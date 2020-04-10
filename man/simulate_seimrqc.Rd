@@ -28,12 +28,20 @@ Object of class covoidd and dcm (from the package EpiModels)
 }
 }
 \details{
-Implementation of the model outlined in Moss et al (2020).
+(In progress) Implementation of the model outlined in Moss et al (2020).
 }
 \examples{
-param <- seimrqc_param(R0=2.5,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
-state0 <- seimrqc_state0(S0=100,E0=1)
+(In progress)
+# no self-quarantine
+param <- seimrqc_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,Qeff=0.5,Meff=0.99,rho=0,alpha=0.2,eta=0.01,delta=0.2,kappa=20,pm=1)
+state0 <- seimrqc_state0(S0=100,E10=1)
 res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
-plot(res,c("S","E","Is","Hp","Rc","F"))
+plot(res,c("S","EI","M","Rt"))
+
+# with self-quarantine
+param <- seimrqc_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,Qeff=0.5,Meff=0.99,rho=0.8,alpha=0.2,eta=0.01,delta=0.2,kappa=20,pm=1)
+state0 <- seimrqc_state0(S0=100,E10=1)
+res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
+plot(res,c("S","EI","M","Rt"))
 
 }

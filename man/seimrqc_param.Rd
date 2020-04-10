@@ -6,40 +6,49 @@
 \usage{
 seimrqc_param(
   R0,
-  beta,
-  sigma,
+  lambdaimp,
+  sigma1,
+  sigma2,
   gamma1,
   gamma2,
-  gamma3,
   Qeff,
-  Heff,
+  Meff,
   rho,
   alpha,
-  eta
+  eta,
+  delta,
+  kappa,
+  pm
 )
 }
 \arguments{
 \item{R0}{Basic reproduction number (S -> E)}
 
-\item{beta}{Rate of potential new infections per infected (S -> E)}
+\item{lambdaimp}{The force of infection from importated cases.}
 
-\item{sigma}{Inverse of the average length of latent period (E -> I1)}
+\item{sigma1}{Inverse of the average length of first latent period (E1 -> E2)}
+
+\item{sigma2}{Inverse of the average length of second latent period (E2 -> I1)}
 
 \item{gamma1}{Inverse of the average length of first infectious period (I1 -> I2 or H)}
 
 \item{gamma2}{Inverse of the average length of second infectious period (I2 -> R)}
 
-\item{gamma3}{Inverse of the average length of second infectious period (for hospitalised) (H -> R or F)}
-
 \item{Qeff}{Effect of quarantine on infectiousness, should be in (0,1)}
 
-\item{Heff}{Effect of hospitalisation on infectiousness, should be in (0,1)}
+\item{Meff}{Effect of medical management on infectiousness, should be in (0,1)}
 
-\item{rho}{Proportion of people who enter quarantine after exposure, should be in (0,1) (E -> Iq1 or I1)}
+\item{rho}{the proportion of contacts (of ascertained cases) that will self-quarantine (0,1)}
 
-\item{alpha}{Proportion of infected requiring hospitalisation, should be in (0,1) (I1 -> I2 or H)}
+\item{alpha}{Proportion of infected requesting medical assistance, should be in (0,1)}
 
-\item{eta}{Case fatality rate, should be in (0,1) (H -> F or Rh). Note F is calculated at each step, there is no dF.}
+\item{eta}{...}
+
+\item{delta}{The duration of quarantine for contacts of ascertained cases (14 days)}
+
+\item{kappa}{The per-person contact rate (20 people per day)}
+
+\item{pm}{The probability of presenting cases being effectively managed}
 }
 \value{
 List of seimrqc model parameters
