@@ -8,7 +8,7 @@ popcounter <- reactive({
 })
 
 output$popcount = renderText({
-    HTML(paste("Population Size: ", popcounter()))
+    HTML(paste("Population Size: ", formatC(popcounter(), format="d", big.mark=',')))
 })
 
 #### SIR Model
