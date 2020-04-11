@@ -11,6 +11,11 @@
 #'
 #' @return Object of class covoidd and dcm (from the package EpiModels)
 #'
+#' @examples
+#' param <- sir_param(R0 = 2.5,gamma = 0.1)
+#' state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+#' res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+#'
 #' @export
 simulate_sir <- function(t,state_t0,param) {
   # assertions

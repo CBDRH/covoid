@@ -2,10 +2,10 @@
 
 S3method(plot,covoidd)
 export(seihrq_param)
+export(seihrq_param_set)
 export(seihrq_state0)
 export(seimrqc_param)
 export(seimrqc_state0)
-export(seiqhrf_param_set)
 export(seir_param)
 export(seir_state0)
 export(simulate_seihrq)
