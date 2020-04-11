@@ -1,26 +1,21 @@
-#
-# This is the server logic of a Shiny web application. You can run the
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
 
-library(shiny)
-
-# Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
-    output$distPlot <- renderPlot({
+# Add up the different populations and display the population count
+popcounter <- reactive({
+    sum(input$s_num, input$e_num, input$i1_num, input$i2_num, input$iq1_num, input$iq2_num,
+        input$h_num, input$hq_num, input$r_num, input$rq_num, input$rh_num, input$rqh_num)
+})
 
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
+output$popcount = renderText({
+    HTML(paste("Population Size: ", popcounter()))
+})
 
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white')
+#### SIR Model
 
-    })
+### Initial conditions
+sir_state0 <- reactive({
+    sir_state0(input$R0, input$beta, 1/input$invgamma)
+})
 
 })
