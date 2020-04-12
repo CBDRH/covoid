@@ -1,0 +1,11 @@
+---
+title: "SEIQHR Model Summary Report"
+output: pdf_document
+params:
+    n: NA
+---
+
+This is a placeholder. The number of cycles was `params$n`.
+
+
+

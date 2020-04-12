@@ -1,3 +1,8 @@
+#' Launch an interactive Shiny session
+#'
+#' @param example A Shiny app
+#' @examples
+#' coviz("dcm.models")
 #' @export
 coviz <- function(example) {
     # locate all the shiny app examples that exist
