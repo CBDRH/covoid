@@ -13,5 +13,5 @@ coviz(example)
 Launch an interactive Shiny session
 }
 \examples{
-coviz(dcm.models)
+coviz("dcm.models")
 }

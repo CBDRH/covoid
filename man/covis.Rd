@@ -13,5 +13,5 @@ covis(example)
 Launch an interactive Shiny session
 }
 \examples{
-covis(dcm.models)
+covis("dcm.models")
 }
