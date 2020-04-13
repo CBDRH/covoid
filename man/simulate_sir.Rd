@@ -9,9 +9,9 @@ simulate_sir(t, state_t0, param)
 \arguments{
 \item{t}{Number of time steps over which to sample from the model}
 
-\item{state_t0}{Initial state of the model (see sir_state0)}
+\item{state_t0}{Initial state of the model (see ?sir_state0)}
 
-\item{param}{Model parameters (see sir_param)}
+\item{param}{Model parameters (see ?sir_param)}
 }
 \value{
 Object of class covoidd and dcm (from the package EpiModels)
@@ -25,5 +25,16 @@ R = Removed
 param <- sir_param(R0 = 2.5,gamma = 0.1)
 state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
 res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+plot(res,c("S","I","R"))
+
+# if the reproduction number is time varying (e.g. due to control measures)
+R_t <- function(t) {
+if (t < 30) 2.5
+else 1.1
+}
+param <- sir_param(R0 = R_t,gamma = 0.1)
+state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+plot(res,c("S","I","R"))
 
 }

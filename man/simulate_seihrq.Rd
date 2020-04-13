@@ -36,4 +36,14 @@ state0 <- seihrq_state0(S0=100,E0=1)
 res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
 plot(res,c("S","E","Is","Hp","Rc","F"))
 
+# if the reproduction number is time varying (e.g. due to control measures)
+R_t <- function(t) {
+if (t < 30) 2.5
+else 1.1
+}
+param <- seihrq_param(R0=R_t,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
+state0 <- seihrq_state0(S0=100,E0=1)
+res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
+plot(res,c("S","E","Is","Hp","Rc","F"))
+
 }

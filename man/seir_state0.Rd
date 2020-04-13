@@ -9,7 +9,7 @@ seir_state0(S0, E0, I0 = 0, R0 = 0)
 \arguments{
 \item{S0}{Initial number of susceptibles}
 
-\item{E0}{Initial number of exposed}
+\item{E0}{Initial number of exposed (non-infectious)}
 
 \item{I0}{Initial number of infected}
 
