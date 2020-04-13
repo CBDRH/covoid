@@ -1,0 +1,47 @@
+---
+title: "Time varying reproduction number"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{time-varying-R}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(COVOIDd)
+library(ggplot2)
+```
+
+We will use a basic step function for the example. Any arbitrary function of time could be used. As `deSolve::ode` will call the function at each timestep it doesn't need to be vectorised (like below), control flow primitives like if, for are permitted.
+
+```{r,fig.width=7}
+# Time varying reproduction number function
+R_t <- function(t) {
+  2.5*(t < 30) + 1.1*(t >= 30)
+}
+
+ggplot(data.frame(x=c(0,100)),aes(x)) +
+  stat_function(fun = R_t,xlim = c(0,100)) +
+  labs(x = "Time", y = "R(t)") +
+  coord_cartesian(ylim=c(0,3)) +
+  theme_bw()
+```
+
+How does shifting the reproduction number from 2.5 to 1.1 impact the epidemic?
+
+```{r,fig.width=7,fig.height=4}
+# model
+param <- sir_param(R0 = R_t,gamma = 0.1)
+state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R")) +
+  labs(x = "Time",y = "Count") +
+  geom_vline(xintercept = 30, linetype=2)
+```

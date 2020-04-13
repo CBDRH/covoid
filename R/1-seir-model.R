@@ -2,7 +2,7 @@
 #' Simulate a deterministic SEIR model
 #'
 #' S = Susceptible
-#' E = Exposed (not infectious)
+#' E = Exposed (non-infectious)
 #' I = Infectious
 #' R = Removed
 #'
@@ -13,9 +13,20 @@
 #' @return Object of class covoidd and dcm (from the package EpiModels)
 #'
 #' @examples
-#' param <- seir_param(R0 = 2.5,gamma = 0.1,sigma=10)
+#' param <- seir_param(R0 = 2.5,gamma = 0.1,sigma=0.1)
 #' state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
 #' res <- simulate_seir(t = 100,state_t0 = state0,param = param)
+#' plot(res,c("S","E","I","R"))
+#'
+#' # if the reproduction number is time varying (e.g. due to control measures)
+#' R_t <- function(t) {
+#' if (t < 30) 2.5
+#' else 1.1
+#' }
+#' param <- seir_param(R0 = R_t,gamma = 0.1,sigma=0.1)
+#' state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
+#' res <- simulate_seir(t = 100,state_t0 = state0,param = param)
+#' plot(res,c("S","E","I","R"))
 #'
 #' @export
 simulate_seir <- function(t,state_t0,param) {
@@ -41,6 +52,9 @@ simulate_seir <- function(t,state_t0,param) {
     epi_tmp = lapply(mod$epi, function(x) x$run1)
     mod$epi = data.frame(epi_tmp)
     mod$epi$t = mod$control$timesteps
+    # keep the integer time steps
+    mod$epi = mod$epi[mod$epi$t == round(mod$epi$t),]
+    rownames(mod$epi) <- NULL
 
     # return
     class(mod) = c("covoidd",class(mod))
@@ -51,8 +65,9 @@ simulate_seir <- function(t,state_t0,param) {
 #'
 #' Setup function
 #'
-#' @param R0 Basic reproduction number (S -> E)
-#' @param beta Rate of potential new infections per infected (S -> E)
+#' @param R0 Basic/empirical reproduction number (S -> E), can be a function of t.
+#' @param beta Rate of potential new infections per infected (S -> E), can be a function of t.
+#' Pass either R0 or beta.
 #' @param sigma Inverse of the average length of latent period (E -> I)
 #' @param gamma Inverse of the average length of infectious period (I -> R)
 #'
@@ -62,11 +77,19 @@ simulate_seir <- function(t,state_t0,param) {
 seir_param <- function(R0,beta,sigma,gamma) {
     # work out missing parameter
     if(missing(R0)) {
-        R0 = beta/gamma
+        if (is.function(beta)) {
+            R0 = function(t) beta(t)/gamma
+        } else {
+            R0 = function(t) beta/gamma
+        }
     } else if(missing(beta)) {
-        beta = gamma*R0
+        if (is.function(R0)) {
+            beta = function(t) gamma*R0(t)
+        } else {
+            beta = function(t) gamma*R0
+        }
     } else if(!missing(R0) & ! missing(beta)) {
-        stopifnot(beta/gamma == R0)
+        stop("Supply either R0 or beta")
     }
 
     # output with class seir_param
@@ -82,7 +105,7 @@ seir_param <- function(R0,beta,sigma,gamma) {
 #' Setup function
 #'
 #' @param S0 Initial number of susceptibles
-#' @param E0 Initial number of exposed
+#' @param E0 Initial number of exposed (non-infectious)
 #' @param I0 Initial number of infected
 #' @param R0 Initial number of removed
 #'
@@ -116,7 +139,7 @@ seir_model <- function(t,state_t0,param) {
         N <- S + E + I + R
 
         # derived parameters
-        lambda = beta*I
+        lambda = beta(t)*I
 
         # differential equations
         dS = -(S/N)*lambda

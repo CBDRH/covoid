@@ -28,6 +28,16 @@
 #' res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
 #' plot(res,c("S","E","Is","Hp","Rc","F"))
 #'
+#' # if the reproduction number is time varying (e.g. due to control measures)
+#' R_t <- function(t) {
+#' if (t < 30) 2.5
+#' else 1.1
+#' }
+#' param <- seihrq_param(R0=R_t,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
+#' state0 <- seihrq_state0(S0=100,E0=1)
+#' res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
+#' plot(res,c("S","E","Is","Hp","Rc","F"))
+#'
 #' @export
 simulate_seihrq <- function(t,state_t0,param) {
     # assertions
@@ -80,8 +90,9 @@ simulate_seihrq <- function(t,state_t0,param) {
 #'
 #' Setup function
 #'
-#' @param R0 Basic reproduction number (S -> E)
-#' @param beta Rate of potential new infections per infected (S -> E)
+#' @param R0 Basic/empirical reproduction number (S -> E), can be a function of t.
+#' @param beta Rate of potential new infections per infected (S -> E), can be a function of t.
+#' Pass either R0 or beta.
 #' @param sigma Inverse of the average length of latent period (E -> I1)
 #' @param gamma1 Inverse of the average length of first infectious period (I1 -> I2 or H)
 #' @param gamma2 Inverse of the average length of second infectious period (I2 -> R)
@@ -91,19 +102,27 @@ simulate_seihrq <- function(t,state_t0,param) {
 #' @param rho Proportion of people who enter quarantine after exposure, should be in (0,1) (E -> Iq1 or I1)
 #' @param alpha Proportion of infected requiring hospitalisation, should be in (0,1) (I1 -> I2 or H)
 #' @param eta Case fatality rate, should be in (0,1) (H -> F or Rh). Note F is calculated at each step, there is no dF.
-
 #'
 #' @return List of SEIHR-Q model parameters
 #'
 #' @export
 seihrq_param <- function(R0,beta,sigma,gamma1,gamma2,gamma3,Qeff,Heff,rho,alpha,eta) {
     # work out missing parameter
+    infectious_period = 1/sigma + 1/gamma1 + (1-alpha)*(1/gamma2) + alpha*1/gamma3
     if(missing(R0)) {
-        R0 = beta*(1/sigma + 1/gamma1 + alpha*(1/gamma2 + 1/gamma3))
+        if (is.function(beta)) {
+            R0 = function(t) beta(t)*infectious_period
+        } else {
+            R0 = function(t) beta*infectious_period
+        }
     } else if(missing(beta)) {
-        beta = R0*(1/(1/sigma + 1/gamma1 + alpha*(1/gamma2 + 1/gamma3)))
+        if (is.function(R0)) {
+            beta = function(t) R0(t)/infectious_period
+        } else {
+            beta = function(t) R0/infectious_period
+        }
     } else if(!missing(R0) & ! missing(beta)) {
-        stopifnot(beta*(1/sigma + 1/gamma1 + alpha*(1/gamma2 + 1/gamma3)) == R0)
+        stop("Supply either R0 or beta")
     }
 
     # output with class seihrq_param
@@ -162,9 +181,9 @@ seihrq_model <- function(t,state_t0,param) {
         N <- S + E + I1 + I2 + H + Rh + R + Iq1 + Iq2 + Hq + Rqh + Rq
 
         # derived parameters
-        betaq = Qeff*beta
-        betah = Heff*beta
-        lambda = beta*(E + I1 + I2) + betaq*(Iq1 + Iq2) + betah*(H + Hq)
+        betaq = Qeff*beta(t)
+        betah = Heff*beta(t)
+        lambda = beta(t)*(E + I1 + I2) + betaq*(Iq1 + Iq2) + betah*(H + Hq)
 
         # differential equations
         # general population
@@ -181,9 +200,11 @@ seihrq_model <- function(t,state_t0,param) {
         dHq = alpha*gamma1*Iq1 - gamma3*Hq
         dRqh = gamma3*Hq
         dRq = gamma2*Iq2
+
         # return
         list(c(dS,dE,dI1,dI2,dH,dRh,dR,
                dIq1,dIq2,dHq,dRqh,dRq),
+             dS=dS,
              Is=I1+I2+Iq1+Iq2,
              Hp=H+Hq,
              Rc=(1-eta)*(R+Rh+Rq+Rqh),

@@ -12,6 +12,8 @@ LazyData: true
 Imports: 
     EpiModel
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
 RoxygenNote: 7.0.2
-Depends:
+VignetteBuilder: knitr

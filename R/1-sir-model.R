@@ -6,8 +6,8 @@
 #' R = Removed
 #'
 #' @param t Number of time steps over which to sample from the model
-#' @param state_t0 Initial state of the model (see sir_state0)
-#' @param param Model parameters (see sir_param)
+#' @param state_t0 Initial state of the model (see ?sir_state0)
+#' @param param Model parameters (see ?sir_param)
 #'
 #' @return Object of class covoidd and dcm (from the package EpiModels)
 #'
@@ -15,6 +15,17 @@
 #' param <- sir_param(R0 = 2.5,gamma = 0.1)
 #' state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
 #' res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+#' plot(res,c("S","I","R"))
+#'
+#' # if the reproduction number is time varying (e.g. due to control measures)
+#' R_t <- function(t) {
+#' if (t < 30) 2.5
+#' else 1.1
+#' }
+#' param <- sir_param(R0 = R_t,gamma = 0.1)
+#' state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+#' res <- simulate_sir(t = 100,state_t0 = state0,param = param)
+#' plot(res,c("S","I","R"))
 #'
 #' @export
 simulate_sir <- function(t,state_t0,param) {
@@ -38,6 +49,9 @@ simulate_sir <- function(t,state_t0,param) {
   epi_tmp = lapply(mod$epi, function(x) x$run1)
   mod$epi = data.frame(epi_tmp)
   mod$epi$t = mod$control$timesteps
+  # keep the integer time steps
+  mod$epi = mod$epi[mod$epi$t == round(mod$epi$t),]
+  rownames(mod$epi) <- NULL
 
   # return
   class(mod) = c("covoidd",class(mod))
@@ -48,21 +62,30 @@ simulate_sir <- function(t,state_t0,param) {
 #'
 #' Setup function
 #'
-#' @param R0 Basic reproduction number (S -> I)
-#' @param beta Rate of potential new infections per infected (S -> I)
+#' @param R0 Basic/empirical reproduction number (S -> I), can be a function of t.
+#' @param beta Rate of potential new infections per infected (S -> I), can be a function of t.
+#' Pass either R0 or beta.
 #' @param gamma Inverse of the average length of infectious period (I -> R)
 #'
 #' @return List of SIR model parameters
 #'
 #' @export
 sir_param <- function(R0,beta,gamma) {
-  # work out missing parameter
+
   if(missing(R0)) {
-    R0 = beta/gamma
+    if (is.function(beta)) {
+      R0 = function(t) beta(t)/gamma
+    } else {
+      R0 = function(t) beta/gamma
+    }
   } else if(missing(beta)) {
-    beta = gamma*R0
+    if (is.function(R0)) {
+      beta = function(t) gamma*R0(t)
+    } else {
+      beta = function(t) gamma*R0
+    }
   } else if(!missing(R0) & ! missing(beta)) {
-    stopifnot(beta/gamma == R0)
+    stop("Supply either R0 or beta")
   }
 
   # output with class sir_param
@@ -111,7 +134,7 @@ sir_model <- function(t,state_t0,param) {
     N <- S + I + R
 
     # derived parameters
-    lambda = beta*I
+    lambda = beta(t)*I
 
     # differential equations
     dS = -(S/N)*lambda
@@ -120,6 +143,7 @@ sir_model <- function(t,state_t0,param) {
 
     # return
     list(c(dS,dI,dR),
+         dS=dS,
            N=N)
   })
 }
