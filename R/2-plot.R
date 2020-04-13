@@ -13,7 +13,8 @@ dcm2df <- function(mod) {
 #'
 #' @param x model
 #' @param y compartments to plot, a character vector
-#' @param popfrac If \code{TRUE}, plot prevalence of values rather than numbers
+#' @param popfrac logical If \code{TRUE}, plot prevalence of values rather than numbers
+#' @param main string Main title for the plot
 #' @param ... see ggplot2::qplot
 #'
 #' @method plot covoidd

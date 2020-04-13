@@ -11,11 +11,14 @@ seimrqc_param(
   sigma2,
   gamma1,
   gamma2,
+  gammaq1,
+  gammaq2,
   Qeff,
   Meff,
   rho,
-  alpha,
   eta,
+  alphamBeta,
+  probHospGivenInf,
   delta,
   kappa,
   pm
@@ -24,7 +27,7 @@ seimrqc_param(
 \arguments{
 \item{R0}{Basic reproduction number (S -> E)}
 
-\item{lambdaimp}{The force of infection from importated cases.}
+\item{lambdaimp}{The force of infection from imported cases.}
 
 \item{sigma1}{Inverse of the average length of first latent period (E1 -> E2)}
 
@@ -34,17 +37,24 @@ seimrqc_param(
 
 \item{gamma2}{Inverse of the average length of second infectious period (I2 -> R)}
 
+\item{gammaq1}{Inverse of the average length of first infectious period for quarantined cases (Iq1 -> Iq2)}
+
+\item{gammaq2}{Inverse of the average length of second infectious period for quarantined cases (Iq2 -> Rq)}
+
 \item{Qeff}{Effect of quarantine on infectiousness, should be in (0,1)}
 
 \item{Meff}{Effect of medical management on infectiousness, should be in (0,1)}
 
 \item{rho}{the proportion of contacts (of ascertained cases) that will self-quarantine (0,1)}
 
-\item{alpha}{Proportion of infected requesting medical assistance, should be in (0,1)}
+\item{eta}{Scaling factor for hospitalization ("severe").}
 
-\item{eta}{...}
+\item{alphamBeta}{Scaling factor for proportion of non-severe requesting medical assistance.
+It should be in (0,1) and in Beta draw in McVernon et al 2020).}
 
-\item{delta}{The duration of quarantine for contacts of ascertained cases (14 days)}
+\item{probHospGivenInf}{Probability of hospitalization given infection (typically from Table 3 in McVernon et al 2020)}
+
+\item{delta}{Inverse of the duration of quarantine for contacts of ascertained cases (14 days)}
 
 \item{kappa}{The per-person contact rate (20 people per day)}
 

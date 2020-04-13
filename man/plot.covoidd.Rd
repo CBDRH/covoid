@@ -4,12 +4,16 @@
 \alias{plot.covoidd}
 \title{Plot with ggplot2}
 \usage{
-\method{plot}{covoidd}(x, y, ...)
+\method{plot}{covoidd}(x, y, popfrac = FALSE, cumulative = FALSE, main = "Doherty model", ...)
 }
 \arguments{
 \item{x}{model}
 
 \item{y}{compartments to plot, a character vector}
+
+\item{popfrac}{logical If \code{TRUE}, plot prevalence of values rather than numbers}
+
+\item{main}{string Main title for the plot}
 
 \item{...}{see ggplot2::qplot}
 }

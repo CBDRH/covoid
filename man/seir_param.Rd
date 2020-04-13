@@ -7,9 +7,10 @@
 seir_param(R0, beta, sigma, gamma)
 }
 \arguments{
-\item{R0}{Basic reproduction number (S -> E)}
+\item{R0}{Basic/empirical reproduction number (S -> E), can be a function of t.}
 
-\item{beta}{Rate of potential new infections per infected (S -> E)}
+\item{beta}{Rate of potential new infections per infected (S -> E), can be a function of t.
+Pass either R0 or beta.}
 
 \item{sigma}{Inverse of the average length of latent period (E -> I)}
 

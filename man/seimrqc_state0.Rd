@@ -2,7 +2,7 @@
 % Please edit documentation in R/1-doherty-model.R
 \name{seimrqc_state0}
 \alias{seimrqc_state0}
-\title{SEIMR-QC model inital state}
+\title{SEIMR-QC model initial state}
 \usage{
 seimrqc_state0(
   S0,
@@ -10,17 +10,18 @@ seimrqc_state0(
   E20 = 0,
   I10 = 0,
   I20 = 0,
+  R0 = 0,
   M0 = 0,
   Rm0 = 0,
-  R0 = 0,
   Eq10 = 0,
   Eq20 = 0,
   Iq10 = 0,
   Iq20 = 0,
+  Rq0 = 0,
   Mq0 = 0,
   Rqm0 = 0,
-  Rq0 = 0,
-  CTm0 = 0
+  CTm0 = 2,
+  CTnm0 = 20
 )
 }
 \arguments{
@@ -34,11 +35,11 @@ seimrqc_state0(
 
 \item{I20}{Initial number of infected (period 2)}
 
+\item{R0}{Initial number of removed}
+
 \item{M0}{Initial number of under medical management}
 
 \item{Rm0}{Initial number of recovered who sought medical treatment}
-
-\item{R0}{Initial number of removed}
 
 \item{Eq10}{Initial number of exposed (latent period 1) who self quarantined after contact}
 
@@ -48,11 +49,11 @@ seimrqc_state0(
 
 \item{Iq20}{Initial number of infected (period 2) who self quarantined after contact}
 
+\item{Rq0}{Initial number of removed who self quarantined after contact}
+
 \item{Mq0}{Initial number of under medical management who self quarantined after contact}
 
 \item{Rqm0}{Initial number of recovered who sought medical treatment and self quarantined after contact}
-
-\item{Rq0}{Initial number of removed who self quarantined after contact}
 }
 \value{
 List of seimrqc model initial states

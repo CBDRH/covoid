@@ -11,7 +11,7 @@ seimrqc_model(t, state_t0, param)
 
 \item{state_t0}{Initial state (S,E1,E2,I1,I2,R,M,Rm,Eq1,Eq2,Iq1,Iq2,Rq,Mq,Rqm)}
 
-\item{param}{The model parameters (R0,sigma1,sigma2,gamma1,gamma2,Qeff,Heff,rho,alpha,eta)}
+\item{param}{The model parameters (R0,sigma1,sigma2,gamma1,gamma2,gammaq1,gammaq2,Qeff,Heff,rho,alpha)}
 }
 \value{
 derivatives of SEIMR-QC model states with respect to time

@@ -7,9 +7,10 @@
 sir_param(R0, beta, gamma)
 }
 \arguments{
-\item{R0}{Basic reproduction number (S -> I)}
+\item{R0}{Basic/empirical reproduction number (S -> I), can be a function of t.}
 
-\item{beta}{Rate of potential new infections per infected (S -> I)}
+\item{beta}{Rate of potential new infections per infected (S -> I), can be a function of t.
+Pass either R0 or beta.}
 
 \item{gamma}{Inverse of the average length of infectious period (I -> R)}
 }
