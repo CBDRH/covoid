@@ -204,7 +204,6 @@ seihrq_model <- function(t,state_t0,param) {
         # return
         list(c(dS,dE,dI1,dI2,dH,dRh,dR,
                dIq1,dIq2,dHq,dRqh,dRq),
-             dS=dS,
              Is=I1+I2+Iq1+Iq2,
              Hp=H+Hq,
              Rc=(1-eta)*(R+Rh+Rq+Rqh),
