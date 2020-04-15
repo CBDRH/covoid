@@ -4,7 +4,7 @@
 \alias{plot.covoidd}
 \title{Plot with ggplot2}
 \usage{
-\method{plot}{covoidd}(x, y, popfrac = FALSE, cumulative = FALSE, main = "Doherty model", ...)
+\method{plot}{covoidd}(x, y, popfrac = FALSE, cumulative = FALSE, main = "", ...)
 }
 \arguments{
 \item{x}{model}

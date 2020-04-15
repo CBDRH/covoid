@@ -143,6 +143,7 @@ sir_model <- function(t,state_t0,param) {
 
     # return
     list(c(dS,dI,dR),
+         dS=dS,
            N=N)
   })
 }

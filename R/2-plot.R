@@ -20,7 +20,7 @@ dcm2df <- function(mod) {
 #' @method plot covoidd
 #'
 #' @export
-plot.covoidd <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="Doherty model",...) {
+plot.covoidd <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
 #   yn = unique(c("N",y))
     df = dcm2df(x)
     df = df[df$compartment %in% y,]

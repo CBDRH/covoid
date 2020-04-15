@@ -11,4 +11,4 @@ library(shinyWidgets)
 library(shinycustomloader)
 library(ggiraph)
 library(markdown)
-
+library(shinyCanvas)
