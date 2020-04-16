@@ -1,0 +1,12 @@
+name: clickr
+title: clickr
+username:
+account: mark-hanly
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2113803
+bundleId: 3015879
+url: https://mark-hanly.shinyapps.io/clickr/
+when: 1586940215.25823
+asMultiple: FALSE
+asStatic: FALSE
