@@ -10,7 +10,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, dev = 'pdf')
 
 library(DiagrammeR)
 library(tidyverse)
@@ -213,7 +213,10 @@ Note the meaning of the following flows:
 
 Following best practice, we will make our source code open and available so that other researchers can verify, replicate and extend our results. In addition, we will provide a simple graphical user interface that will allow users to visualise the proposed transmission model, and interactively modified the model parameters to explore results under different scenarios. 
 
-![Moss _et al_. model presented as an interactive GUI]("vignettes/model-gui.png")
+```{r, out.width="100%"}
+knitr::include_graphics(path = here::here("vignettes/model-gui.png"))
+```
+
 This interface will be embedded as part of a downloadable _R_ package, and also made available as a webpage.  Users will be able to generate and download customisable dynamic reports based on the scenarios they explore, that summarise the results as well as document the underlying assumptions and model parameter settings.
 
 
