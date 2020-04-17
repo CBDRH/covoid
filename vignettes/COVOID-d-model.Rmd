@@ -1,0 +1,209 @@
+---
+title: "Candidate COVOID-d model"
+author: "Oisin Fitzgerald, Mark Hanly, Tim Churches"
+date: "17/04/2020"
+always_allow_html: true
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(DiagrammeR)
+```
+
+## Introduction 
+
+ The compartment model of Moss _et al_. (2020) appears to have been constructed prior to the start of the COVID-19 epidemic in Australia (that is, prior to Feb 2020) and was primarily designed to assess the potential impact of COVID-19 on the Australian hospital system. As described, it allows for modelling of the following interventions or behavioural modifcations aimed at reducing the spread of SARS-CoV-2 infection:
+ 
+* isolation of cases (defined as "confirmed by a medical practitioner")
+* voluntary self-quarantine of contacts of cases
+* indefinite (ongoing), fixed levels of pphysical/social distancing
+* an indefinite (ongoing) fixed level of imported cases
+
+Based on events since the start of the local COVID-19 epidemic, and as at the time of writing, there has been widespread government responses, centred around social/physical distancing, and gradually liberalised testing criteria, allied with ongoing case-based interventions (case identification and isolation, contact tracing and quarantining), together with near closure of the borders and manadtory quarantine for all arrivals. These measures have resulted in an impressive reduction in incident cases across Australia, a few localised of point source outbreaks notwithstanding). 
+
+The questions now are what is the "exit strategy" from the economically and socially harmful widespread social distancing measures? With this in mind, we propose the model shown below, dubbed _**COVOID-d** to permit the exploration of future scenarios involving both current interventions and behaviours, such as:
+
+* self-isolation if symptomatic (even minor symptoms), pending readily available testing (including testing-at-home, mobile teams come to you);
+* varying levels of social distancing
+* school closure, tertiary education clusore or partial closure (eg small tutorials but not lectures)
+time-varying numbers of imported cases
+* enhanced and more efficient contact tracing through scaled-up public health workforces (with ADF assistance) and deployment of low-power BlueTooth mobile-phone-assisted contact tracing.
+* "drive-through" and "pop-up" or mobile testing facilities, particularly in hot spots
+
+With later addition of:
+
+* serological testing and seroserveys
+* vaccination strategies
+
+## Moss _et al._ SEIMR-Q model
+
+This is teh structure of the Moss _et al.) (2020) model as described, as best as we can understand it (in the absence of any released source code for its implementation). It contains peculiarities and uses various "short-cuts" to approximate the modelling of certain scenarios.
+
+We have re-implemented this as a dynamic model (which is the type used by Moss _et al.) using the _EpiModel_ library and framework for _R_. We are attempting to use it to reproduce the rather few model outputs given in teh Moss _et al._ paper, in order to demonstrate the faithfulness of the results obtained from implementation to theirs. We will include it in our released code, and mention it in any scientific papers based on this intitaive, but we do not believe it is adequate for modelling purpses henceforth.
+
+```{r moss_et_al, echo=FALSE, eval=TRUE, message=FALSE}
+grViz("
+digraph SEIMRQ {
+
+  # a 'graph' statement
+  graph [overlap = false, fontsize = 10]
+
+  # several 'node' statements
+  node [shape = box,
+        fontname = Helvetica]
+  S[label='S\nsusceptible'];
+  E1[label='E&#x2081;\nexposed,\nasymptomatic,\nnon-infectious'];
+  E2[label='E&#x2082;\nexposed,\nasymptomatic,\ninfectious'];
+  I1[label='I&#x2081;\nsymptomatic,\ninfectious,\nearly stage'];
+  I2[label='I&#x2082;\nsymptomatic,\ninfectious,\nlater stage'];
+  M[label='M\nunder\nmedical\ncare'];
+  R[label='R\nremoved\n(recovered/immune,\ndeceased)'];
+  Rm[label='Rm\nrecovered/\nimmune\n(under\nmedical\ncare)'];
+  E1s[label='E&#x2081;&#x02E2;\nexposed,\nasymptomatic,\nnon-infectious,\n(self-quarantined)'];
+  E2s[label='E&#x2082;&#x02E2;\nexposed,\nasymptomatic,\ninfectious,\n(self-quarantined)'];
+  I1s[label='I&#x2081;&#x02E2;\nsymptomatic,\ninfectious,\nearly stage,\n(was self-\nquarantined)'];
+  I2s[label='I&#x2082;&#x02E2;\nsymptomatic,\ninfectious,\nlater stage,\n(was self-\nquarantined)'];
+  Ms[label='M&#x02E2;\nunder\nmedical\ncare,\n(was self-\nquarantined)'];
+  Rs[label='R&#x02E2;\nremoved\n(recovered/immune,\ndeceased)\n(was self-\nquarantined)'];
+  Rms[label='Rm&#x02E2;\nremoved\n(recovered/immune,\ndeceased)\n(under\nmedical\ncare,\n(was self-\nquarantined)'];
+
+  # several 'edge' statements
+  S->E1
+  E1->E2
+  E2->I1
+  I1->I2
+  I2->R
+  I1->M
+  M->Rm
+  S->E1s
+  E1s->E2s
+  E2s->I1s
+  I1s->I2s
+  I2s->Rs
+  I1s->Ms
+  Ms->Rms
+}
+")
+```
+
+## COVOID-d model
+
+This is the proposed **COVOID-d** model. It also contains some infelicities, in particular the almost complete branching of the model at an early stage to accomodate modelling of quarantine of asymptomatic contacts of cases (something which the Moss _et al_. model "fudges" through a mathematical short-cut). However, we think it has the capability to explore most of the scenarios set out above.
+
+```{r covoid-d, echo=FALSE, eval=TRUE, message=FALSE}
+grViz("
+digraph COVOIDd {
+
+  overlap = false;
+  fontsize = 10;
+  node [shape = box, fontname = Helvetica]
+
+  S[label='S\nsusceptible'];
+  Sc[label='S&#x1D9C;\nsusceptible\n(quarantined contact)'];
+  R[label='R\nremoved\n(recovered/immune,\ndeceased)'];
+  Rh[label='Rh\nremoved\n(recovered/immune,\ndeceased)\n(required\nhospitalisation)'];
+  Rt[label='Rt\nremoved\n(recovered/immune,\ndeceased)\n(test +ve)'];
+  Rc[label='R&#x1D9C;\nremoved\n(recovered/immune,\ndeceased)\n(was quarantined contact)'];
+  Rhc[label='Rh&#x1D9C;\nremoved\n(recovered/immune,\ndeceased)\n(required\nhospitalisation)\n(was quarantined contact)'];
+  Rtc[label='Rt&#x1D9C;\nremoved\n(recovered/immune,\ndeceased)\n(test +ve)\n(was quarantined contact)'];
+  
+  # a 'graph' statement
+  subgraph cluster_0 {
+    label='Asymptomatic';
+    color=green;
+    style=filled;
+    node [shape = box, fontname = Helvetica]
+    E1[label='E&#x2081;\nexposed/infected,\nasymptomatic,\nnon-infectious'];
+    E1c[label='E&#x2081;&#x1D9C;\nexposed/infected,\nasymptomatic,\nnon-infectious\n(quarantined contact)'];
+  }
+
+  subgraph cluster_1 {
+    label='Asymptomatic & infectious';
+    color=yellow;
+    style=filled;
+    node [shape = box, fontname = Helvetica]
+    E2[label='E&#x2082;\nexposed/infected,\nasymptomatic,\ninfectious'];
+    E2c[label='E&#x2082;&#x1D9C;\nexposed/infected,\nasymptomatic,\ninfectious\n(was quarantined contact)'];
+  }
+  
+  subgraph cluster_2 {
+    label='Infectious';
+    color=orange;
+    style=filled;
+    node [shape = box, fontname = Helvetica]
+    I1[label='I&#x2081;\ninfected,\nsymptomatic,\ninfectious,\nearly stage'];
+    I2[label='I&#x2082;\ninfected,\nsymptomatic,\ninfectious,\nlater stage'];
+    T[label='T\ninfected,\ntest +ve,\nin isolation'];
+    H[label='H\ninfected,\nrequires/is hospitalised'];
+    I1c[label='I&#x2081;&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nearly stage\n(was quarantined contact)'];
+    I2c[label='I&#x2082;&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nlater stage\n(was quarantined contact)'];
+    Tc[label='T&#x1D9C;\ninfected,\ntest +ve,\nin isolation\n(was quarantined contact)'];
+    Hc[label='H&#x1D9C;\ninfected,\nrequires/is hospitalised\n(was quarantined contact)'];
+  }
+
+  # several 'edge' statements
+  S->E1
+  E1->E2
+  E2->I1
+  E2->I1c
+  I1->I2
+  I2->R
+  I1->H
+  H->Rh
+  I1->T
+  T->Rt
+  I1->I2c
+  S->Sc
+  Sc->S
+  S->E1c
+  E1c->E2c
+  E2c->I1c
+  I1c->I2c
+  I1c->Tc
+  I2c->Rc
+  I1c->Hc
+  Tc->Rtc
+  Hc->Rhc
+}
+")
+```
+
+Just to re-iterate the compartment definitions:
+
+| Symbol | Definition                          |
+|--------|-------------------------------------|
+| S      | susceptible |
+| E~1~   | exposed/infected; asymptomatic; non-infectious|
+| E~2~   | exposed/infected; asymptomatic; infectious|
+| I~1~   | infected, symptomatic, infectious, early stage|
+| I~2~   | infected, symptomatic, infectious, later stage|
+| T      | infected, tested positive, in isolation|
+| H      | infected, symptomatic, infectious, requires hospitalisation|
+| R      | removed (recovered/immune, deceased)|
+| Rt   | removed (recovered/immune, deceased), was tested positive|
+| Rh   | removed (recovered/immune, deceased), required hospitalsiation|
+| S^C^   | susceptible; contact of a case in quarantine|
+| E~1~^C^ | exposed/infected; asymptomatic; non-infectious; contact of a case in quarantine|
+| E~2~^C^ | exposed/infected; asymptomatic; infectious; contact of a case in quarantine|
+| I~1~^C^ | infected, symptomatic, infectious, early stage; contact of a case in quarantine/isolation|
+| I~2~^C^ | infected, symptomatic, infectious, later stage; contact of a case in quarantine/isolation|
+| T^C^    | infected, tested positive, in isolation; contact of a case in quarantine|
+| H^C^      | infected, symptomatic, infectious, requires hospitalisation; contact of a case |
+| R^C^      | removed (recovered/immune, deceased); contact of a case|
+| Rt^C^   | removed (recovered/immune, deceased), was tested positive; contact of a case|
+| Rh^C^   | removed (recovered/immune, deceased), required hospitalsiation; contact of a case|
+
+Note the meaning of the following flows:
+
+| Flow | Interpretation                          |
+|--------|-------------------------------------|
+| E~2~ &#x2192; I~1~^C^ | immediate self-isolation upon onset of symptoms |
+| I~1~ &#x2192; T | tested positive for COVID-19 but doesn't require hospitalisation|
+| S &#x2192; E~1~^C^ | enters 14 day quarantine contact with a case |
+
+
