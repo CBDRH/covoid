@@ -27,27 +27,27 @@ library(gt)
 * indefinite (ongoing), fixed levels of pphysical/social distancing
 * an indefinite (ongoing) fixed level of imported cases
 
-Based on events since the start of the local COVID-19 epidemic, and as at the time of writing, there has been widespread government responses, centred around social/physical distancing, and gradually liberalised testing criteria, allied with ongoing case-based interventions (case identification and isolation, contact tracing and quarantining), together with near closure of the borders and manadtory quarantine for all arrivals. These measures have resulted in an impressive reduction in incident cases across Australia, a few localised of point source outbreaks notwithstanding). 
+Based on events since the start of the local COVID-19 epidemic, and as at the time of writing, there has been widespread government responses, centred around social/physical distancing, and gradually liberalised testing criteria, allied with ongoing case-based interventions (case identification and isolation, contact tracing and quarantining), together with near closure of the borders and mandatory quarantine for all arrivals. These measures have resulted in an impressive reduction in incident cases across Australia, a few localised of point source outbreaks notwithstanding). 
 
-The questions now are what is the "exit strategy" from the economically and socially harmful widespread social distancing measures? With this in mind, we propose the model shown below, dubbed _**COVOID-d** to permit the exploration of future scenarios involving both current interventions and behaviours, such as:
+The questions now are what is the "exit strategy" from the economically and socially harmful widespread social distancing measures? With this in mind, we propose the model shown below, dubbed _**COVOID-d**_, to permit the exploration of future scenarios involving both current interventions and behaviours, such as:
 
 * self-isolation if symptomatic (even minor symptoms), pending readily available testing (including testing-at-home, mobile teams come to you);
-* varying levels of social distancing
-* school closure, tertiary education clusore or partial closure (eg small tutorials but not lectures)
-time-varying numbers of imported cases
-* enhanced and more efficient contact tracing through scaled-up public health workforces (with ADF assistance) and deployment of low-power BlueTooth mobile-phone-assisted contact tracing.
-* "drive-through" and "pop-up" or mobile testing facilities, particularly in hot spots
+* varying levels of social distancing;
+* school closure, tertiary education clusore or partial closure (eg small tutorials but not lectures);
+time-varying numbers of imported cases;
+* enhanced and more efficient contact tracing through scaled-up public health workforces (with ADF assistance) and deployment of low-power BlueTooth mobile-phone-assisted contact tracing;
+* "drive-through" and "pop-up" or mobile testing facilities, particularly in hot spots.
 
 With later addition of:
 
-* serological testing and seroserveys
+* serological testing and seroserveys;
 * vaccination strategies
 
 ## Moss _et al._ SEIMR-Q model
 
-This is teh structure of the Moss _et al.) (2020) model as described, as best as we can understand it (in the absence of any released source code for its implementation). It contains peculiarities and uses various "short-cuts" to approximate the modelling of certain scenarios.
+This is the structure of the Moss _et al_.) (2020) model as described, as best as we can understand it (in the absence of any released source code for its implementation). It contains peculiarities and uses various "short-cuts" to approximate the modelling of certain scenarios.
 
-We have re-implemented this as a dynamic model (which is the type used by Moss _et al.) using the _EpiModel_ library and framework for _R_. We are attempting to use it to reproduce the rather few model outputs given in teh Moss _et al._ paper, in order to demonstrate the faithfulness of the results obtained from implementation to theirs. We will include it in our released code, and mention it in any scientific papers based on this intitaive, but we do not believe it is adequate for modelling purpses henceforth.
+We have re-implemented this as a dynamic model (which is the type used by Moss _et al_.) using the _EpiModel_ library and framework for _R_. We are attempting to use it to reproduce the rather few model outputs given in the Moss _et al._ paper, in order to demonstrate the faithfulness of the results obtained from implementation to theirs. We will include it in our released code, and mention it in any scientific papers based on this initiative, but we do not believe it is adequate for modelling purposes henceforth.
 
 ```{r moss_et_al, eval=TRUE, message=FALSE}
 grViz("
@@ -210,6 +210,12 @@ Note the meaning of the following flows:
 | S &#x2192; E~1~^C^ | enters 14 day quarantine contact with a case |
 
 ## Proposed user interface elements
+
+Following best practice, we will make our source code open and available so that other researchers can verify, replicate and extend our results. In addition, we will provide a simple graphical user interface that will allow users to visualise the proposed transmission model, and interactively modified the model parameters to explore results under different scenarios. 
+
+![Moss _et al_. model presented as an interactive GUI]("vignettes/model-gui.png")
+This interface will be embedded as part of a downloadable _R_ package, and also made available as a webpage.  Users will be able to generate and download customisable dynamic reports based on the scenarios they explore, that summarise the results as well as document the underlying assumptions and model parameter settings.
+
 
 ### Moss _et al._/Doherty Institute model
 
