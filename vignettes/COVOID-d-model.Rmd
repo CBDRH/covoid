@@ -10,9 +10,12 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 
 library(DiagrammeR)
+library(tidyverse)
+library(readxl)
+library(gt)
 ```
 
 ## Introduction 
@@ -46,7 +49,7 @@ This is teh structure of the Moss _et al.) (2020) model as described, as best as
 
 We have re-implemented this as a dynamic model (which is the type used by Moss _et al.) using the _EpiModel_ library and framework for _R_. We are attempting to use it to reproduce the rather few model outputs given in teh Moss _et al._ paper, in order to demonstrate the faithfulness of the results obtained from implementation to theirs. We will include it in our released code, and mention it in any scientific papers based on this intitaive, but we do not believe it is adequate for modelling purpses henceforth.
 
-```{r moss_et_al, echo=FALSE, eval=TRUE, message=FALSE}
+```{r moss_et_al, eval=TRUE, message=FALSE}
 grViz("
 digraph SEIMRQ {
 
@@ -95,7 +98,7 @@ digraph SEIMRQ {
 
 This is the proposed **COVOID-d** model. It also contains some infelicities, in particular the almost complete branching of the model at an early stage to accomodate modelling of quarantine of asymptomatic contacts of cases (something which the Moss _et al_. model "fudges" through a mathematical short-cut). However, we think it has the capability to explore most of the scenarios set out above.
 
-```{r covoid-d, echo=FALSE, eval=TRUE, message=FALSE}
+```{r covoid-d, eval=TRUE, message=FALSE}
 grViz("
 digraph COVOIDd {
 
@@ -206,4 +209,15 @@ Note the meaning of the following flows:
 | I~1~ &#x2192; T | tested positive for COVID-19 but doesn't require hospitalisation|
 | S &#x2192; E~1~^C^ | enters 14 day quarantine contact with a case |
 
+## Proposed user interface elements
+
+### Moss _et al._/Doherty Institute model
+
+```{r doherty-ui-table}
+
+doh_ui <- read_excel("vignettes/doherty_params_of.xlsx")
+
+doh_ui %>%
+  gt()
+```
 
