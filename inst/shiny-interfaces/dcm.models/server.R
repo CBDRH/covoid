@@ -84,10 +84,60 @@ mod_df <- reactive({
     mod_df
 })
 
-### Prepare data
-output$mod_df <- renderTable({
-mod_df()
-})
+### Save and output data
+
+# Wide format
+output$mod_df_wide <- DT::renderDataTable(model()$epi)
+
+# Long format
+output$mod_df_long <- DT::renderDataTable({mod_df()})
+
+# Download data in wide format
+output$get_wide_data <- downloadHandler(
+    filename = "data-wide.csv",
+    content = function(file) {
+        write.csv(model()$epi, file, row.names = FALSE)
+    }
+)
+
+# Download data in long format
+output$get_long_data <- downloadHandler(
+    filename = "data-long.csv",
+    content = function(file) {
+        write.csv(mod_df(), file, row.names = FALSE)
+    }
+)
+
+
+### Compile all parameters into a table
+
+# "s_num", "Initial number susceptible"
+# "e_num", "Initial number exposed", placement = 'right'),
+# "i1_num", "Initial number infected (stage 1)", placement = 'left'),
+# "i2_num", "Initial number infected (stage 2)", placement = 'right'),
+# "iq1_num", "Initial number of infected who had self quarantined (Stage 1)", placement = 'right'),
+# "iq2_num", "Initial number of infected who had self quarantined (Stage 2)", placement = 'left'),
+# "h_num", "Initial number hospitalised", placement = 'right'),
+# "hq_num", "Initial number of hospitalised (who had self quarantined)", placement = 'right'),
+# "r_num", "Initial number recovered", placement = 'left'),
+# "rq_num", "Initial number of recovered (who had self quarantined)", placement = 'right'),
+# "rh_num", "Initial number of recovered hospitalisations", placement = 'right'),
+# "rqh_num", "Initial number of recovered hospitalisations (who had self quarantined)", placement = 'left'),
+#
+# # Model parameters
+# "r0", "Basic reproduction number (S -> E)", placement = 'right'),
+# "beta", HTML(paste0("&beta;",tags$em(" (beta)"), " = Rate of potential new infections per infected (S -> E)")), placement = 'right'),
+# "sigma", HTML(paste0("&sigma;",tags$em(" (sigma)"), " = Inverse of the average length of latent period (E -> I1)")), placement = 'left'),
+# "gamma1", HTML(paste0("&gamma;", tags$sub("1"), tags$em(" (gamma one)"), " = Inverse of the average length of first infectious period (I1 -> I2 or H)")), placement = 'right'),
+# "gamma2", HTML(paste0("&gamma;", tags$sub("2"), tags$em(" (gamma two)"), " = Inverse of the average length of second infectious period (I2 -> R)")), placement = 'right'),
+# "gamma3", HTML(paste0("&gamma;", tags$sub("3"), tags$em(" (gamma three)"), " = Inverse of the average length of second infectious period (for hospitalised) (H -> R or F)")), placement = 'left'),
+# "q_eff", "Q effect = Effect of quarantine on infectiousness", placement = 'right'),
+# "h_eff", "H effect = Effect of hospitalisation on infectiousness", placement = 'right'),
+# "rho", HTML(paste0("&rho;",tags$em(" (rho)"), " = Proportion of people who enter quarantine after exposure (E -> Iq1 or I1)")), placement = 'left'),
+# "alpha", HTML(paste0("&alpha;",tags$em(" (alpha)"), " = Proportion of infected requiring hospitalisation (I1 -> I2 or H)")), placement = 'right'),
+# "eta", HTML(paste0("&eta;",tags$em(" (eta)"), " = Case fatality rate (H -> F or Rh)")), placement = 'right'),
+# "nsteps", "Number of time steps over which to sample from the model", placement = 'bottom')
+
 
 ### Model summary
 output$plot <- renderggiraph({
@@ -162,6 +212,8 @@ observe({
     val = min(100, input$nsteps)
     updateSliderInput(session, "ndays", max=input$nsteps, value=val)
 })
+
+
 
 ## Prepare report
 
