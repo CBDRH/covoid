@@ -183,7 +183,6 @@ body <- dashboardBody(
 
                     # Summary
                     tabPanel(title = icon("file-download"),
-                             includeHTML(rmarkdown::render("report.Rmd")),
                              box(width=NULL, status = "info", solidHeader = FALSE,
                                  column(width=3,
                                         textInput("reportname", label=NULL, value="", placeholder = "my-report")
