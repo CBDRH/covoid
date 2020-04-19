@@ -6,9 +6,10 @@
 
 ###################################################################################
 
+# Load the mathJax library
+withMathJax()
 
-
-# Define the dashboar header
+# Define the dashboard header
 header <- dashboardHeader(title = "COVID-19 Open-source Infection Dynamics", titleWidth = 420,
                           tags$li(class="dropdown",
                                   tags$a(href='https://github.com/CBDRH/',
@@ -17,6 +18,9 @@ header <- dashboardHeader(title = "COVID-19 Open-source Infection Dynamics", tit
 
 # Sidebar (icons from https://fontawesome.com/icons)
 sidebar <- dashboardSidebar(
+    dateRangeInput('dateRange',
+                   label = span(tagList(icon('calendar-alt'), 'Date range')),
+                   start = '2020-01-01', end = '2020-12-31'),
     sidebarMenu(
         menuItem("Doherty Model", tabName = "doherty", icon = icon("dashboard")),
         menuItem("Fitzgerald Model", tabName = "fitzgerald", icon = icon("dashboard"))
@@ -40,9 +44,7 @@ sidebar <- dashboardSidebar(
 #
 #     hr(),
 #
-#     dateRangeInput('dateRange',
-#                    label = span(tagList(icon('calendar-alt'), 'Date range')),
-#                    start = '2020-01-01', end = '2020-12-31'
+
 #     ),
 #     hr(),
 #     div(style="text-align:center",
@@ -68,7 +70,7 @@ body <- dashboardBody(
                                  column(width=4, h3("Transmission model of COVID-19 infection"),
                                         helpText(HTML("The figure to the right represents the compartmental transition model presented by
                                                           <a href='https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf' target='_blank'>
-                                                          Ross et al (2020)
+                                                          Moss et al (2020)
                                                         </a>
                                                       used to model the impact of COVID-19 in Australia.
                                                       <br/><br/>
@@ -78,9 +80,9 @@ body <- dashboardBody(
                                                       <strong>Edges</strong> represent transition pathways between the compartments. The parameterisation of the model determines
                                                       the likelihood of transitioning from one compartment to another along these pathways.
                                                       <br/><br/>
-                                                      <strong>Hover</strong> over a node or edge to find out more information.
+                                                      <strong>Hover</strong> over a node or edge to view the underlying parameter.
                                                       <br/><br/>
-                                                      <strong>Click</strong> on a node or edge to modify the underlying parameters.
+                                                      <strong>Click</strong> on a node or edge to find out more information or modify the underlying parameters.
                                                       "
                                                       ))
                                  ),
@@ -103,16 +105,20 @@ body <- dashboardBody(
                                            htmlOutput("summary2")
                                        )
                                 ),
-                                column(width=3,
+                                column(width=2,
                                        box(width=NULL, status = "info", solidHeader = FALSE,
                                            htmlOutput("summary3")
                                        )
                                 ),
-                                column(width=3,
+                                column(width=2,
                                        box(width=NULL, status = "info", solidHeader = FALSE,
-                                           textOutput("test1"),
-                                           textOutput("test2")
+                                           htmlOutput("summary4"),
                                            )
+                                ),
+                                column(width=2,
+                                       box(width=NULL, status = "info", solidHeader = FALSE,
+                                           htmlOutput("summary5"),
+                                       )
                                 )
                              )
 
@@ -124,13 +130,12 @@ body <- dashboardBody(
                     tabPanel(title = icon("chart-bar"),
                              fluidRow(
                                  column(width=3,
-                                        box(title = tagList(shiny::icon("wrench"), " "),
-                                            width=NULL, status = "success", solidHeader = FALSE,
+                                        box(title = NULL, width=NULL,
+                                            status = "success", solidHeader = FALSE,
                                             actionButton(inputId = "runMod", "Run Model",
                                                          icon = icon("paper-plane"),
                                                          width = '100%',
                                                          class = "btn-success"),
-                                            helpText("Run the model"),
 
                                             hr(),
                                             sliderInput("ndays",
@@ -140,12 +145,13 @@ body <- dashboardBody(
                                             checkboxGroupInput("plotvars", "Compartments to include",
                                                                choices = list(
                                                                    "Susceptible" = "S",
-                                                                   "Exposed" = "E",
-                                                                   "Infected (total)" = "Is",
-                                                                   "Hospitalised (total)" = "Hp",
-                                                                   "Recovered (total)" = "Rc",
-                                                                   "Fatalities (total)" = "F"
-                                                               ), selected=c("S", "E", "Is", "Hp", "Rc", "F")
+                                                                   "Infected (total)" = "Itotal",
+                                                                   "Managed (total)" = "Mtotal",
+                                                                   "Hospitalised (total)" = "H",
+                                                                   "Recovered (total)" = "Rtotal",
+                                                                   "Quarantined (total)" = "Q",
+                                                                   "Fatalities (total)" = "D"
+                                                               ), selected=c("H", "D")
                                             ),
                                             hr(),
                                             radioButtons("scale", "Scale",
@@ -153,34 +159,20 @@ body <- dashboardBody(
                                                              "Linear",
                                                              "Log",
                                                              "Percentage"),
+                                                         inline = TRUE,
                                                          selected=c("Linear")
                                             ),
-                                            textOutput("test")
+                                            radioButtons("yvar", "Cumulative?",
+                                                         choices = list(
+                                                             "No" = "count",
+                                                             "Yes" = "cum_sum"),
+                                                         inline = TRUE,
+                                                         selected=c("count")
+                                            ),
                                         )
                                  ),
 
                                  column(width=9,
-                                        box(width=NULL, status = "info", solidHeader = FALSE,
-                                            column(width=3,
-                                                   textInput("reportname", label=NULL, value="", placeholder = "my-report")
-                                            ),
-                                            column(width=3,
-                                                   prettyCheckbox(inputId = "datelab", "yyyy-mm-dd tag?", icon = icon("check"),
-                                                                  status = "default", shape = "curve", animation = "pulse", value = TRUE)
-                                            ),
-                                            column(width=3,
-                                                   radioButtons(
-                                                       inputId = "reporttype", label = NULL,
-                                                       choices = c("pdf", "html"),
-                                                       selected = "pdf")
-                                            ),
-                                            column(width=3,
-                                                   downloadButton("report", "Download report",
-                                                                  icon = icon("file-download"),
-                                                                  width = '100%',
-                                                                  class = "btn-info")
-                                            )
-                                        ),
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Prevalence over time"),
                                             width=NULL, status = "primary", solidHeader = FALSE,
                                             withLoader(ggiraphOutput("plot"), type="html", loader="loader5")
@@ -191,12 +183,35 @@ body <- dashboardBody(
 
                     # Summary
                     tabPanel(title = icon("file-download"),
-                             verbatimTextOutput("summary")
+                             includeHTML(rmarkdown::render("report.Rmd")),
+                             box(width=NULL, status = "info", solidHeader = FALSE,
+                                 column(width=3,
+                                        textInput("reportname", label=NULL, value="", placeholder = "my-report")
+                                 ),
+                                 column(width=3,
+                                        prettyCheckbox(inputId = "datelab", "yyyy-mm-dd tag?", icon = icon("check"),
+                                                       status = "default", shape = "curve", animation = "pulse", value = TRUE)
+                                 ),
+                                 column(width=3,
+                                        radioButtons(
+                                            inputId = "format", label = NULL,
+                                            choices = c("HTML"),
+                                            selected = "HTML")
+                                 ),
+                                 column(width=3,
+                                        withLoader(downloadButton("downloadReport", "Download report",
+                                                       icon = icon("file-download"),
+                                                       width = '100%',
+                                                       class = "btn-info"), type="html", loader="loader5")
+                                 )
+                             )
                     ),
 
                     # Data
                     tabPanel(title = icon("file-excel"),
-                             tableOutput("mod_df")
+                             DT::dataTableOutput("mod_df_wide"),
+                             hr(),
+                             downloadLink("get_wide_data", label = HTML(paste("Download the data", icon("download"))))
                     ),
                     # About
                     tabPanel(title = icon("info-circle")
@@ -220,16 +235,14 @@ body <- dashboardBody(
 
                              fluidRow(
                                  column(width=4,
-                                        h3("Instructions go here")
+                                        HTML(paste("Under construction", icon("wrench")))
                                         ),
 
                                  column(width=8,
-                                        h3("Model diagram goes here")
                                  )
                              ),
 
                              fluidRow(
-                                 h3("Parameter ummary goes here")
                              )
 
                          )  # Closes fluidPage
