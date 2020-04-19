@@ -43,6 +43,25 @@ With later addition of:
 * serological testing and seroserveys;
 * vaccination strategies
 
+### Modelling critical public health intervention capacities
+
+So far, focus of most modelling groups has been on ICU capacity, in particular ventilated beds (and implicitly ECMO capacity). However, with the near-eradication scenarios which now seem likely in Australia, New Zealand, South Korea and Taiwan, it is far less likely that ICU or even general hospital capacity will be overwhelmed unless control of the epipemic is lost. Such loss of control is entirely possible, as evinced by Japan and Singapore, both of which had their initial COVID-19 outbreaks under control through moderate social distancing but strong case-based interventions. However, to ensure prevention such failures of control when local transmission and external seeding have been reduced to low numbers, it is important to consider not hospital treatment capacity but public health intervention capacity.
+
+These case-based public health capacities comprise:
+
+* border control, specifically rigorous quarantining (and potentially testing) of all arrivals
+* case isolation for those tested positive, and facilitation of self-isolation for pre-test potential cases
+* case detection through widespread _ad hoc_ or organised sampled testing
+* contact tracing and contact quarantine (with daily follow-up, and potentially, testing) 
+
+These capacities are largely constrained by workforce size and lab capacity, including RT-PCR reagent supplies and lab personnel capacity.
+
+We should be able to model scenarios in which each or all of the above capabilities are constrained at current levels, and examine the impact of increasing amounts of local transmission. 
+
+### From "flattening the curve" to "keep it flat"
+
+There needs to be a paradigm shift from "flattening the curve" in order to keep the prevalent number of serious cases below hospital and ICU capacity, to "keep it flat" in order to prevent the number of undetected local transmission chains from rising (due to restricted testing and poor self-isolation), and to prevent  the number of detected local transmission chains from outstripping the capacity of case-based public health interventions (isolation. contact tracing and quarantine) to suppress them.
+
 ## Moss _et al._ SEIMR-Q model
 
 This is the structure of the Moss _et al_.) (2020) model as described, as best as we can understand it (in the absence of any released source code for its implementation). It contains peculiarities and uses various "short-cuts" to approximate the modelling of certain scenarios.
@@ -213,12 +232,21 @@ Note the meaning of the following flows:
 
 Following best practice, we will make our source code open and available so that other researchers can verify, replicate and extend our results. In addition, we will provide a simple graphical user interface that will allow users to visualise the proposed transmission model, and interactively modified the model parameters to explore results under different scenarios. 
 
-```{r, out.width="100%"}
-knitr::include_graphics(path = here::here("vignettes/model-gui.png"))
+```{r, out.width="100%", fig.cap="Proposed COVOID-d user interface - parameter specification"}
+knitr::include_graphics(path = here::here("vignettes/model-gui-1.png"))
 ```
 
-This interface will be embedded as part of a downloadable _R_ package, and also made available as a webpage.  Users will be able to generate and download customisable dynamic reports based on the scenarios they explore, that summarise the results as well as document the underlying assumptions and model parameter settings.
+```{r, out.width="100%", fig.cap="Proposed COVOID-d user interface - time-variant parameter specification interface - users can point and click"}
+knitr::include_graphics(path = here::here("vignettes/model-gui-3.png"))
+```
 
+```{r, out.width="100%", fig.cap="Proposed COVOID-d user interface - running the model and obtaining results as a self-contained report"}
+knitr::include_graphics(path = here::here("vignettes/model-gui-2.png"))
+```
+
+This interface will be embedded as part of a downloadable _R_ package, and also made available as a web app.  Users will be able to generate and download customisable dynamic reports based on the scenarios they explore, that summarise the results as well as document the underlying assumptions and model parameter settings.
+
+\newpage
 
 ### Moss _et al._/Doherty Institute model
 
