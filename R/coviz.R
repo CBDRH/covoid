@@ -6,7 +6,7 @@
 #' @export
 coviz <- function(example) {
     # locate all the shiny app examples that exist
-    validExamples <- list.files(system.file("shiny-interfaces", package = "COVOIDd"))
+    validExamples <- list.files(system.file("shiny-interfaces", package = "covoid"))
 
     validExamplesMsg <-
         paste0(
@@ -24,6 +24,6 @@ coviz <- function(example) {
     }
 
     # find and launch the app
-    appDir <- system.file("shiny-interfaces", example, package = "COVOIDd")
+    appDir <- system.file("shiny-interfaces", example, package = "covoid")
     shiny::runApp(appDir, display.mode = "normal")
 }

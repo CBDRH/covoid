@@ -1,4 +1,4 @@
 library(testthat)
-library(COVOIDd)
+library(covoid)
 
-test_check("COVOIDd")
+test_check("covoid")

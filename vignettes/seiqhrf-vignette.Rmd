@@ -1,0 +1,27 @@
+---
+title: "Testing Oisin's continuous-time implementaion of the COVOID ICM model"
+author: "Oisin Fitzgerald & Tim Churches"
+date: "10/04/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(covoid)
+library(tictoc)
+```
+
+## Bingo!
+
+
+```{r cars}
+tic()
+param <- seihrq_param(R0=2.5,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
+
+state0 <- seihrq_state0(S0=100,E0=1)
+res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
+plot(res,c("S","E","Is","Hp","Rc","F"))
+toc()
+```
