@@ -4,21 +4,31 @@
 \alias{add_intervention}
 \title{Add an intervention}
 \usage{
-add_intervention(R, start, stop, c_reduce, r_reduce, delay, delay_dist = "exp")
+add_intervention(
+  R,
+  start,
+  stop,
+  c_reduce,
+  r_reduce,
+  start_delay,
+  start_delay_dist = "logis",
+  stop_delay,
+  stop_delay_dist = "logis"
+)
 }
 \arguments{
-\item{R}{Either a vector of the reproduction number for each step of the period being modeled
+\item{R}{Either a vector of the (effective) reproduction number for each time step of the period being modeled
 or a function that returns the reproduction number.}
 
 \item{start}{The start time of the intervention}
 
-\item{stop}{The end time of the intervention. For never enter Inf.}
+\item{stop}{The end time of the intervention.}
 
 \item{c_reduce}{The reduction in the proportion of daily contact as a result of
 this measure}
 
-\item{r_reduce}{An alternative to `pcontact_reduce`. The reduction in the reproduction
-number.}
+\item{r_reduce}{An alternative to `pcontact_reduce`. Not implemented!
+The expected reduction in the effective reproduction number.}
 
 \item{delay}{The delay until full uptake of the measure.
 For instant uptake (e.g. as a result of immediate strict enforcement by authorities)
@@ -32,4 +42,18 @@ Alteratives include the uniform "unif" distribution where 100% uptake occurs at 
 Use `add_intervention` to model the impact of a epidemic control measure, for
 example "social distancing", on the trajectory of a epidemic.
 Is this measure adopted instantly or gradually over a number of units of time?
+}
+\examples{
+# function as input
+R <- function(t) 2.5
+R_updated <- add_intervention(R,5,25,0.5,start_delay=10,stop_delay=10)
+R_updated(9)
+plot(1:50,sapply(1:50,R_updated))  # the function is not vectorised
+
+# vector as input
+R <- rep(2.5,30)
+R_updated <- add_intervention(R,5,25,0.5,delay=10)
+R_updated[9]
+plot(1:30,R_updated)
+
 }
