@@ -375,7 +375,6 @@ observe(
             title = HTML(paste0("Susceptible to latent (S", "&rarr;", "E1)")),
             size = 'm',
             helpText(HTML(paste0("The net force of infection ", "&lambda;", " is a function of several key parameters:"))),
-            helpText(HTML(paste0("Currently ", "&lambda;", "="))),
             accordion(
                 accordionItem(
                     id = 1,
@@ -432,11 +431,13 @@ observe(
     # E1 -> E2
     else if (setEdge()=='B' & setNode()==0) { isolate(
         showModal(modalDialog(
-            title = HTML(paste0("Latent first period to second period (E1", "&rarr;", "E2)")),
+            title = HTML(paste0("First latent period to second latent period (E", tags$sub("1"), "&rarr;", "E", tags$sub(2), ")" )),
             size = 's',
             code(HTML(paste0("&sigma;", tags$sub("1")))),
             helpText(HTML(paste0("Inverse of the first latent period."))),
-            sliderInput("sigma1", label=NULL, min=0, max=3, step=.1, value=default$sigma1()),
+            hr(),
+            sliderInput("sigma1inv", label="Duration of the first latent period in days:", min=0.1, max=10, step=.1, value=1/default$sigma1()),
+            htmlOutput("sigma1inv"),
             easyClose = FALSE,
             footer = actionButton("modal_done", label = "Done")))
     )}
@@ -444,11 +445,13 @@ observe(
     # E2 -> I1
     else if (setEdge()=='C' & setNode()==0) { isolate(
         showModal(modalDialog(
-            title = HTML(paste0("Latent second period to infectious first period (E2", "&rarr;", "I1)")),
+            title = HTML(paste0("Second latent period to first infectious period (E", tags$sub("1"), "&rarr;", "I", tags$sub(1), ")" )),
             size = 's',
             code(HTML(paste0("&sigma;", tags$sub("2")))),
             helpText(HTML(paste0("Inverse of the second latent period."))),
-            sliderInput("sigma2", label=NULL, min=0, max=3, step=.1, value=default$sigma2()),
+            hr(),
+            sliderInput("sigma2inv", label="Duration of the second latent period in days:", min=0.1, max=10, step=.1, value=1/default$sigma2()),
+            htmlOutput("sigma2inv"),
             easyClose = FALSE,
             footer = actionButton("modal_done", label = "Done")))
     )}
@@ -456,7 +459,7 @@ observe(
     # I1 -> I2
     else if (setEdge()=='D' & setNode()==0) { isolate(
         showModal(modalDialog(
-            title = HTML(paste0("Inverse of first infectious period (I1", "&rarr;", "I2)")),
+            title = HTML(paste0("First infectious period to second infectious period (I1", "&rarr;", "I2)")),
             size = 'm',
             accordion(
                 accordionItem(
@@ -467,7 +470,9 @@ observe(
                     # gamma1
                     code(HTML(paste0("&gamma;", tags$sub("1")))),
                     helpText(HTML(paste0("Inverse of first infectious period."))),
-                    sliderInput("gamma1", label=NULL, min=0, max=8, step=.1, value=default$gamma1()),
+                    hr(),
+                    sliderInput("gamma1inv", label="Duration of the first infectious period in days:", min=1, max=14, step=.1, value=1/default$gamma1()),
+                    htmlOutput("gamma1inv"),
                     hr(),
                     code(HTML(paste0("P", tags$sub("M")))),
                     helpText(HTML(paste0("Probability of presenting cases being effectively managed."))),
@@ -517,11 +522,13 @@ else if (setEdge()=='E' & setNode()==0) { isolate(
 # I2 -> R
 else if (setEdge()=='F' & setNode()==0) { isolate(
     showModal(modalDialog(
-        title = HTML(paste0("Infectious second period to recovery (I2", "&rarr;", "R)")),
+        title = HTML(paste0("Infectious second period to recovery (I", tags$sub("2"), "&rarr;", "R)")),
         size = 's',
         code(HTML(paste0("&gamma;", tags$sub("2")))),
         helpText(HTML(paste0("Inverse of second infectious period."))),
-        sliderInput("gamma2", label=NULL, min=1, max=10, step=.01, value=default$gamma2()),
+        hr(),
+        sliderInput("gamma2inv", label="Duration of the second infectious period in days:", min=1, max=14, step=.1, value=1/default$gamma2()),
+        htmlOutput("gamma2inv"),
         easyClose = FALSE,
         footer = actionButton("modal_done", label = "Done")))
     )}
@@ -534,7 +541,7 @@ else if (setEdge()=='G' & setNode()==0) { isolate(
         code(HTML(paste0("&gamma;", tags$sub("2")))),
         helpText(HTML(paste0("Inverse of second infectious period."))),
         hr(),
-        helpText(HTML(paste0("This parameter can be modified in the I2", "&rarr;", "R dialogue box"))),
+        helpText(HTML(paste0("This parameter can be modified in the I", tags$sub("2"), "&rarr;", "R dialogue box"))),
         easyClose = FALSE,
         footer = actionButton("modal_done", label = "Done")))
     )}
@@ -589,7 +596,9 @@ else if (setEdge()=='K' & setNode()==0) { isolate(
         size = 's',
         code(HTML(paste0("&gamma;", tags$sub("1"), tags$sup("q") ))),
         helpText(HTML(paste0("Inverse of the first infectious period for quarantined individuals."))),
-        sliderInput("gamma1q", label=NULL, min=0, max=8, step=.1, value=default$gamma1q()),
+        hr(),
+        sliderInput("gamma1qinv", label="Duration of the fist infectious period in days:", min=1, max=14, step=.1, value=1/default$gamma1q()),
+        htmlOutput("gamma1qinv"),
         hr(),
         code(HTML(paste0("&alpha;"))),
         helpText(HTML(paste0("Net proportion of people who present."))),
@@ -627,9 +636,11 @@ else if (setEdge()=='M' & setNode()==0) { isolate(
     showModal(modalDialog(
         title = HTML(paste0("Infectious second period to recovery (I", tags$sub("2"), tags$sup("q"), "&rarr;", "R", tags$sup("q"), ")")),
         size = 's',
-        code(HTML(paste0("&gamma;", tags$sub("2")))),
+        code(HTML(paste0("&gamma;", tags$sub("2"), tags$sup("q")))),
         helpText(HTML(paste0("Inverse of second infectious period for quarantined cases."))),
-        sliderInput("gamma2q", label=NULL, min=1, max=10, step=.01, value=default$gamma2q()),
+        hr(),
+        sliderInput("gamma2qinv", label="Duration of the second infectious period in days:", min=1, max=14, step=.1, value = 1/default$gamma2q()),
+        htmlOutput("gamma2qinv"),
         easyClose = FALSE,
         footer = actionButton("modal_done", label = "Done")))
 )}
@@ -650,6 +661,13 @@ else if (setEdge()=='N' & setNode()==0) { isolate(
 ) # Closes observe
 
 
+### Text updates for user when moving 'inverse' plots
+output$sigma1inv <- renderText(HTML(paste0("&sigma;", tags$sub("1"), " = 1/" , input$sigma1inv, " = ", round(default$sigma1(), digits=3))))
+output$sigma2inv <- renderText(HTML(paste0("&sigma;", tags$sub("2"), " = 1/" , input$sigma2inv, " = ", round(default$sigma2(), digits=3))))
+output$gamma1inv <- renderText(HTML(paste0("&gamma;", tags$sub("1"), " = 1/" , input$gamma1inv, " = ", round(default$gamma1(), digits=3))))
+output$gamma2inv <- renderText(HTML(paste0("&gamma;", tags$sub("2"), " = 1/" , input$gamma2inv, " = ", round(default$gamma2(), digits=3))))
+output$gamma1qinv <- renderText(HTML(paste0("&gamma;", tags$sub("1"), tags$sup("q"), " = 1/" , input$gamma1qinv, " = ", round(default$gamma1q(), digits=3))))
+output$gamma2qinv <- renderText(HTML(paste0("&gamma;", tags$sub("2"), tags$sup("q"), " = 1/" , input$gamma2qinv, " = ", round(default$gamma2q(), digits=3))))
 
 ############################################################################
                     ### Set parameter default values ###
@@ -680,14 +698,14 @@ default$ctm_num <- reactive(ifelse(is.null(input$ctm_num), 2, input$ctm_num))
 default$r0 <- reactive(ifelse(is.null(input$r0), 2.53, input$r0))
 default$lambdaimp <- reactive(ifelse(is.null(input$lambdaimp), .3, input$lambdaimp))
 default$rho <- reactive(ifelse(is.null(input$rho), 0.8, input$rho))
-default$sigma1 <- reactive(ifelse(is.null(input$sigma1), 1/1.6, input$sigma1))
-default$sigma2 <- reactive(ifelse(is.null(input$sigma2), 1/1.6, input$sigma2))
-default$gamma1 <- reactive(ifelse(is.null(input$gamma1), 1/4.0, input$gamma1))
-default$gamma2 <- reactive(ifelse(is.null(input$gamma2), 1/4.0, input$gamma2))
+default$sigma1 <- reactive(ifelse(is.null(input$sigma1inv), 1/1.6, 1/input$sigma1inv))
+default$sigma2 <- reactive(ifelse(is.null(input$sigma2inv), 1/1.6, 1/input$sigma2inv))
+default$gamma1 <- reactive(ifelse(is.null(input$gamma1inv), 1/4.0, 1/input$gamma1inv))
+default$gamma2 <- reactive(ifelse(is.null(input$gamma2inv), 1/4.0, 1/input$gamma2inv))
 default$alpham <- reactive(ifelse(is.null(input$alpham), 0, input$alpham))
 default$pm <- reactive(ifelse(is.null(input$pm), 1, input$pm))
-default$gamma1q <- reactive(ifelse(is.null(input$gamma1q), 1/5.68, input$gamma1q))
-default$gamma2q <- reactive(ifelse(is.null(input$gamma2q), 1/5.68, input$gamma2q))
+default$gamma1q <- reactive(ifelse(is.null(input$gamma1qinv), 1/5.68, 1/input$gamma1qinv))
+default$gamma2q <- reactive(ifelse(is.null(input$gamma2qinv), 1/5.68, 1/input$gamma2qinv))
 default$qeff <- reactive(ifelse(is.null(input$qeff), 0.5, input$qeff))
 default$meff <- reactive(ifelse(is.null(input$meff), 0.8, input$meff))
 default$eta <- reactive(ifelse(is.null(input$eta), 1/sqrt(2), input$eta))
@@ -873,15 +891,15 @@ mod_df <- reactive({
         group_by(compartment) %>%
         arrange(t) %>%
         mutate(cum_sum = cumsum(count)) %>%
-        mutate(lab1 = sprintf("<strong>%s</strong><strong>%s</strong><br/><strong>%s</strong><strong>%s</strong><strong>%s</strong><strong>%s</strong><strong>%s</strong><br/>%s",
-                             "Day: ", t,
+        mutate(lab1 = sprintf("<strong>%s</strong><em>%s</em><em>%s</em><br/><strong>%s</strong><strong>%s</strong><em>%s</em><em>%s</em><em>%s</em><br/>%s",
+                              format(date, "%d-%b-%y"), " Day ", t,
                              "Count: ", formatC(round(count, digits = 0), format="d", big.mark=','),
                              " (", round(100*count/popcounter(), digits = 1), "%)",
                              complong) %>% lapply(htmltools::HTML)) %>%
-        mutate(lab2 = sprintf("<strong>%s</strong><strong>%s</strong><br/><strong>%s</strong><strong>%s</strong><strong>%s</strong><strong>%s</strong><strong>%s</strong><br/>%s",
-                             "Day: ", t,
-                             "Cuml: ", formatC(round(cum_sum, digits = 0), format="d", big.mark=','),
-                             " (", round(100*cum_sum/popcounter(), digits = 1), "%)",
+        mutate(lab2 = sprintf("<strong>%s</strong><em>%s</em><em>%s</em><br/><strong>%s</strong><strong>%s</strong><em>%s</em><em>%s</em><em>%s</em><br/>%s",
+                              format(date, "%d-%b-%y"), " Day ", t,
+                              "Cuml. count: ", formatC(round(cum_sum, digits = 0), format="d", big.mark=','),
+                              " (", round(100*cum_sum/popcounter(), digits = 1), "%)",
                              complong) %>% lapply(htmltools::HTML))
     mod_df
 })
@@ -901,63 +919,67 @@ output$get_wide_data <- downloadHandler(
 )
 
 
-### Update tooltip based on choice of graph
-tooltip <- reactive({
-    if (input$yvar=="count"){"lab1"}
-    else if (input$yvar=="cum_sum"){"lab2"}
-})
-
 ### Model summary
 output$plot <- renderggiraph({
 
     compcols <- c("S" = "lightblue", "Itotal" = "red", "Mtotal" = "pink", "H" = "maroon", "Q" = "Purple", "Rtotal" = "lightgreen", "D" = "Black" )
     complabels <- c("S" = "Susceptible", "Itotal" = "Infected", "MTotal" = "Managed", "H" = "Hospitalised", "Q" = "Quarantined", "Rtotal" = "Recovered", "D" = "Case fatality")
 
-    if (input$scale == "Linear") {
+
+### Update graph based on choice of cumulative
+    if(!input$cuml) {
+        yvar <- "count"
+        part1 <- "Incidence"
+        tt <- "lab1"
+    }
+    if(input$cuml) {
+        yvar <- "cum_sum"
+        part1 <- "Cumulative incidence"
+        tt <- "lab2"
+    }
+
+    # Determine scale
+    if(input$scale=="Count") {
+        yscale = 1
+        part2 = "(Persons)"
+    }
+    if(input$scale=="Percent") {
+        yscale = 100
+        part2 = "(Percent)"
+    }
+    if(input$scale=="Per 100,000") {
+        yscale = 100000
+        part2 = "(Per 100,000 population)"
+    }
+
+    ### Update graph based on choice of log scale
+    if(!input$logScale) {
+        part3 <- NULL
+    }
+    if(input$logScale) {
+        part3 <- "[Log scale]"
+    }
+
+    ### Dynamically create Y title
+    ytitle <- paste(part1, part2, part3)
+
     p <- mod_df() %>%
         filter(compartment %in% input$plotvars) %>%
         filter(t <= input$ndays) %>%
-        ggplot(aes_string(x="date", y=input$yvar, colour="compartment")) +
+        ggplot(aes(x=date, y=(!!as.name(yvar))/yscale, colour=compartment)) +
         geom_line(size=2, alpha=0.7) +
         scale_x_date(date_labels="%d%b%Y") +
         theme_dark() +
         theme(legend.position = "right", legend.title = element_blank()) +
         guides(col = guide_legend(ncol = 1)) +
-        labs(x="Date", y="Prevalence (persons)") +
+        labs(x="Date", y=ytitle) +
         scale_colour_manual(values = compcols, labels=complabels) +
-        geom_point_interactive(aes_string(tooltip = tooltip()))
-    }
+        geom_point_interactive(aes_string(tooltip = tt))
 
-    if (input$scale == "Log") {
-        p <- mod_df() %>%
-            filter(compartment %in% input$plotvars) %>%
-            filter(t <= input$ndays) %>%
-            ggplot(aes_string(x="date", y=input$yvar, colour="compartment")) +
-            geom_line(size=2, alpha=0.7) +
-            scale_x_date(date_labels="%d%b%Y") +
-            theme_dark() +
-            theme(legend.position = "right", legend.title = element_blank()) +
-            guides(col = guide_legend(ncol = 1)) +
-            labs(x="Date", y="Prevalence (persons - log scale)") +
-            scale_colour_manual(values = compcols, labels=complabels) +
-            geom_point_interactive(aes_string(tooltip = tooltip())) +
-            scale_y_log10()
-    }
-
-    if (input$scale == "Percentage") {
-        p <- mod_df() %>%
-            filter(compartment %in% input$plotvars) %>%
-            filter(t <= input$ndays) %>%
-            ggplot(aes_string(x="date", y=input$yvar, colour="compartment")) +
-            geom_line(size=2, alpha=0.7) +
-            scale_x_date(date_labels="%d%b%Y") +
-            theme_dark() +
-            theme(legend.position = "right", legend.title = element_blank()) +
-            guides(col = guide_legend(ncol = 1)) +
-            labs(x="Date", y="Percentage (%)") +
-            scale_colour_manual(values = compcols, labels=complabels) +
-            geom_point_interactive(aes_string(tooltip = tooltip()))
-    }
+        # Add log sclae where neccessary
+        if(input$logScale) {
+        p <- p + scale_y_log10()
+        }
 
     girafe(code = print(p))
 })

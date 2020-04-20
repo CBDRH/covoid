@@ -16,6 +16,11 @@ header <- dashboardHeader(title = "COVID-19 Open-source Infection Dynamics", tit
                                          icon('github'), "Source Code", target="_blank"))
 )
 
+
+#######################################################
+                    ### Sidebar ###
+#######################################################
+
 # Sidebar (icons from https://fontawesome.com/icons)
 sidebar <- dashboardSidebar(
     dateRangeInput('dateRange',
@@ -28,34 +33,18 @@ sidebar <- dashboardSidebar(
 ) # closes Sideboard
 
 
-# hr(),
-# div(style="text-align:center",
-#     h3(icon("tachometer-alt"), "Model Settings")
-# ),
-# hr(),
-#
-# div(style = 'overflow-y:scroll;height:600px;',
-#
-#
-#     div(style="text-align:center",
-#         h4(icon("globe-asia"), "Initial conditions"),
-#         em(htmlOutput("popcount"))
-#     ),
-#
-#     hr(),
-#
 
-#     ),
-#     hr(),
-#     div(style="text-align:center",
-#         h4(icon("sliders-h"), "Model parameters")
-#     ),
-#
-#
-# ) # Closes div
+
+#######################################################
+                    ### Body ###
+#######################################################
 
 ## Define the Body
 body <- dashboardBody(
+
+tags$head(tags$style(HTML('
+.box {margin: 5px;}'
+    ))),
 
     ### Doherty Model
     tabItems(
@@ -156,27 +145,24 @@ body <- dashboardBody(
                                             hr(),
                                             radioButtons("scale", "Scale",
                                                          choices = list(
-                                                             "Linear",
-                                                             "Log",
-                                                             "Percentage"),
-                                                         inline = TRUE,
-                                                         selected=c("Linear")
+                                                             "Count",
+                                                             "Percent",
+                                                             "Per 100,000"),
+                                                         inline = FALSE,
+                                                         selected=c("Count")
                                             ),
-                                            radioButtons("yvar", "Cumulative?",
-                                                         choices = list(
-                                                             "No" = "count",
-                                                             "Yes" = "cum_sum"),
-                                                         inline = TRUE,
-                                                         selected=c("count")
-                                            ),
+                                            materialSwitch("logScale", "Log scale", FALSE, inline=TRUE, status = "info"),
+                                            materialSwitch("cuml", "Cumulative", FALSE, inline=TRUE, status = "info")
                                         )
                                  ),
 
                                  column(width=9,
-                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results: Prevalence over time"),
-                                            width=NULL, status = "primary", solidHeader = FALSE,
+                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
+                                            width = "100%", status = "primary", solidHeader = FALSE,
                                             withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
-                                        )
+                                        ),
+                                        box(width = "100%",
+                                            helpText(HTML(paste(strong("Notes"), "Cumulative counts are sensible for hospitalised and fatalaities"))))
                                  )
                              )
                     ),
