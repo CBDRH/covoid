@@ -159,7 +159,7 @@ tags$head(tags$style(HTML('
                                  column(width=9,
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
                                             width = "100%", status = "primary", solidHeader = FALSE,
-                                            withLoader(ggiraphOutput("plot"), type="html", loader="loader5")
+                                            withLoader(ggiraphOutput("plot"), type="html", loader="SARS-CoV-2.gif")
                                         ),
                                         box(width = "100%",
                                             helpText(HTML(paste(strong("Notes"), "Cumulative counts are sensible for hospitalised and fatalaities"))))
@@ -187,7 +187,7 @@ tags$head(tags$style(HTML('
                                         withLoader(downloadButton("downloadReport", "Download report",
                                                        icon = icon("file-download"),
                                                        width = '100%',
-                                                       class = "btn-info"), type="html", loader="loader5")
+                                                       class = "btn-info"), type="image", loader="SARS-CoV-2.gif")
                                  )
                              )
                     ),

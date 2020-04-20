@@ -151,7 +151,7 @@ body <- dashboardBody(
                              ),
                              box(title = tagList(shiny::icon("chart-area"), "Simulation results: Prevalence over time"),
                                  width=NULL, status = "primary", solidHeader = FALSE,
-                                 withLoader(ggiraphOutput("plot"), type="html", loader="loader5")
+                                 withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
                              )
                         )
                     )
