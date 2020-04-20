@@ -1,0 +1,12 @@
+name: covoid-d
+title: covoid-d
+username:
+account: cbdrh
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2133563
+bundleId: 3033771
+url: https://cbdrh.shinyapps.io/covoid-d/
+when: 1587285502.79886
+asMultiple: FALSE
+asStatic: FALSE

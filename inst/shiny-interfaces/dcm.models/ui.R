@@ -134,7 +134,7 @@ body <- dashboardBody(
                                  ),
                                  column(width=3,
                                     prettyCheckbox(inputId = "datelab", "yyyy-mm-dd tag?", icon = icon("check"),
-                                                   status = "default", shape = "curve", animation = "pulse", value = TRUE)
+                                                   status = "default", shape = "curve", value = TRUE)
                                  ),
                                  column(width=3,
                                      radioButtons(
@@ -151,7 +151,7 @@ body <- dashboardBody(
                              ),
                              box(title = tagList(shiny::icon("chart-area"), "Simulation results: Prevalence over time"),
                                  width=NULL, status = "primary", solidHeader = FALSE,
-                                 withLoader(ggiraphOutput("plot"), type="html", loader="loader5")
+                                 withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
                              )
                         )
                     )
@@ -164,7 +164,11 @@ body <- dashboardBody(
 
         # Data
         tabPanel("Data",
-                 tableOutput("mod_df")
+                 DT::dataTableOutput("mod_df_wide"),
+                 hr(),
+                 downloadLink("get_wide_data", label = HTML("Download the data in wide format")),
+                 br(),
+                 downloadLink("get_long_data", label = HTML("Download the data in long format"))
                  ),
         # About
         tabPanel(title = icon("info-circle"),
