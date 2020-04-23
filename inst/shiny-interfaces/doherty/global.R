@@ -24,3 +24,11 @@ library(visNetwork)
 library(rmarkdown)
 library(knitr)
 library(kableExtra)
+library(googleVis)
+library(gganimate)
+
+# Source extended EpiModel files
+source_files <- c("prepData.R", "plotResults.R", "animateResults.R")
+for (source_file in source_files) {
+    source(paste("R/", source_file, sep = ""))
+}

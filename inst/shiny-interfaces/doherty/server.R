@@ -847,6 +847,7 @@ param <- reactive({
 
 # Run the model when the button is clicked
 model <- eventReactive(input$runMod, {
+    updateMaterialSwitch(session, "toreport", value = FALSE)
     isolate(
         simulate_seimrqc(t = nsteps(),
                      state_t0 = state0(),
@@ -920,91 +921,170 @@ output$get_wide_data <- downloadHandler(
 
 
 ### Model summary
-output$plot <- renderggiraph({
-
-    compcols <- c("S" = "lightblue", "Itotal" = "red", "Mtotal" = "pink", "H" = "maroon", "Q" = "Purple", "Rtotal" = "lightgreen", "D" = "Black" )
-    complabels <- c("S" = "Susceptible", "Itotal" = "Infected", "MTotal" = "Managed", "H" = "Hospitalised", "Q" = "Quarantined", "Rtotal" = "Recovered", "D" = "Case fatality")
-
-
-### Update graph based on choice of cumulative
-    if(!input$cuml) {
-        yvar <- "count"
-        part1 <- "Incidence"
-        tt <- "lab1"
-    }
-    if(input$cuml) {
-        yvar <- "cum_sum"
-        part1 <- "Cumulative incidence"
-        tt <- "lab2"
-    }
-
-    # Determine scale
-    if(input$scale=="Count") {
-        yscale = 1
-        part2 = "(Persons)"
-    }
-    if(input$scale=="Percent") {
-        yscale = 100
-        part2 = "(Percent)"
-    }
-    if(input$scale=="Per 100,000") {
-        yscale = 100000
-        part2 = "(Per 100,000 population)"
-    }
-
-    ### Update graph based on choice of log scale
-    if(!input$logScale) {
-        part3 <- NULL
-    }
-    if(input$logScale) {
-        part3 <- "[Log scale]"
-    }
-
-    ### Dynamically create Y title
-    ytitle <- paste(part1, part2, part3)
-
-    p <- mod_df() %>%
-        filter(compartment %in% input$plotvars) %>%
-        filter(t <= input$ndays) %>%
-        ggplot(aes(x=date, y=(!!as.name(yvar))/yscale, colour=compartment)) +
-        geom_line(size=2, alpha=0.7) +
-        scale_x_date(date_labels="%d%b%Y") +
-        theme_dark() +
-        theme(legend.position = "right", legend.title = element_blank()) +
-        guides(col = guide_legend(ncol = 1)) +
-        labs(x="Date", y=ytitle) +
-        scale_colour_manual(values = compcols, labels=complabels) +
-        geom_point_interactive(aes_string(tooltip = tt))
-
-        # Add log sclae where neccessary
-        if(input$logScale) {
-        p <- p + scale_y_log10()
-        }
-
-    girafe(code = print(p))
-})
-
+output$plot <- renderggiraph(plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays))
 
 # Interactively update number of days in slider
 observe({
     val = min(100, nsteps())
     updateSliderInput(session, "ndays", max=nsteps(), value=val)
+    updateSliderInput(session, "ndays_a", max=nsteps(), value=val)
 })
 
-## Prepare report
 
+## Prepare animation
+
+# Preview
+output$animation_preview <- renderggiraph(plotResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a))
+
+# Animation
+animation <- eventReactive(input$runAni, {
+    animateResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a)
+})
+
+output$animation <- renderImage({
+    withProgress(message = "Creating the animation - this takes a moment. Don't forget to wash your hands", {
+
+        if(is.null(animation())) {
+            return()
+        }
+        if(!is.null(animation())) {
+            animation()
+        }
+
+    })
+}, deleteFile=TRUE )
+
+
+## Saving plots for comparison
+
+extra <- reactiveValues() # place holder for additional plots
+
+count <- reactiveValues(nPlots = 0)
+
+
+observeEvent(input$toreport==TRUE,
+             {
+                 if(input$reportFigs==1) {
+                     extra$plot1 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 1
+                     count$param_p1 <- param()
+                     count$state0_p1 <- state0()
+                     count$nsteps_p1 <- nsteps()
+                     count$cuml_p1 <- input$cuml
+                     count$scale_p1 <- input$scale
+                     count$logScale_p1 <- input$logScale
+                     count$plotvars_p1 <- input$plotvars
+                     count$ndays_p1 <- input$ndays
+                     count$startDate_p1 <- input$dateRange[1]
+                     count$popSize_p1 <- popcounter()
+                     }
+
+                 if(input$reportFigs==2) {
+                     extra$plot2 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 2
+                     count$param_p2 <- param()
+                     count$state0_p2 <- state0()
+                     count$nsteps_p2 <- nsteps()
+                     count$cuml_p2 <- input$cuml
+                     count$scale_p2 <- input$scale
+                     count$logScale_p2 <- input$logScale
+                     count$plotvars_p2 <- input$plotvars
+                     count$ndays_p2 <- input$ndays
+                     count$startDate_p2 <- input$dateRange[1]
+                     count$popSize_p2 <- popcounter()
+                 }
+
+                 if(input$reportFigs==3) {
+                     extra$plot3 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 3
+                     count$param_p3 <- param()
+                     count$state0_p3 <- state0()
+                     count$nsteps_p3 <- nsteps()
+                     count$cuml_p3 <- input$cuml
+                     count$scale_p3 <- input$scale
+                     count$logScale_p3 <- input$logScale
+                     count$plotvars_p3 <- input$plotvars
+                     count$ndays_p3 <- input$ndays
+                     count$startDate_p3 <- input$dateRange[1]
+                     count$popSize_p3 <- popcounter()
+                 }
+
+                 if(input$reportFigs==4) {
+                     extra$plot4 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 4
+                     count$param_p4 <- param()
+                     count$state0_p4 <- state0()
+                     count$nsteps_p4 <- nsteps()
+                     count$cuml_p4 <- input$cuml
+                     count$scale_p4 <- input$scale
+                     count$logScale_p4 <- input$logScale
+                     count$plotvars_p4 <- input$plotvars
+                     count$ndays_p4 <- input$ndays
+                     count$startDate_p4 <- input$dateRange[1]
+                     count$popSize_p4 <- popcounter()
+                 }
+
+                 if(input$reportFigs==5) {
+                     extra$plot5 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 5
+                     count$param_p5 <- param()
+                     count$state0_p5 <- state0()
+                     count$nsteps_p5 <- nsteps()
+                     count$cuml_p5 <- input$cuml
+                     count$scale_p5 <- input$scale
+                     count$logScale_p5 <- input$logScale
+                     count$plotvars_p5 <- input$plotvars
+                     count$ndays_p5 <- input$ndays
+                     count$startDate_p5 <- input$dateRange[1]
+                     count$popSize_p5 <- popcounter()
+                 }
+
+                 if(input$reportFigs==6) {
+                     extra$plot6 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     updateMaterialSwitch(session, "toreport", value = FALSE)
+                     count$nPlots <- 6
+                     count$param_p6 <- param()
+                     count$state0_p6 <- state0()
+                     count$nsteps_p6 <- nsteps()
+                     count$cuml_p6 <- input$cuml
+                     count$scale_p6 <- input$scale
+                     count$logScale_p6 <- input$logScale
+                     count$plotvars_p6 <- input$plotvars
+                     count$ndays_p6 <- input$ndays
+                     count$startDate_p6 <- input$dateRange[1]
+                     count$popSize_p6 <- popcounter()
+                 }
+             })
+
+# Render chosen plots for the report
+output$extplot1 <- renderggiraph(extra$plot1)
+output$extplot2 <- renderggiraph(extra$plot2)
+output$extplot3 <- renderggiraph(extra$plot3)
+output$extplot4 <- renderggiraph(extra$plot4)
+output$extplot5 <- renderggiraph(extra$plot5)
+output$extplot6 <- renderggiraph(extra$plot6)
+
+output$nPlots <- reactive(count$nPlots)
+outputOptions(output, "nPlots", suspendWhenHidden = FALSE)
+
+## Prepare report
+## Download the report
 output$downloadReport <- downloadHandler(
         filename = function(){
             name <- ifelse(input$reportname=="", "my-report", input$reportname)
             name1 <- ifelse(input$datelab==TRUE,
                             paste0(Sys.Date(), "-", gsub(" ", "-", name)),
                             gsub(" ", "-", name))
-            paste(name1, sep = '.', switch(
-                input$format, PDF = 'pdf', HTML = 'html', Word = 'docx'
-            ))
+            paste0(name1, '.html')
             },
 
         content = function(file) {
+            withProgress(message = "Compiling your report - this takes a moment. Don't touch your face", {
             src <- normalizePath('report.Rmd')
 
             # temporarily switch to the temp dir, in case you do not have write
@@ -1017,13 +1097,11 @@ output$downloadReport <- downloadHandler(
             # Knit the document, passing in the `params` list, and eval it in a
             # child of the global environment (this isolates the code in the document
             # from the code in this app).
-            out <- rmarkdown::render('report.Rmd', switch(
-                input$format,
-                PDF = pdf_document(), HTML = html_document(), Word = word_document()
-            ))
+            out <- rmarkdown::render('report.Rmd', html_document())
             file.rename(out, file)
+            })
         }
-    )
+)
 
 
 
