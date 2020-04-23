@@ -85,27 +85,27 @@ tags$head(tags$style(HTML('
 
                              fluidRow(
                                 column(width=3,
-                                        box(title=NULL, width=NULL, status = "info", solidHeader = FALSE,
+                                        box(title=NULL, width=NULL, height = "250px", status = "info", solidHeader = FALSE,
                                             htmlOutput("summary1")
                                         )
                                  ),
                                 column(width=3,
-                                       box(width=NULL, status = "info", solidHeader = FALSE,
+                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
                                            htmlOutput("summary2")
                                        )
                                 ),
                                 column(width=2,
-                                       box(width=NULL, status = "info", solidHeader = FALSE,
+                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
                                            htmlOutput("summary3")
                                        )
                                 ),
                                 column(width=2,
-                                       box(width=NULL, status = "info", solidHeader = FALSE,
+                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
                                            htmlOutput("summary4")
                                            )
                                 ),
                                 column(width=2,
-                                       box(width=NULL, status = "info", solidHeader = FALSE,
+                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
 
                                        )
                                 )
@@ -119,18 +119,16 @@ tags$head(tags$style(HTML('
                     tabPanel(title = icon("chart-bar"),
                              fluidRow(
                                  column(width=3,
-                                        box(title = NULL, width=NULL,
+                                        box(title = NULL, width=NULL, height="600px",
                                             status = "success", solidHeader = FALSE,
                                             actionButton(inputId = "runMod", "Run Model",
                                                          icon = icon("paper-plane"),
                                                          width = '100%',
                                                          class = "btn-success"),
+                                            hr(),
+                                            downloadButton('downloadPlot','Download Plot', icon=icon("download"), width="100%", class = "btn-info"),
 
                                             hr(),
-                                            sliderInput("ndays",
-                                                        "Number of days to plot:",
-                                                        min=0, step=1, max=365, value=365),
-                                            br(),
                                             checkboxGroupInput("plotvars", "Compartments to include",
                                                                choices = list(
                                                                    "Susceptible" = "S",
@@ -156,16 +154,29 @@ tags$head(tags$style(HTML('
                                         )
                                  ),
 
-                                 column(width=9,
+                                 column(width=6,
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
-                                            width = "100%", status = "primary", solidHeader = FALSE,
-                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif"),
-                                            materialSwitch("toreport", label=HTML(paste(icon("palette"), "Add to my report preparation area")), status = "success"),
+                                            width = "100%", height="600px", status = "primary", solidHeader = FALSE,
+                                            sliderInput("ndays",
+                                                        "Number of days to plot:",
+                                                        min=0, step=1, max=365, value=365),
+                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
+                                        )
+                                 ),
+
+                                 column(width=3,
+                                        box(title = NULL,
+                                            width = "100%", height="600px", status = "primary", solidHeader = FALSE,
+                                            actionButton("toreport", label="Add to my report canvas", icon("palette"), class = "btn-success"),
+                                            helpText("Plots that are added to your report canvas can be reviewed and captioned later.
+                                                     You can also download these files as part of a customisable report for easy sharing."),
+                                            hr(),
                                             radioButtons("reportFigs", label = "What figure should this appear as?",
                                                          choices = list("Figure 1" = 1, "Figure 2" = 2, "Figure 3" = 3, "Figure 4" = 4, "Figure 5" = 5, "Figure 6" = 6),
-                                                         selected = NULL, inline =  TRUE)
+                                                         selected = NULL, inline =  FALSE)
                                         )
-                                 )
+                                 ),
+
 
                              )
                     ),
@@ -367,9 +378,12 @@ tags$head(tags$style(HTML('
 
                     # Data
                     tabPanel(title = icon("file-excel"),
+                             helpText("Once you run a model you will be able to view and download the data here."),
                              DT::dataTableOutput("mod_df_wide"),
                              hr(),
-                             downloadLink("get_wide_data", label = HTML(paste("Download the data", icon("download"))))
+                             conditionalPanel("output.mod_df_wide",
+                                downloadLink("get_wide_data", label = HTML(paste("Download the data", icon("download"))))
+                             )
                     ),
                     # About
                     tabPanel(title = icon("info-circle")
