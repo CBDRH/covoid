@@ -131,7 +131,7 @@ sir_model <- function(t,state_t0,param) {
   with(as.list(c(state_t0, param)), {
 
     # population size
-    N <- S + I + R
+    N = S + I + R
 
     # derived parameters
     lambda = beta(t)*I
