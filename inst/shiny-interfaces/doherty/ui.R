@@ -101,12 +101,12 @@ tags$head(tags$style(HTML('
                                 ),
                                 column(width=2,
                                        box(width=NULL, status = "info", solidHeader = FALSE,
-                                           htmlOutput("summary4"),
+                                           htmlOutput("summary4")
                                            )
                                 ),
                                 column(width=2,
                                        box(width=NULL, status = "info", solidHeader = FALSE,
-                                           htmlOutput("summary5"),
+
                                        )
                                 )
                              )
@@ -159,37 +159,210 @@ tags$head(tags$style(HTML('
                                  column(width=9,
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
                                             width = "100%", status = "primary", solidHeader = FALSE,
-                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
-                                        ),
-                                        box(width = "100%",
-                                            helpText(HTML(paste(strong("Notes"), "Cumulative counts are sensible for hospitalised and fatalaities"))))
+                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif"),
+                                            materialSwitch("toreport", label=HTML(paste(icon("palette"), "Add to my report preparation area")), status = "success"),
+                                            radioButtons("reportFigs", label = "What figure should this appear as?",
+                                                         choices = list("Figure 1" = 1, "Figure 2" = 2, "Figure 3" = 3, "Figure 4" = 4, "Figure 5" = 5, "Figure 6" = 6),
+                                                         selected = NULL, inline =  TRUE)
+                                        )
                                  )
+
                              )
                     ),
 
-                    # Summary
-                    tabPanel(title = icon("file-download"),
-                             box(width=NULL, status = "info", solidHeader = FALSE,
+
+                    # Animate results
+                    tabPanel(title = icon("video"),
+
+                             fluidRow(
                                  column(width=3,
-                                        textInput("reportname", label=NULL, value="", placeholder = "my-report")
+                                        box(title = NULL, width="100%", height = "600px",
+                                            status = "success", solidHeader = FALSE,
+                                            sliderInput("ndays_a",
+                                                        "Number of days to animate:",
+                                                        min=0, step=1, max=365, value=365),
+                                            br(),
+                                            checkboxGroupInput("plotvars_a", "Compartments to include",
+                                                               choices = list(
+                                                                   "Susceptible" = "S",
+                                                                   "Infected (total)" = "Itotal",
+                                                                   "Managed (total)" = "Mtotal",
+                                                                   "Hospitalised (total)" = "H",
+                                                                   "Recovered (total)" = "Rtotal",
+                                                                   "Quarantined (total)" = "Q",
+                                                                   "Fatalities (total)" = "D"
+                                                               ), selected=c("H", "D")
+                                            ),
+                                            hr(),
+                                            radioButtons("scale_a", "Scale",
+                                                         choices = list(
+                                                             "Count",
+                                                             "Percent",
+                                                             "Per 100,000"),
+                                                         inline = FALSE,
+                                                         selected=c("Count")
+                                            ),
+                                            materialSwitch("logScale_a", "Log scale", FALSE, inline=TRUE, status = "info"),
+                                            materialSwitch("cuml_a", "Cumulative", FALSE, inline=TRUE, status = "info")
+                                        )
                                  ),
-                                 column(width=3,
-                                        prettyCheckbox(inputId = "datelab", "yyyy-mm-dd tag?", icon = icon("check"),
-                                                       status = "default", shape = "curve", animation = "pulse", value = TRUE)
+
+                                 column(width=6,
+                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
+                                            width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
+                                            withLoader(imageOutput("animation"), type="image", loader="SARS-CoV-2.gif")
+                                        )
                                  ),
+
                                  column(width=3,
-                                        radioButtons(
-                                            inputId = "format", label = NULL,
-                                            choices = c("HTML"),
-                                            selected = "HTML")
-                                 ),
-                                 column(width=3,
-                                        withLoader(downloadButton("downloadReport", "Download report",
-                                                       icon = icon("file-download"),
-                                                       width = '100%',
-                                                       class = "btn-info"), type="image", loader="SARS-CoV-2.gif")
-                                 )
+                                        box(title = NULL,
+                                            width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
+                                            helpText("Here you can visualise disease transition over time. Design the plot you would
+                                                     like to animate then click on Create Animation to view. If no preview appears below, make sure that you have run a model."),
+                                            h4("Animation preview"),
+                                            ggiraphOutput("animation_preview", width='100%', height='200px'),
+                                            actionButton(inputId = "runAni", "Create Animation",
+                                                         icon = icon("play"),
+                                                         width = '100%',
+                                                         class = "btn-success")
+                                        )
+                                        )
                              )
+
+                    ),
+
+
+                    # Dynamic report
+                    tabPanel(title = icon("palette"),
+                                 fluidRow(
+                                 box(width=NULL, status = "info", solidHeader = FALSE,
+                                     column(width=3,
+                                            textInput("reportname", label=NULL, value="", placeholder = "my-report")
+                                     ),
+                                     column(width=3,
+                                            prettyCheckbox(inputId = "datelab", "yyyy-mm-dd tag?", icon = icon("check"),
+                                                           status = "default", shape = "curve", animation = "pulse", value = TRUE)
+                                     ),
+                                     column(width=3,
+                                            radioButtons(
+                                                inputId = "format", label = NULL,
+                                                choices = c("HTML"),
+                                                selected = "HTML")
+                                     ),
+                                     column(width=3,
+                                            withLoader(downloadButton("downloadReport", "Download report",
+                                                           icon = icon("file-download"),
+                                                           width = '100%',
+                                                           class = "btn-info"), type="image", loader="SARS-CoV-2.gif")
+                                     )
+                                 ),
+
+                                 ),
+
+                             conditionalPanel("output.nPlots>=1",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot1", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p1title", "Add a title for this plot", width="100%", placeholder = "Figure 1"),
+                                                         textAreaInput("p1comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot1", width='100%', height='300px')
+                                                  )
+                                              ),
+                                              hr()
+                                        ),
+                             conditionalPanel("output.nPlots>=2",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot2", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p2title", "Add a title for this plot", width="100%", placeholder = "Figure 2"),
+                                                         textAreaInput("p2comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot2", width='100%', height='300px')
+                                                  )
+                                              ),
+                                              hr()
+                                        ),
+                             conditionalPanel("output.nPlots>=3",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot3", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p3title", "Add a title for this plot", width="100%", placeholder = "Figure 3"),
+                                                         textAreaInput("p3comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot3", width='100%', height='300px')
+                                                  )
+                                              ),
+                                              hr()
+                                        ),
+                             conditionalPanel("output.nPlots>=4",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot4", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p4title", "Add a title for this plot", width="100%", placeholder = "Figure 4"),
+                                                         textAreaInput("p4comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot4", width='100%', height='300px')
+                                                  )
+                                              ),
+                                              hr()
+                                        ),
+                             conditionalPanel("output.nPlots>=5",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot5", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p5title", "Add a title for this plot", width="100%", placeholder = "Figure 5"),
+                                                         textAreaInput("p5comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot5", width='100%', height='300px')
+                                                  )
+                                              ),
+                                              hr()
+                                        ),
+
+                             conditionalPanel("output.nPlots>=6",
+                                              fluidRow(
+                                                  column(width = 2,
+                                                         materialSwitch("inclPlot6", "Include this plot in your downloadable report?", value = FALSE, status = "success"),
+                                                  ),
+
+                                                  column(width = 5,
+                                                         textInput("p6title", "Add a title for this plot", width="100%", placeholder = "Figure 6"),
+                                                         textAreaInput("p6comment", "Add a comment on this plot", width="400px", height="200px")
+                                                  ),
+
+                                                  column(width = 5,
+                                                         ggiraphOutput("extplot6", width='100%', height='300px')
+                                                  )
+                                              )),
+
+
+
                     ),
 
                     # Data
