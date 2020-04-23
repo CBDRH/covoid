@@ -150,10 +150,6 @@ output$network_d <- renderVisNetwork({
                   )
 })
 
-output$test1 <- renderText({paste0("Node: ", values$setNode, " Edge: ", values$setEdge, "days: ", nsteps() )})
-output$test2 <- renderUI({
-paste(default$thetam())
-})
 
 ################################################################################################
                     ### Set parameters by clicking on a network node ###
@@ -847,7 +843,6 @@ param <- reactive({
 
 # Run the model when the button is clicked
 model <- eventReactive(input$runMod, {
-    updateMaterialSwitch(session, "toreport", value = FALSE)
     isolate(
         simulate_seimrqc(t = nsteps(),
                      state_t0 = state0(),
@@ -855,54 +850,10 @@ model <- eventReactive(input$runMod, {
     )
 })
 
-### Summarise output
-output$summary <- renderPrint({
-    model()
-})
 
 # Extract the data in ggplot ready form
 mod_df <- reactive({
-    mod_df <- pivot_longer(model()$epi, -t, names_to = "compartment", values_to = "count") %>%
-        mutate(complong = recode(compartment,
-                                 S = "Susceptible",
-                                 E1 = "Exposed (first stage)",
-                                 E2 = "Exposed (second stage)",
-                                 I1 = "Infected (first stage)",
-                                 I2 = "Infected (second stage)",
-                                 R = "Recovered non-quar",
-                                 M = "Managed non-quar",
-                                 Rm = "Recovered from managed)",
-                                 Eq1 = "Exp quar (first stage)",
-                                 Eq2 = "Exp quar (second stage)",
-                                 Iq1 = "Inf quar (first stage)",
-                                 Iq2 = "Inf quar (second stage)",
-                                 Rq = "Recovered quar",
-                                 Rqm = "Rec quar managed",
-                                 CTm = "Contacts of managed cases",
-                                 CTnm = "Contacts of unmanaged cases",
-                                 Itotal = "Infected",
-                                 I = "",
-                                 Ictotal = "",
-                                 Mtotal = "Managed",
-                                 H = "Hospitalised",
-                                 D = "Fatalities",
-                                 Q = "Quarantined",
-                                 N = "Population"),
-               date = as.Date(t + input$dateRange[1] - 1, origin = "1970-01-01")) %>%
-        group_by(compartment) %>%
-        arrange(t) %>%
-        mutate(cum_sum = cumsum(count)) %>%
-        mutate(lab1 = sprintf("<strong>%s</strong><em>%s</em><em>%s</em><br/><strong>%s</strong><strong>%s</strong><em>%s</em><em>%s</em><em>%s</em><br/>%s",
-                              format(date, "%d-%b-%y"), " Day ", t,
-                             "Count: ", formatC(round(count, digits = 0), format="d", big.mark=','),
-                             " (", round(100*count/popcounter(), digits = 1), "%)",
-                             complong) %>% lapply(htmltools::HTML)) %>%
-        mutate(lab2 = sprintf("<strong>%s</strong><em>%s</em><em>%s</em><br/><strong>%s</strong><strong>%s</strong><em>%s</em><em>%s</em><em>%s</em><br/>%s",
-                              format(date, "%d-%b-%y"), " Day ", t,
-                              "Cuml. count: ", formatC(round(cum_sum, digits = 0), format="d", big.mark=','),
-                              " (", round(100*cum_sum/popcounter(), digits = 1), "%)",
-                             complong) %>% lapply(htmltools::HTML))
-    mod_df
+    prepData(df_epi = model()$epi, day1 = input$dateRange[1], popsize = popcounter())
 })
 
 
@@ -913,15 +864,33 @@ output$mod_df_wide <- DT::renderDataTable(model()$epi)
 
 # Download data in wide format
 output$get_wide_data <- downloadHandler(
+
     filename = "data-wide.csv",
+
     content = function(file) {
+
         write.csv(model()$epi, file, row.names = FALSE)
     }
+
 )
 
 
 ### Model summary
-output$plot <- renderggiraph(plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays))
+mainPlot <- reactive({plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+output$plot <- renderggiraph(mainPlot())
+
+# Make static version the plot for download
+staticPlot <- reactive({plotStaticResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+
+# Download the current main plot
+output$downloadPlot <- downloadHandler(
+    filename = "resultsPlot.png",
+    content = function(file) {
+
+        ggsave(file, plot = staticPlot())
+    },
+    contentType = "image/png"
+)
 
 # Interactively update number of days in slider
 observe({
@@ -955,14 +924,14 @@ output$animation <- renderImage({
 }, deleteFile=TRUE )
 
 
+
 ## Saving plots for comparison
 
 extra <- reactiveValues() # place holder for additional plots
 
 count <- reactiveValues(nPlots = 0)
 
-
-observeEvent(input$toreport==TRUE,
+observeEvent(input$toreport,
              {
                  if(input$reportFigs==1) {
                      extra$plot1 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
@@ -978,7 +947,8 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p1 <- input$ndays
                      count$startDate_p1 <- input$dateRange[1]
                      count$popSize_p1 <- popcounter()
-                     }
+                     updateRadioButtons(session, "reportFigs", selected = 2)
+                 }
 
                  if(input$reportFigs==2) {
                      extra$plot2 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
@@ -994,6 +964,7 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p2 <- input$ndays
                      count$startDate_p2 <- input$dateRange[1]
                      count$popSize_p2 <- popcounter()
+                     updateRadioButtons(session, "reportFigs", selected = 3)
                  }
 
                  if(input$reportFigs==3) {
@@ -1010,6 +981,7 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p3 <- input$ndays
                      count$startDate_p3 <- input$dateRange[1]
                      count$popSize_p3 <- popcounter()
+                     updateRadioButtons(session, "reportFigs", selected = 4)
                  }
 
                  if(input$reportFigs==4) {
@@ -1026,6 +998,7 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p4 <- input$ndays
                      count$startDate_p4 <- input$dateRange[1]
                      count$popSize_p4 <- popcounter()
+                     updateRadioButtons(session, "reportFigs", selected = 5)
                  }
 
                  if(input$reportFigs==5) {
@@ -1042,6 +1015,7 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p5 <- input$ndays
                      count$startDate_p5 <- input$dateRange[1]
                      count$popSize_p5 <- popcounter()
+                     updateRadioButtons(session, "reportFigs", selected = 6)
                  }
 
                  if(input$reportFigs==6) {
@@ -1058,6 +1032,7 @@ observeEvent(input$toreport==TRUE,
                      count$ndays_p6 <- input$ndays
                      count$startDate_p6 <- input$dateRange[1]
                      count$popSize_p6 <- popcounter()
+                     updateRadioButtons(session, "reportFigs", selected = 1)
                  }
              })
 
