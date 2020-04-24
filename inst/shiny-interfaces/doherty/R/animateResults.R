@@ -1,4 +1,4 @@
-animateResults <- function(df, cuml, scale, logScale, plotvars, ndays) {
+animateResults <- function(df, cuml, scale, logScale, plotvars, ndays, update_progress = NULL) {
 
     # A temp file to save the output. This file will be removed later by renderImage
     outfile <- tempfile(fileext='.gif')
@@ -63,7 +63,7 @@ animateResults <- function(df, cuml, scale, logScale, plotvars, ndays) {
         p <- p + scale_y_log10()
     }
 
-    anim_save("outfile.gif", animate(p), height = '20px', width = '100px')
+    anim_save("outfile.gif", animate(p, nframes = 100, update_progress = update_progress), height = '20px', width = '100px')
 
     # Return a list containing the filename
     list(src = "outfile.gif",

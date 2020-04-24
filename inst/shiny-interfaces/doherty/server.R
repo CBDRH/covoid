@@ -907,11 +907,22 @@ output$animation_preview <- renderggiraph(plotResults(df=mod_df(), cuml=input$cu
 
 # Animation
 animation <- eventReactive(input$runAni, {
-    animateResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a)
+    # as per https://shiny.rstudio.com/articles/progress.html#a-more-complex-progress-example
+    # but set max value to pre-determined total frame count
+    progress <- shiny::Progress$new(max = 100)
+    progress$set(message = "Rendering", value = 0)
+    on.exit(progress$close())
+
+    updateShinyProgress <- function(detail) {
+      progress$inc(1, detail = detail)
+    }
+
+    animateResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a,
+                   logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a,
+                   update_progress = updateShinyProgress)
 })
 
 output$animation <- renderImage({
-    withProgress(message = "Creating the animation - this takes a moment. Don't forget to wash your hands", {
 
         if(is.null(animation())) {
             return()
@@ -920,7 +931,6 @@ output$animation <- renderImage({
             animation()
         }
 
-    })
 }, deleteFile=TRUE )
 
 
