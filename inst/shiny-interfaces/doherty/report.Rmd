@@ -8,7 +8,7 @@ always_allow_html: true
 knitr::opts_chunk$set(echo = FALSE)
 proginc <- function(incr) {
   if (params$rendered_by_shiny) shiny::setProgress(incr)
-  NULL
+  invisible(NULL)
 }
 ```
 
