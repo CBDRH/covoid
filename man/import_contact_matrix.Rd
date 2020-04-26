@@ -13,7 +13,8 @@ import_contact_matrix(country, setting)
 Can be one of "general","work","school","home","other"}
 }
 \description{
-Import a contact matrix for country and setting
+Each row i of a column j of the contact matrix corresponds to the number of contacts
+made by an individual in group j with an individual in group i.
 }
 \examples{
 import_contact_matrix("Australia","general")

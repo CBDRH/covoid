@@ -1,0 +1,80 @@
+---
+title: "Age structured epidemic models in covoid"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{age-structure-mixing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(covoid)
+library(ggplot2)
+```
+
+An epidemic in a population of 4 million. Starts uniformly across all age groups. Use Australian contact matrices and age distributions.
+
+```{r}
+cm_oz <- import_contact_matrix("Australia","general")
+p_age_oz <- import_age_distribution("Australia")
+S0 <- p_age_oz*4e6
+I0 <- rep(1,16)
+R0 <- rep(0,length(S0))
+```
+
+We first consider the case without any intervention.
+
+```{r, fig.width=7}
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz)
+state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"),main="No intervention")
+```
+
+## Interventions
+
+We can add in time varying interventions using `create_intervention`. The below example reduces all 
+contact by 20%. Simulates physical distancing.
+
+```{r, fig.width=7}
+phys_dist = create_intervention(start = 10,stop = 150,c_reduce = 0.8,start_delay = 5,stop_delay = 5)
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz,intervention = phys_dist)
+state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"),main="Physical distancing")
+```
+
+the `covoid` package allows you to separate the contact rates into different settings - e.g. school, work and home. 
+
+```{r,fig.height=2.5,fig.width=7}
+cm_oz_all <- import_contact_matrix("Australia","general")
+cm_oz_sch <- import_contact_matrix("Australia","school")
+# separate out school and general population contact rates
+cm_oz_all = cm_oz_all - cm_oz_sch
+p_all <- plot(cm_oz_all) + labs(title = "General") +
+  theme(axis.text.x = element_text(size=6, angle=0),
+          axis.text.y = element_text(size=6))
+p_sch <- plot(cm_oz_sch) + labs(title = "School") +
+  theme(axis.text.x = element_text(size=6, angle=0),
+          axis.text.y = element_text(size=6))
+gridExtra::grid.arrange(p_all,p_sch,ncol=2)
+```
+
+We can then add in time varying interventions using `create_intervention` to each setting. The below example reduces general contact by 20% to simulate physical distancing combined with a reduction in school age contact by 80% to simulate school closures.
+
+```{r, fig.width=7}
+cm = list(all = cm_oz_all, sch = cm_oz_sch)
+int = list(sch=create_intervention(start = 10,stop = 150,c_reduce = 0.2,start_delay = 5,stop_delay = 5),
+           all=create_intervention(start = 10,stop = 150,c_reduce = 0.8,start_delay = 5,stop_delay = 5))
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=p_age_oz,intervention = int)
+state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"),main="Physical distancing + school closures")
+```

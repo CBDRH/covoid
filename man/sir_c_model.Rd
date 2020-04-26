@@ -4,7 +4,7 @@
 \alias{sir_c_model}
 \title{SIR with heterogeneous contact differential equations}
 \usage{
-sir_c_model(t, state_t0, param)
+sir_c_model(t, y, parms)
 }
 \arguments{
 \item{t}{Number of time steps over which to sample from the model}

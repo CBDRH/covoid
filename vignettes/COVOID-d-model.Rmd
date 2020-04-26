@@ -115,7 +115,7 @@ digraph SEIMRQ {
 
 ## COVOID-d model
 
-This is the proposed **COVOID-d** model. It also contains some infelicities, in particular the almost complete branching of the model at an early stage to accomodate modelling of quarantine of asymptomatic contacts of cases (something which the Moss _et al_. model "fudges" through a mathematical short-cut). However, we think it has the capability to explore most of the scenarios set out above.
+This is the proposed **COVOID-d** model. It also contains some infelicities, in particular the almost complete branching of the model at an early stage to accommodate modelling of quarantine of asymptomatic contacts of cases (something which the Moss _et al_. model "fudges" through a mathematical short-cut). However, we think it has the capability to explore most of the scenarios set out above. The red dashed lines indicate routes of infection. In theory, there should be an equivalent set of infectivity routes to the S^C^ compartment too, but we will assume that route is negligible.
 
 ```{r covoid-d, eval=TRUE, message=FALSE}
 grViz("
@@ -191,6 +191,16 @@ digraph COVOIDd {
   I1c->Hc
   Tc->Rtc
   Hc->Rhc
+  T->S[style=dashed color=red]
+  Tc->S[style=dashed  color=red]
+  H->S[style=dashed color=red]
+  Hc->S[style=dashed color=red]
+  E2->S[style=dashed color=red]
+  E2c->S[style=dashed color=red]
+  I1->S[style=dashed color=red]
+  I1c->S[style=dashed color=red]
+  I2->S[style=dashed color=red]
+  I2c->S[style=dashed color=red]
 }
 ")
 ```

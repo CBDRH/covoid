@@ -2,10 +2,10 @@
 % Please edit documentation in R/2-load-contact-matrix.R
 \name{available_contact_matrices}
 \alias{available_contact_matrices}
-\title{Available contact matrices}
+\title{List countries for which a contact matrix is available}
 \usage{
 available_contact_matrices()
 }
 \description{
-Available contact matrices
+List countries for which a contact matrix is available
 }

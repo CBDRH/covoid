@@ -30,6 +30,13 @@ S0 = rep(100,nJ)
 I0 = rep(1,nJ)
 R0 = rep(0,nJ)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
-res <- simulate_c_sir(t = 100,state_t0 = state0,param = param)
+res <- simulate_c_sir(t = 150,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"),main="Heterogeneous mixing")
+
+# compare with homogeneous
+param <- sir_param(R0 = 2.5,gamma = 0.1)
+state0 <- sir_state0(S0 = 1600,I0 = 16,R0 = 0)
+res <- simulate_sir(t = 150,state_t0 = state0,param = param)
+plot(res,c("S","I","R"),main="Homogeneous mixing")
 
 }

@@ -4,14 +4,20 @@
 \alias{sir_c_param}
 \title{SIR model parameters}
 \usage{
-sir_c_param(R0, gamma, cm)
+sir_c_param(R0, gamma, cm, dist, intervention = NULL)
 }
 \arguments{
 \item{R0}{Basic/empirical reproduction number (S -> I), can be a function of t.}
 
 \item{gamma}{Inverse of the average length of infectious period (I -> R)}
 
-\item{cm}{Contact matrix}
+\item{cm}{Contact matrix or a named list of contact matrices where the sum is taken to
+be all contacts in the population.}
+
+\item{dist}{Proportion of the population in each age category. Should sum to 1.}
+
+\item{intervention}{An intervention created using `create_intervention` or named list
+of interventions with the names matching the list of contact matrices.}
 }
 \value{
 List of SIR model parameters

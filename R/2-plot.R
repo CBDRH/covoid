@@ -48,3 +48,19 @@ plot.covoidd <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
         ggplot2::theme_bw()
     p
 }
+
+#' Plot a contact matrix
+#'
+#' @param x the contact matrix
+#'
+#' @export
+plot.contact_matrix <- function(x,...) {
+    df = as.data.frame(x)
+    df$age_contact = as.character(seq(5,80,by=5))
+    df$age_contact = factor(df$age_contact,levels=as.character(seq(5,80,by=5)),ordered=TRUE)
+    df = tidyr::pivot_longer(data = df,cols = 1:16,names_to = "age_individual",values_to = "contact_rate")
+    df$age_individual = factor(df$age_individual,levels=as.character(seq(5,80,by=5)),ordered=TRUE)
+    ggplot2::ggplot(df, ggplot2::aes(y=age_contact, x=age_individual, fill=contact_rate)) +
+        ggplot2::geom_tile()
+
+}
