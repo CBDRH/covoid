@@ -76,13 +76,17 @@ sir_param <- function(R0,beta,gamma) {
     if (is.function(beta)) {
       R0 = function(t) beta(t)/gamma
     } else {
-      R0 = function(t) beta/gamma
+      beta_val = beta
+      R0 = function(t) beta_val/gamma
+      beta = function(t) beta_val
     }
   } else if(missing(beta)) {
     if (is.function(R0)) {
       beta = function(t) gamma*R0(t)
     } else {
-      beta = function(t) gamma*R0
+      R0_val = R0
+      beta = function(t) gamma*R0_val
+      R0 = function(t) R0_val
     }
   } else if(!missing(R0) & ! missing(beta)) {
     stop("Supply either R0 or beta")

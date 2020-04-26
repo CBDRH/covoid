@@ -1,3 +1,57 @@
+#' Create an intervention
+#'
+#' Use `create_intervention` to model the impact of a epidemic control measure, for
+#' example "social distancing", on the trajectory of a epidemic.
+#' Is this measure adopted instantly or gradually over a number of units of time?
+#'
+#' @param start The start time of the intervention
+#' @param stop The end time of the intervention.
+#' @param c_reduce The relative reduction in the proportion of daily contact as a result of
+#' this measure, e.g. enter 0.8 to indicate contact has been reduced to 80% of pre-intervention
+#' levels
+#' @param delay The delay until full uptake of the measure.
+#' For instant uptake (e.g. as a result of immediate strict enforcement by authorities)
+#' enter 0, else some positive number that indicates the time to full uptake.
+#' @param delay_dist The distribution of time to full uptake for non-zero delay times.
+#' By default an exponential decay form "exp" is assumed where 99% uptake occurs by start+delay.
+#' Alteratives include the uniform "unif" distribution where 100% uptake occurs at start+delay..
+#'
+#' @examples
+#'
+#' @export
+create_intervention <- function(start,stop,c_reduce,start_delay,start_delay_dist="logis",
+                             stop_delay,stop_delay_dist="logis") {
+    stopifnot(c_reduce > 0 & c_reduce < 1)
+    stopifnot(start_delay >= 0)
+    stopifnot(stop_delay >= 0)
+
+    times = seq(from = start,to = stop+stop_delay-1,by = 1)
+    c_reduce = rep(c_reduce,times = length(times))
+
+    if (start_delay != 0) {
+        delay_p = switch(start_delay_dist,
+                         exp=exp_decay(start_delay,start_stop="start"),
+                         logis=logis_decay(start_delay,start_stop="start"))
+        vals = c_reduce[1:start_delay]
+        c_reduce[1:start_delay] = vals + (1-vals)*delay_p
+    }
+
+    if (stop_delay != 0) {
+        delay_p = switch(stop_delay_dist,
+                         exp=exp_decay(start_delay,start_stop="stop"),
+                         logis=logis_decay(start_delay,start_stop="stop"))
+        offset = stop-start+1
+        vals = c_reduce[offset:(offset+stop_delay-1)]
+        c_reduce[offset:(offset+stop_delay-1)] = vals + (1-vals)*delay_p
+    }
+
+    # return
+    c_reduce = data.frame(time = start:(stop+stop_delay-1), c_reduce = c_reduce)
+    class(c_reduce) = c(class(c_reduce),"intervention")
+    c_reduce
+}
+
+
 #' Add an intervention
 #'
 #' Use `add_intervention` to model the impact of a epidemic control measure, for
