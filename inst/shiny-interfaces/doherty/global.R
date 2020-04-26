@@ -27,7 +27,6 @@ library(kableExtra)
 library(googleVis)
 library(prettyunits)
 library(gganimate)
-library(shinyalert)
 
 
 # Source extended EpiModel files
