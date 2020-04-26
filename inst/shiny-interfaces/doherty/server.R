@@ -1084,11 +1084,11 @@ output$downloadReport <- downloadHandler(
             on.exit(setwd(owd))
             file.copy(src, 'report.Rmd', overwrite = TRUE)
 
-
+            params <- list(rendered_by_shiny = TRUE)
             # Knit the document, passing in the `params` list, and eval it in a
             # child of the global environment (this isolates the code in the document
             # from the code in this app).
-            out <- rmarkdown::render('report.Rmd', html_document())
+            out <- rmarkdown::render('report.Rmd', html_document(), params=params)
             file.rename(out, file)
             })
         }

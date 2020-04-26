@@ -6,6 +6,10 @@ always_allow_html: true
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+proginc <- function(incr) {
+  if (params$rendered_by_shiny) shiny::setProgress(incr)
+  NULL
+}
 ```
 
 ## Summary
@@ -18,6 +22,8 @@ The total population size was `r popcounter()`, and `r default$e1_num()` were in
 ## The compartment model
 
 ```{r}
+
+proginc(0.1)
 
     nodes <- data.frame(id = 1:15,
 
@@ -93,6 +99,7 @@ The total population size was `r popcounter()`, and `r default$e1_num()` were in
 
 ## Summary of compartments
 ```{r}
+proginc(0.2)
 
 initTable <- data.frame(
   Compartment = c("$S$",
@@ -140,6 +147,8 @@ knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the mo
 ```
 
 ```{r}
+proginc(0.3)
+
 ### Re-run models and prepare graphs
 ## Could this be done more elegantly with a loop? surely?
 ## for(i in 1:6){I don't know how to loop through sequenced variables in R}
@@ -157,6 +166,8 @@ if(input$inclPlot1){
    paramVec <- cbind(paramVec, `Scenario 1` = round(unlist(count$param_p1), digits=3))
 }
 
+proginc(0.35)
+
 if(input$inclPlot2){
    model_p2 <- covoid::simulate_seimrqc(t = count$nsteps_p2, state_t0 = count$state0_p2, param = count$param_p2)
    mod_df_p2 <- prepData(df_epi=model_p2$epi, popsize=count$popSize_p2 , day1 = count$startDate_p2)
@@ -164,6 +175,8 @@ if(input$inclPlot2){
    stateVec <- cbind(stateVec, `Scenario 2` = count$state0_p2)
    paramVec <- cbind(paramVec, `Scenario 2` = round(unlist(count$param_p2), digits=3))
   }
+
+proginc(0.4)
 
 if(input$inclPlot3){
    model_p3 <- covoid::simulate_seimrqc(t = count$nsteps_p3, state_t0 = count$state0_p3, param = count$param_p3)
@@ -173,6 +186,8 @@ if(input$inclPlot3){
    paramVec <- cbind(paramVec, `Scenario 3` = round(unlist(count$param_p3), digits=3))
 }
 
+proginc(0.45)
+
 if(input$inclPlot4){
    model_p4 <- covoid::simulate_seimrqc(t = count$nsteps_p4, state_t0 = count$state0_p4, param = count$param_p4)
    mod_df_p4 <- prepData(df_epi=model_p4$epi, popsize=count$popSize_p4 , day1 = count$startDate_p4)
@@ -181,6 +196,8 @@ if(input$inclPlot4){
    paramVec <- cbind(paramVec, `Scenario 4` = round(unlist(count$param_p4), digits=3))
 }
 
+proginc(0.475)
+
 if(input$inclPlot5){
    model_p5 <- covoid::simulate_seimrqc(t = count$nsteps_p5, state_t0 = count$state0_p5, param = count$param_p5)
    mod_df_p5 <- prepData(df_epi=model_p5$epi, popsize=count$popSize_p5, day1 = count$startDate_p5)
@@ -188,6 +205,8 @@ if(input$inclPlot5){
    stateVec <- cbind(stateVec, `Scenario 5` = count$state0_p5)
    paramVec <- cbind(paramVec, `Scenario 5` = round(unlist(count$param_p5), digits=3))
 }
+
+proginc(0.485)
 
 if(input$inclPlot6){
    model_p6 <- covoid::simulate_seimrqc(t = count$nsteps_p6, state_t0 = count$state0_p6, param = count$param_p6)
@@ -203,6 +222,8 @@ if(input$inclPlot6){
 
 ### `r if(input$inclPlot1){input$p1title}`
 ```{r}
+proginc(0.5)
+
 if(input$inclPlot1){
 plot_p1
 }
@@ -212,6 +233,8 @@ plot_p1
 
 ### `r if(input$inclPlot1){input$p2title}`
 ```{r}
+proginc(0.5)
+
 if(input$inclPlot2){
 plot_p2
 }
@@ -220,6 +243,8 @@ plot_p2
 
 ### `r if(input$inclPlot1){input$p3title}`
 ```{r}
+proginc(0.6)
+
 if(input$inclPlot3){
 plot_p3
 }
@@ -228,6 +253,8 @@ plot_p3
 
 ### `r if(input$inclPlot1){input$p4title}`
 ```{r}
+proginc(0.7)
+
 if(input$inclPlot4){
 plot_p4
 }
@@ -236,6 +263,8 @@ plot_p4
 
 ### `r if(input$inclPlot1){input$p5title}`
 ```{r}
+proginc(0.75)
+
 if(input$inclPlot5){
 plot_p5
 }
@@ -244,6 +273,8 @@ plot_p5
 
 ### `r if(input$inclPlot1){input$p5title}`
 ```{r}
+proginc(0.8)
+
 if(input$inclPlot6){
 plot_p6
 }
@@ -258,6 +289,7 @@ plot_p6
 ### Initial conditions
 
 ```{r}
+proginc(0.9)
 
 initTable <- cbind(
   Compartment = c("$S$",
@@ -311,6 +343,8 @@ knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the mo
 
 ### Model parameters
 ```{r, warning=FALSE}
+proginc(0.95)
+
 # Model parameters
 paramTable <- cbind(
   Parameter = c("$R_{0}$",
