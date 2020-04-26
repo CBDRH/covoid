@@ -946,6 +946,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==1) {
                      extra$plot1 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot1", value = TRUE)
                      count$nPlots <- 1
                      count$param_p1 <- param()
                      count$state0_p1 <- state0()
@@ -963,6 +964,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==2) {
                      extra$plot2 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot2", value = TRUE)
                      count$nPlots <- 2
                      count$param_p2 <- param()
                      count$state0_p2 <- state0()
@@ -980,6 +982,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==3) {
                      extra$plot3 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot3", value = TRUE)
                      count$nPlots <- 3
                      count$param_p3 <- param()
                      count$state0_p3 <- state0()
@@ -997,6 +1000,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==4) {
                      extra$plot4 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot4", value = TRUE)
                      count$nPlots <- 4
                      count$param_p4 <- param()
                      count$state0_p4 <- state0()
@@ -1014,6 +1018,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==5) {
                      extra$plot5 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot5", value = TRUE)
                      count$nPlots <- 5
                      count$param_p5 <- param()
                      count$state0_p5 <- state0()
@@ -1031,6 +1036,7 @@ observeEvent(input$toreport,
                  if(input$reportFigs==6) {
                      extra$plot6 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
+                     updateMaterialSwitch(session, "inclPlot6", value = TRUE)
                      count$nPlots <- 6
                      count$param_p6 <- param()
                      count$state0_p6 <- state0()
@@ -1087,7 +1093,5 @@ output$downloadReport <- downloadHandler(
             })
         }
 )
-
-
 
 }) # Closes Shiny Server

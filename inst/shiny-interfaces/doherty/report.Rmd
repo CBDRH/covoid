@@ -70,46 +70,8 @@ The total population size was `r popcounter()`, and `r default$e1_num()` were in
     edges <- data.frame(from = c(1, 2, 3, 4, 4, 5, 6, 1, 9, 10, 11, 11, 12, 13),
         to = c(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
         id = LETTERS[seq( from = 1, to = 14 )],
-        dashes = c(rep(FALSE,7), rep(TRUE,7)),
-
-        # Label text
-        label = c(
-            round(default$lambda()*(1-(default$rho()*default$thetam())), digits=2),
-            round(default$sigma1(), digits=2),
-            round(default$sigma2(), digits=2),
-            round(default$gamma1()*(1 - default$alpha()*default$pm()), digits=2),
-            round(default$gamma1()*(default$alpha()*default$pm()), digits=2),
-            round(default$gamma2(), digits=2),
-            round(default$gamma2(), digits=2),
-            round(default$lambda()*(default$rho()*default$thetam()), digits=2),
-            round(default$sigma1(), digits=2),
-            round(default$sigma2(), digits=2),
-            round(default$gamma1q()*(1 - default$alpha()*default$pm()), digits=2),
-            round(default$gamma1q()*(default$alpha()*default$pm()), digits=2),
-            round(default$gamma2q(), digits=2),
-            round(default$gamma2q(), digits=2)
-            ),
-
-        # Label colour
-        font.color = c(rep("darkgrey", 14)),
-
-        # Hover titles
-        title = c(HTML('&lambda;(1-&rho;&sdot;&Theta;<sub>M</sub>)'),
-                  HTML('&sigma;<sub>1</sub>'),
-                  HTML('&sigma;<sub>2</sub>'),
-                  HTML('&gamma;<sub>1</sub>(1 - &alpha;P<sub>M</sub>)'),
-                  HTML('&gamma;<sub>1</sub>(&alpha;P<sub>M</sub>)'),
-                  HTML('&gamma;<sub>2</sub>'),
-                  HTML('&gamma;<sub>2</sub>'),
-                  HTML('&lambda;(&rho;&sdot;&Theta;<sub>M</sub>)'),
-                  HTML('&sigma;<sub>1</sub>'),
-                  HTML('&sigma;<sub>2</sub>'),
-                  HTML('&gamma;<sub>1</sub><sup>q</sup>(1 - &alpha;P<sub>M</sub>)'),
-                  HTML('&gamma;<sub>1</sub><sup>q</sup>(&alpha;P<sub>M</sub>)'),
-                  HTML('&gamma;<sub>2</sub><sup>q</sup>'),
-                  HTML('&gamma;<sub>2</sub><sup>q</sup>')
-                  )
-    )
+        dashes = c(rep(FALSE,7), rep(TRUE,7))
+        )
 
 
     visNetwork(nodes, edges, submain = HTML("See <a href='https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf' target='_blank'>
@@ -129,52 +91,115 @@ The total population size was `r popcounter()`, and `r default$e1_num()` were in
 
 ```
 
+## Summary of compartments
+```{r}
 
+initTable <- data.frame(
+  Compartment = c("$S$",
+                  "$E_{1}$",
+                  "$E_{2}$",
+                  "$I_{1}$",
+                  "$I_{2}$",
+                  "$R$",
+                  "$M$",
+                  "$R_{M}^{q}$",
+                  "$E_{1}^{q}$",
+                  "$E_{2}^{q}$",
+                  "$I_{1}^{q}$",
+                  "$I_{2}^{q}$",
+                  "$R^{q}$",
+                  "$M^{q}$",
+                  "$R_{M}^{q}$"),
+  
+  Quarantined = c(rep("No",8), rep("Yes",7)),
+  
+  Description = c("Susceptible individuals", 
+                  "Latent period (first stage)", 
+                  "Latent period (second stage)", 
+                  "Infectious period (first stage)", 
+                  "Infectious period (second stage)", 
+                  "Recovered individuals", 
+                  "Managed cases", 
+                  "Recovered individuals that were managed cases", 
+                  "Latent period (first stage)", 
+                  "Latent period (second stage)", 
+                  "Infectious period (first stage)", 
+                  "Infectious period (second stage)", 
+                  "Recovered individuals", 
+                  "Managed cases", 
+                  "Recovered individuals that were managed cases"
+                  )
+)
+
+knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the model compartments")  %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>% 
+  column_spec(1, bold = T, border_right = T, width = '15%') %>%
+  column_spec(2, width = '15%') %>% 
+  column_spec(3, width = "70%")
+
+```
 
 ```{r}
 ### Re-run models and prepare graphs
 ## Could this be done more elegantly with a loop? surely?
 ## for(i in 1:6){I don't know how to loop through sequenced variables in R}
 
+# Initialise an empty vector for initial states and initial parameters
+# These get added to if the results have been saved in the report
+stateVec <- vector()
+paramVec <- vector()
+
 if(input$inclPlot1){
    model_p1 <- covoid::simulate_seimrqc(t = count$nsteps_p1, state_t0 = count$state0_p1, param = count$param_p1)
    mod_df_p1 <- prepData(df_epi=model_p1$epi, popsize=count$popSize_p1 , day1 = count$startDate_p1)
    plot_p1 <- plotResults(df = mod_df_p1, cuml=count$cuml_p1, scale=count$scale_p1, logScale=count$logScale_p1, plotvars=count$plotvars_p1, ndays=count$ndays_p1)
+   stateVec <- cbind(stateVec, `Scenario 1` = count$state0_p1)
+   paramVec <- cbind(paramVec, `Scenario 1` = round(unlist(count$param_p1), digits=3))
 }
 
-if(input$inclPlot2==TRUE){
+if(input$inclPlot2){
    model_p2 <- covoid::simulate_seimrqc(t = count$nsteps_p2, state_t0 = count$state0_p2, param = count$param_p2)
    mod_df_p2 <- prepData(df_epi=model_p2$epi, popsize=count$popSize_p2 , day1 = count$startDate_p2)
    plot_p2 <- plotResults(df = mod_df_p2, cuml=count$cuml_p2, scale=count$scale_p2, logScale=count$logScale_p2, plotvars=count$plotvars_p2, ndays=count$ndays_p2)
+   stateVec <- cbind(stateVec, `Scenario 2` = count$state0_p2)
+   paramVec <- cbind(paramVec, `Scenario 2` = round(unlist(count$param_p2), digits=3))
   }
 
 if(input$inclPlot3){
    model_p3 <- covoid::simulate_seimrqc(t = count$nsteps_p3, state_t0 = count$state0_p3, param = count$param_p3)
    mod_df_p3 <- prepData(df_epi=model_p3$epi, popsize=count$popSize_p3 , day1 = count$startDate_p3)
    plot_p3 <- plotResults(df = mod_df_p3, cuml=count$cuml_p3, scale=count$scale_p3, logScale=count$logScale_p3, plotvars=count$plotvars_p3, ndays=count$ndays_p3)
+   stateVec <- cbind(stateVec, `Scenario 3` = count$state0_p3)
+   paramVec <- cbind(paramVec, `Scenario 3` = round(unlist(count$param_p3), digits=3))
 }
 
 if(input$inclPlot4){
    model_p4 <- covoid::simulate_seimrqc(t = count$nsteps_p4, state_t0 = count$state0_p4, param = count$param_p4)
    mod_df_p4 <- prepData(df_epi=model_p4$epi, popsize=count$popSize_p4 , day1 = count$startDate_p4)
    plot_p4 <- plotResults(df = mod_df_p4, cuml=count$cuml_p4, scale=count$scale_p4, logScale=count$logScale_p4, plotvars=count$plotvars_p4, ndays=count$ndays_p4)
+   stateVec <- cbind(stateVec, `Scenario 4` = count$state0_p4)
+   paramVec <- cbind(paramVec, `Scenario 4` = round(unlist(count$param_p4), digits=3))
 }
 
 if(input$inclPlot5){
    model_p5 <- covoid::simulate_seimrqc(t = count$nsteps_p5, state_t0 = count$state0_p5, param = count$param_p5)
    mod_df_p5 <- prepData(df_epi=model_p5$epi, popsize=count$popSize_p5, day1 = count$startDate_p5)
    plot_p5 <- plotResults(df = mod_df_p5, cuml=count$cuml_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p5, ndays=count$ndays_p5)
+   stateVec <- cbind(stateVec, `Scenario 5` = count$state0_p5)
+   paramVec <- cbind(paramVec, `Scenario 5` = round(unlist(count$param_p5), digits=3))
 }
 
 if(input$inclPlot6){
    model_p6 <- covoid::simulate_seimrqc(t = count$nsteps_p6, state_t0 = count$state0_p6, param = count$param_p6)
    mod_df_p6 <- prepData(df_epi=model_p6$epi, popsize=count$popSize_p6, day1 = count$startDate_p6)
    plot_p6 <- plotResults(df = mod_df_p5, cuml=count$cuml_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p6, ndays=count$ndays_p6)
+   stateVec <- cbind(stateVec, `Scenario 6` = count$state0_p6)
+   paramVec <- cbind(paramVec, `Scenario 6` = round(unlist(count$param_p6), digits=3))
  }
 
 ```
 
-
+## Model results
 
 ### `r if(input$inclPlot1){input$p1title}`
 ```{r}
@@ -228,13 +253,13 @@ plot_p6
 
 
 
-## Summary of underlying parameters
+## Appendix. Summary of underlying parameters
 
 ### Initial conditions
 
 ```{r}
 
-initTable <- data.frame(
+initTable <- cbind(
   Compartment = c("$S$",
                   "$E_{1}$",
                   "$E_{2}$",
@@ -251,9 +276,10 @@ initTable <- data.frame(
                   "$M^{q}$",
                   "$R_{M}^{q}$",
                   "$CT_{NM}$",
-                  "$CT_{M}$"),
+                  "$CT_{M}$",
+                  "N"),
   
-  Quarantined = c(rep("No",8), rep("Yes",7), rep("", 2)),
+  Quarantined = c(rep("No",8), rep("Yes",7), rep("", 3)),
   
   Description = c("Susceptible individuals", 
                   "Latent period (first stage)", 
@@ -271,43 +297,23 @@ initTable <- data.frame(
                   "Managed cases", 
                   "Recovered individuals that were managed cases",
                   "Contacts of unmanaged cases",
-                  "Contacts of managed cases"),
-  Count = c(
-    default$s_num(),
-    default$e1_num(),
-    default$e2_num(),
-    default$i1_num(),
-    default$i2_num(),
-    default$r_num(),
-    default$m_num(),
-    default$rm_num(),
-    default$e1q_num(),
-    default$e2q_num(),
-    default$i1q_num(),
-    default$i2q_num(),
-    default$rq_num(),
-    default$mq_num(),
-    default$rmq_num(),
-    default$ctnm_num(),
-    default$ctm_num()
-  )
+                  "Contacts of managed cases",
+                  "Total count"),
+                  stateVec
 )
 
 knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the model compartments")  %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>% 
-  column_spec(1, bold = T, border_right = T, width = '15%') %>%
-  column_spec(2, width = '15%') %>% 
-  column_spec(3, width = "70%") %>% 
-  column_spec(4, width = '15%')
+  column_spec(1, bold = T, border_right = T)
 
 ```
 
 
 ### Model parameters
-```{r}
+```{r, warning=FALSE}
 # Model parameters
-paramTable <- data.frame(
-  Compartment = c("$R_{0}$",
+paramTable <- cbind(
+  Parameter = c("$R_{0}$",
                   "$\\lambda_{imp}$",
                   "$\\rho$",
                   "$\\sigma_{1}$",
@@ -355,38 +361,12 @@ paramTable <- data.frame(
     "The net force of infection",
     "Net proportion of people who present"
   ),
-  
-  Count = c(
-        round(default$r0(), digits = 2),
-        round(default$lambdaimp(), digits = 2),
-        round(default$rho(), digits = 2),
-        round(default$sigma1(), digits = 2),
-        round(default$sigma2(), digits = 2),
-        round(default$gamma1(), digits = 2),
-        round(default$gamma2(), digits = 2),
-        round(default$alpham(), digits = 2),
-        round(default$pm(), digits = 2),
-        round(default$gamma1q(), digits = 2),
-        round(default$gamma2q(), digits = 2),
-        round(default$qeff(), digits = 2),
-        round(default$meff(), digits = 2),
-        round(default$eta(), digits = 2),
-        round(default$alphambeta),
-        round(default$probHospGivenInf),
-        round(default$delta),
-        round(default$kappa),
-        round(default$beta(), digits = 2),
-        round(default$betamq(), digits = 2),
-        round(default$lambda(), digits = 2), 
-        round(default$alpha(), digits = 2)
-    )
+  paramVec
 )
 
 knitr::kable(paramTable, escape = FALSE, caption = "Model parameters")  %>%
   kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>% 
-  column_spec(1, bold = T, border_right = T, width = '15%') %>%
-  column_spec(2, width = "70%") %>% 
-  column_spec(3, width = '15%')
+  column_spec(1, bold = T, border_right = T, width = '15%')
 
 ```
 
