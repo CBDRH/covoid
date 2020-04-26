@@ -1091,6 +1091,20 @@ output$downloadReport <- downloadHandler(
             out <- rmarkdown::render('report.Rmd', html_document(), params=params)
             file.rename(out, file)
             })
+            shinyalert(
+              title = "Report generated",
+              text = "Look for it in your Downloads folder",
+              closeOnEsc = TRUE,
+              closeOnClickOutside = TRUE,
+              html = FALSE,
+              type = "success",
+              showConfirmButton = FALSE,
+              showCancelButton = TRUE,
+              cancelButtonText = "Dismiss",
+              timer = 0,
+              imageUrl = "",
+              animation = TRUE
+            )
         }
 )
 

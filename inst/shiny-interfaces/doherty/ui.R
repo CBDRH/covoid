@@ -55,6 +55,7 @@ tags$head(tags$style(HTML('
                     # The model
                     tabPanel(title = icon("project-diagram"),
                            fluidPage(
+                             useShinyalert(),
                              fluidRow(
                                  column(width=4, h3("Transmission model of COVID-19 infection"),
                                         helpText(HTML("The figure to the right represents the compartmental transition model presented by

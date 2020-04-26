@@ -27,6 +27,8 @@ library(kableExtra)
 library(googleVis)
 library(prettyunits)
 library(gganimate)
+library(shinyalert)
+
 
 # Source extended EpiModel files
 source_files <- c("prepData.R", "plotResults.R",
