@@ -45,7 +45,9 @@ simulate_c_sir <- function(t,state_t0,param) {
                                   cm=param$cm,
                                   pt=param$pt,
                                   dist=param$dist,
-                                  intervention=param$intervention))
+                                  im=param$im,
+                                  contact_intervention=param$contact_intervention,
+                                  transmission_intervention=param$transmission_intervention))
 
     # make the output a dataframe
     out = list(param = param,
@@ -67,27 +69,38 @@ simulate_c_sir <- function(t,state_t0,param) {
 #' @param cm Contact matrix or a named list of contact matrices where the sum is taken to
 #' be all contacts in the population.
 #' @param dist Proportion of the population in each age category. Should sum to 1.
-#' @param intervention An intervention created using `create_intervention` or named list
+#' @param contact_intervention An intervention created using `contact_intervention` or named list
 #' of interventions with the names matching the list of contact matrices.
+#' @param transmission_intervention An intervention created using `create_intervention` or named list
+#' of interventions with the names matching the list of contact matrices.
+#' @param im Relative infectiousness matrix. Default is 1.
 #'
 #' @return List of SIR model parameters
 #'
 #' @export
-sir_c_param <- function(R0,gamma,cm,dist,intervention=NULL) {
+sir_c_param <- function(R0,gamma,cm,dist,contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
     # assertions
     if (is.list(cm)) {
         stopifnot(!is.null(names(cm)))
         stopifnot(all(sapply(cm,function(x) nrow(x) == ncol(x))))
         stopifnot(all(sapply(cm,function(x) nrow(x) == length(dist))))
-        if (!is.null(intervention)) {
-            stopifnot(is.list(intervention))
-            stopifnot(all(names(intervention) %in% names(cm)))
+        if (!is.null(contact_intervention)) {
+            stopifnot(is.list(contact_intervention))
+            stopifnot(all(names(contact_intervention) %in% names(cm)))
+        }
+        if (!is.null(im)) {
+            stopifnot(ncol(cm[[1]]) == ncol(im))
+            stopifnot(ncol(im) == nrow(im))
         }
     } else {
         stopifnot(ncol(cm) == nrow(cm))
         stopifnot(length(dist) == ncol(cm))
-        if (!is.null(intervention)) {
-            stopifnot("intervention" %in% class(intervention))
+        if (!is.null(contact_intervention)) {
+            stopifnot("intervention" %in% class(contact_intervention))
+        }
+        if (!is.null(im)) {
+            stopifnot(ncol(cm) == ncol(im))
+            stopifnot(ncol(im) == nrow(im))
         }
     }
     stopifnot(all.equal(sum(dist),1.0))
@@ -98,12 +111,15 @@ sir_c_param <- function(R0,gamma,cm,dist,intervention=NULL) {
     } else {
         cm_gen = cm
     }
+    if (is.null(im)) {
+        im = matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
+    }
     J = ncol(cm_gen)
     V = diag(rep(gamma,J))
     F1 = cm_gen
     for (i in 1:J) {
         for (j in 1:J) {
-            F1[i,j] = dist[i]/dist[j]*F1[i,j]
+            F1[i,j] = dist[i]/dist[j]*F1[i,j]*im[i,j]
         }
     }
     K1 = F1 %*% solve(V)
@@ -111,7 +127,14 @@ sir_c_param <- function(R0,gamma,cm,dist,intervention=NULL) {
     pt = R0/l1
 
     # output with class sir_param
-    param = list(R0=R0,gamma=gamma,cm=cm,pt=pt,dist=dist,intervention=intervention)
+    param = list(R0=R0,
+                 gamma=gamma,
+                 cm=cm,
+                 pt=pt,
+                 dist=dist,
+                 contact_intervention=contact_intervention,
+                 transmission_intervention=transmission_intervention,
+                 im=im)
     class(param) = "sir_c_param"
 
     # return
@@ -144,8 +167,6 @@ sir_c_state0 <- function(S0,I0,R0) {
 }
 
 
-
-
 #' SIR with heterogeneous contact differential equations
 #'
 #' @param t Number of time steps over which to sample from the model
@@ -157,33 +178,9 @@ sir_c_state0 <- function(S0,I0,R0) {
 sir_c_model <- function(t,y,parms) {
     with(as.list(c(y, parms)), {
 
-        # interventions
-        cm_cur = cm
-        if(!is.null(intervention)) {
-            if (is.list(intervention) & !is.data.frame(intervention)) {
-
-                for (nm in names(intervention)) {
-                    int = intervention[names(intervention) == nm][[1]]
-                    if (t >= int$time[1] && t <= int$time[nrow(int)]) {
-                        vals = int$c_reduce[t > int$time-1 & t < int$time+1]
-                        int_m = diag(mean(vals),length(dist))
-                        cm_cur[names(cm_cur) == nm][[1]] = int_m %*% cm_cur[names(cm_cur) == nm][[1]]
-                    }
-                    # else leave as is
-                }
-            } else {
-                if (t >= intervention$time[1] && t <= intervention$time[nrow(intervention)]) {
-                    vals = intervention$c_reduce[t > intervention$time-1 & t < intervention$time+1]
-                    int_m = diag(mean(vals),nrow = length(dist))
-                    cm_cur = int_m %*% cm_cur
-                }
-                # else leave as is
-            }
-        }
-
-        if (is.list(cm_cur)) {
-            cm_cur = Reduce('+', cm_cur)
-        }
+        # account for interventions
+        cm_cur = calculate_current_cm(cm,contact_intervention,t,dist)
+        pt_cur = calculate_current_pt(pt,transmission_intervention,t)
 
         # population size
         J = ncol(cm_cur)
@@ -200,8 +197,8 @@ sir_c_model <- function(t,y,parms) {
         dI = numeric(length=J)
         dR = numeric(length=J)
         for (i in 1:J) {
-            dS[i] = -(S[i])*sum(pt*cm_cur[i,]*(I/N))
-            dI[i] = (S[i])*sum(pt*cm_cur[i,]*(I/N)) - gamma*I[i]
+            dS[i] = -(S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N))
+            dI[i] = (S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N)) - gamma*I[i]
             dR[i] = gamma*I[i]
         }
 
