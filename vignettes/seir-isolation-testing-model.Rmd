@@ -22,7 +22,7 @@ devtools::load_all()
 ```{r}
 cm_oz <- import_contact_matrix("Australia","general")
 p_age_oz <- import_age_distribution("Australia")
-param <- seithr_qc_param(R0=2.5,Qeff=0,Teff=0,Heff=0,delta=0,sigma1=0.3,
+param <- seithr_qc_param(R0=2.3,Qeff=0,Teff=0,Heff=0,delta=0,sigma1=0.3,
 sigma2=0.3,p_severe=0.1,p_isolate=0,gamma1=0.3,gamma2=0.3,cm=cm_oz,dist=p_age_oz)
 nJ = ncol(cm_oz)
 S = p_age_oz*4e6
