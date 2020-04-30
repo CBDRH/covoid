@@ -14,7 +14,7 @@ simulate_seir(t, state_t0, param)
 \item{param}{Model parameters (see seir_param)}
 }
 \value{
-Object of class covoidd and dcm (from the package EpiModels)
+Object of class covoid and dcm (from the package EpiModels)
 }
 \description{
 S = Susceptible

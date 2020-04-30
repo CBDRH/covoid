@@ -1,0 +1,53 @@
+---
+title: "seir-isolation-testing-model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{seir-isolation-testing-model}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+#library(covoid)
+devtools::load_all()
+```
+
+```{r}
+cm_oz <- import_contact_matrix("Australia","general")
+p_age_oz <- import_age_distribution("Australia")
+param <- seithr_qc_param(R0=2.5,Qeff=0,Teff=0,Heff=0,delta=0,sigma1=0.3,
+sigma2=0.3,p_severe=0.1,p_isolate=0,gamma1=0.3,gamma2=0.3,cm=cm_oz,dist=p_age_oz)
+nJ = ncol(cm_oz)
+S = p_age_oz*4e6
+E1 = rep(1,nJ)
+E2 = rep(0,nJ)
+I1m = rep(0,nJ)
+I1s = rep(0,nJ)
+I2 = rep(0,nJ)
+T = rep(0,nJ)
+H = rep(0,nJ)
+Sc = rep(0,nJ)
+Ec1 = rep(0,nJ)
+Ec2 = rep(0,nJ)
+Ic1m = rep(0,nJ)
+Ic1s = rep(0,nJ)
+Ic2 = rep(0,nJ)
+Tc = rep(0,nJ)
+Hc = rep(0,nJ)
+R = rep(0,nJ)
+Rh = rep(0,nJ)
+state0 = seithr_qc_state0(S,E1,E2,I1m,I1s,I2,T,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Tc,Hc,R,Rh)
+res = simulate_seithr_qc(200,state0,param)
+```
+
+```{r, fig.width=7}
+plot(res,y = c("S","I","R"))
+```
+

@@ -9,7 +9,7 @@
 #' @param state_t0 Initial state of the model (see ?sir_state0)
 #' @param param Model parameters (see ?sir_param)
 #'
-#' @return Object of class covoidd and dcm (from the package EpiModels)
+#' @return Object of class covoid and dcm (from the package EpiModels)
 #'
 #' @examples
 #'
@@ -21,7 +21,7 @@
 #' I0 = rep(1,nJ)
 #' R0 = rep(0,nJ)
 #' state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
-#' res <- simulate_c_sir(t = 150,state_t0 = state0,param = param)
+#' res <- simulate_sir_c(t = 150,state_t0 = state0,param = param)
 #' plot(res,y=c("S","I","R"),main="Heterogeneous mixing")
 #'
 #' # compare with homogeneous
@@ -31,7 +31,7 @@
 #' plot(res,c("S","I","R"),main="Homogeneous mixing")
 #'
 #' @export
-simulate_c_sir <- function(t,state_t0,param) {
+simulate_sir_c <- function(t,state_t0,param) {
     # assertions
     stopifnot(class(state_t0) == "sir_c_state0")
     stopifnot(class(param) == "sir_c_param")
@@ -55,7 +55,7 @@ simulate_c_sir <- function(t,state_t0,param) {
     names(out$epi)[1] = "t"
 
     # return
-    class(out) = c("covoidd",class(out))
+    class(out) = c("covoid",class(out))
     out
 }
 

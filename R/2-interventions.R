@@ -149,7 +149,7 @@ logis_decay <- function(delay,start_stop) {
     delay_p
 }
 
-#'
+#' Calculate current contact matrix
 #'
 #' @param cm ...
 #' @param intervention ...
@@ -187,7 +187,7 @@ calculate_current_cm <- function(cm,intervention,t,dist) {
     cm_cur
 }
 
-#'
+#' Calculate current probability of transmission
 #'
 #' @param pt ...
 #' @param intervention ...

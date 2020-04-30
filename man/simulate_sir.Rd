@@ -14,7 +14,7 @@ simulate_sir(t, state_t0, param)
 \item{param}{Model parameters (see ?sir_param)}
 }
 \value{
-Object of class covoidd and dcm (from the package EpiModels)
+Object of class covoid and dcm (from the package EpiModels)
 }
 \description{
 S = Susceptible
