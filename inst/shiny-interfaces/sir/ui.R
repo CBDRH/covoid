@@ -29,7 +29,7 @@ sidebar <- dashboardSidebar(
     div(style = 'overflow-y:scroll;height:600px;',
         dateRangeInput('dateRange',
                        label = span(tagList(icon('calendar-alt'), 'Date range')),
-                       start = '2020-01-01', end = '2020-12-31')
+                       start = '2020-03-01', end = '2020-09-30')
     ) # Closes div
 ) # closes Sideboard
 
@@ -118,17 +118,44 @@ tags$head(tags$style(HTML('
                     tabPanel(title = icon("user-md"),
                              fluidPage(
                                  box(width="100%", title = "Introduce an intervention. Choose the intervention setting(s):", status = "info", solidHeader = FALSE,
-                                 checkboxGroupInput("intSetting", NULL, selected = NULL, inline = TRUE,
-                                                    choices=list("School" = "school", "Work" = "work", "Home" = "home", "All" = "general")),
-                                 helpText("Different interventions can be simultaneously applied to school, work and home settings, or a single intervention can be applied to all settings")
+                                 checkboxGroupInput("intSetting", NULL, selected = "general", inline = TRUE,
+                                                    choices=list("School" = "school", "Work" = "work", "Home" = "home")),
+                                 helpText("Separate interventions can be simultaneously applied to contacts within school, work and home settings.
+                                          Interventions for all remaining contacts can be controlled with the 'All contacts' box.")
                                  ),
 
                                  div(style = 'overflow-y:scroll;height:500px;',
+
+                                     # All
+                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("users"), "All contacts")),
+                                             helpText("If school, work, or home-based interventions are selected, those contacts will be excluded from the intervention specified here."),
+                                             column(width = 2,
+                                                    sparklineOutput("sparklineGeneral"),
+                                                    hr(),
+                                                    strong("Pointer value:"),
+                                                    textOutput("tooltipGeneral"),
+                                                    helpText("Click to add a point. Double-click to remove."),
+                                                    hr(),
+                                                    actionButton("resetGeneral", "Reset"),
+                                                    actionButton("undoGeneral", "Undo")),
+                                             column(width = 6,
+                                                    plotOutput("intGeneral", height = 270,
+                                                               click = "intGeneral_click",
+                                                               dblclick = "intGeneral_dblclick",
+                                                               hover = hoverOpts("intGeneral_hover", delay=100, delayType = "debounce")),
+                                             ),
+
+                                             column(width = 4,
+                                                    DTOutput("reviewGeneral")
+                                             )
+                                         ), # Closes box
+
                                  # Schools
                                  conditionalPanel(
 
                                      condition = "input.intSetting.includes('school')",
-                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("school"), "Schools")),
+                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("school"), "Contacts at school")),
+                                             helpText("Apply a distinct intervention for school-based contacts"),
                                              column(width = 2,
                                                     sparklineOutput("sparklineSchool"),
                                                     hr(),
@@ -155,7 +182,8 @@ tags$head(tags$style(HTML('
                                  conditionalPanel(
 
                                      condition = "input.intSetting.includes('work')",
-                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("building"), "Work")),
+                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("building"), "Contacts at work")),
+                                         helpText("Apply a distinct intervention for work-based contacts"),
                                          column(width = 2,
                                                 sparklineOutput("sparklineWork"),
                                                 hr(),
@@ -182,7 +210,8 @@ tags$head(tags$style(HTML('
                                  conditionalPanel(
 
                                      condition = "input.intSetting.includes('home')",
-                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("home"), "Home")),
+                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("home"), "Contacts at home")),
+                                         helpText("Apply a distinct intervention for home-based contacts"),
                                          column(width = 2,
                                                 sparklineOutput("sparklineHome"),
                                                 hr(),
@@ -201,33 +230,6 @@ tags$head(tags$style(HTML('
 
                                          column(width = 4,
                                                 DTOutput("reviewHome")
-                                         )
-                                     ) # Closes box
-                                 ), # Closes Conditional panel
-
-                                 # All
-                                 conditionalPanel(
-
-                                     condition = "input.intSetting.includes('general')",
-                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("users"), "All settings")),
-                                         column(width = 2,
-                                                sparklineOutput("sparklineGeneral"),
-                                                hr(),
-                                                strong("Pointer value:"),
-                                                textOutput("tooltipGeneral"),
-                                                helpText("Click to add a point. Double-click to remove."),
-                                                hr(),
-                                                actionButton("resetGeneral", "Reset"),
-                                                actionButton("undoGeneral", "Undo")),
-                                         column(width = 6,
-                                                plotOutput("intGeneral", height = 270,
-                                                           click = "intGeneral_click",
-                                                           dblclick = "intGeneral_dblclick",
-                                                           hover = hoverOpts("intGeneral_hover", delay=100, delayType = "debounce")),
-                                         ),
-
-                                         column(width = 4,
-                                                DTOutput("reviewGeneral")
                                          )
                                      ) # Closes box
                                  ) # Closes Conditional panel

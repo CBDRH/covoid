@@ -428,7 +428,7 @@ output$gammainv <- renderText(HTML(paste0("&gamma;", " = 1/" , input$gammainv, "
 default <- reactiveValues()
 
 # Initial conditions
-default$s_num <- reactive(ifelse(is.null(input$s_num), 499000, input$s_num))
+default$s_num <- reactive(ifelse(is.null(input$s_num), 4000000, input$s_num))
 default$i_num <- reactive(ifelse(is.null(input$i_num), 300, input$i_num))
 default$r_num <- reactive(ifelse(is.null(input$r_num), 700, input$r_num))
 
@@ -607,7 +607,7 @@ output$intGeneral <- renderPlot(clickrPlot(int$dfGeneral, input$dateRange[1], in
 output$reviewSchool <- renderDT(clickrTable(int$dfSchool, input$dateRange[1]))
 output$reviewWork <- renderDT(clickrTable(int$dfWork, input$dateRange[1]))
 output$reviewHome <- renderDT(clickrTable(int$dfHome, input$dateRange[1]))
-output$reviewGeneral <- renderDT(clickrTable(int$General, input$dateRange[1]))
+output$reviewGeneral <- renderDT(clickrTable(int$dfGeneral, input$dateRange[1]))
 
 # Update labels that are hovered
 observeEvent(input$intSchool_hover, {int$hvSchool <- clickrHover(input$intSchool_hover)})
@@ -631,7 +631,7 @@ observeEvent(input$intGeneral_dblclick, {if(nrow(int$dfGeneral)) {int$dfGeneral 
 observeEvent(input$undoSchool, {int$dfSchool <- undo(int$dfSchool)})
 observeEvent(input$undoWork, {int$dfWork <- undo(int$dfWork)})
 observeEvent(input$undoHome, {int$dfHome <- undo(int$dfHome)})
-observeEvent(input$undoGeneral, {int$dfGeneral <- undo(int$df$General)})
+observeEvent(input$undoGeneral, {int$dfGeneral <- undo(int$dfGeneral)})
 
 ## Reset on click
 observeEvent(input$resetSchool, {int$dfSchool <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
@@ -716,6 +716,10 @@ cmList <- reactive({
 
 })
 
+output$test1 <- reactive(paste("General:", round(sum(cmList()[["general"]]), digits=0)))
+output$test2 <- reactive(paste("School:", round(sum(cmList()[["school"]]), digits=0)))
+output$test3 <- reactive(paste("Work:", round(sum(cmList()[["work"]]), digits=0)))
+output$test4 <- reactive(paste("Home:", round(sum(cmList()[["home"]]), digits=0)))
 
 ### Prepare intervention matrix list
 intList <- reactive({
