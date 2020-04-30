@@ -133,7 +133,7 @@ sir_c_state0 <- function(S0,I0,R0) {
     # assertions
     stopifnot(length(S0) == length(I0))
     stopifnot(length(I0) == length(R0))
-    stopifnot(any(I0 >= 1))
+    stopifnot(any(I0 >= 0))
 
     # output with class sir_state0
     state0 = c(S=S0,I=I0,R=R0)
