@@ -175,41 +175,41 @@ digraph COVOIDd {
     color=orange;
     style=filled;
     node [shape = box, fontname = Helvetica]
-    I1[label='I1\ninfected,\nsymptomatic,\ninfectious,\nearly stage'];
+    I1m[label='I1\ninfected,\nsymptomatic,\ninfectious,\nearly stage,\nmild'];
+    I1s[label='I1\ninfected,\nsymptomatic,\ninfectious,\nearly stage,\nsevere'];
     I2[label='I2\ninfected,\nsymptomatic,\ninfectious,\nlater stage'];
     T[label='T\ninfected,\ntest +ve,\nin isolation'];
     H[label='H\ninfected,\nrequires/is hospitalised'];
-    I1c[label='I1&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nearly stage\n(was quarantined contact)'];
+    I1cm[label='I1m&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nearly stage\n,mild\n(was quarantined contact)'];
+    I1cs[label='I1s&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nearly stage\n,severe\n(was quarantined contact)'];
     I2c[label='I2&#x1D9C;\ninfected,\nsymptomatic,\ninfectious,\nlater stage\n(was quarantined contact)'];
-    Tc[label='T&#x1D9C;\ninfected,\ntest +ve,\nin isolation\n(was quarantined contact)'];
     Hc[label='H&#x1D9C;\ninfected,\nrequires/is hospitalised\n(was quarantined contact)'];
   }
 
   # several 'edge' statements
   S->E1
   E1->E2
-  E2->I1
+  E2->I1m
+  E2->I1s
   E2->I1c
-  I1->I2
+  I1m->I2
   I2->R
-  I1->H
+  I1s->H
   H->Rh
-  I1->T
+  I1m->T
   T->R
   I1->I2c
   S->Sc
   Sc->S
   S->E1c
   E1c->E2c
-  E2c->I1c
-  I1c->I2c
-  I1c->Tc
+  E2c->I1cm
+  E2c->I1cs
+  I1cm->I2c
   I2c->Rc
-  I1c->Hc
-  Tc->Rc
+  I1cs->Hc
   Hc->Rhc
   T->S[style=dashed color=red]
-  Tc->S[style=dashed  color=red]
   H->S[style=dashed color=red]
   Hc->S[style=dashed color=red]
   E2->S[style=dashed color=red]
@@ -233,7 +233,8 @@ digraph COVOIDd {
 | S      | susceptible |
 | E1   | exposed/infected; asymptomatic; non-infectious|
 | E2   | exposed/infected; asymptomatic; infectious|
-| I1   | infected, symptomatic, infectious, early stage|
+| I1m   | infected, symptomatic, infectious, early stage, mild disease|
+| I1s   | infected, symptomatic, infectious, early stage, severe disease|
 | I2   | infected, symptomatic, infectious, later stage|
 | T      | infected, tested positive, in isolation|
 | H      | infected, symptomatic, infectious, requires hospitalisation|
@@ -242,9 +243,9 @@ digraph COVOIDd {
 | S^C^   | susceptible; contact of a case in quarantine|
 | E1^C^ | exposed/infected; asymptomatic; non-infectious; contact of a case in quarantine|
 | E2^C^ | exposed/infected; asymptomatic; infectious; contact of a case in quarantine|
-| I1^C^ | infected, symptomatic, infectious, early stage; contact of a case in quarantine/isolation|
+| I1m^C^ | infected, symptomatic, infectious, early stage; contact of a case in quarantine/isolation, mild disease|
+| I1s^C^ | infected, symptomatic, infectious, early stage; contact of a case in quarantine/isolation, severe disease|
 | I2^C^ | infected, symptomatic, infectious, later stage; contact of a case in quarantine/isolation|
-| T^C^    | infected, tested positive, in isolation; contact of a case in quarantine|
 | H^C^      | infected, symptomatic, infectious, requires hospitalisation; contact of a case |
 | R^C^      | removed (recovered/immune, deceased); contact of a case|
 | Rh^C^   | removed (recovered/immune, deceased), required hospitalsiation; contact of a case|
@@ -268,28 +269,27 @@ $$
 \begin{aligned} 
 \lambda_i &= \sum{p^T \cdot IM_{*,i} \cdot CM_{i,*} \cdot \frac{E\it{2} + I1m + I1s + I2}{N}} \\
           &+ (1 - Q_{eff}) \cdot \sum{p^T \cdot IM_{*,i} \cdot CM_{i,*} \cdot \frac{E\it{2}^C + I1m^C + I1s^C + I2^C}{N}} \\
-          &+ (1 - T_{eff}) \cdot \sum{p^T \cdot IM_{*,i} \cdot CM_{i,*} \cdot \frac{T + T^C}{N}} \\
+          &+ (1 - T_{eff}) \cdot \sum{p^T \cdot IM_{*,i} \cdot CM_{i,*} \cdot \frac{T}{N}} \\
           &+ (1 - H_{eff}) \cdot \sum{p^T \cdot IM_{*,i} \cdot CM_{i,*} \cdot \frac{H + H^C}{N}}
 \end{aligned} 
 $$
 
 $$
 \begin{aligned} 
-\frac{dS_i}{dt} &= -S_{i} \cdot \lambda_{i} \\
-\frac{dE\it{1}_i}{dt} &= (1 - \delta) \cdot S_{i} \cdot \lambda_{i} - \sigma_1 \cdot E\it{1}_i \\
-\frac{dE\it{2}_i}{dt} &= \sigma_1 \cdot E\it{1}_i - \sigma_2 \cdot E2_i \\
-\frac{dI\it{1}m_i}{dt} &= (1 - p_{severe}) \cdot \sigma_2 \cdot E2_i  - \gamma_1 \cdot I\it{1}m_1 \\
-\frac{dI\it{1}s_i}{dt} &= p_{severe} \cdot \sigma_2 \cdot E2_i  - \gamma_1 \cdot I\it{1}s_i \\
-\frac{dI\it{2}_i}{dt} &= (1 - p_{isolate}) \cdot \gamma_1 \cdot I\it{1}m_i  - \gamma_2 \cdot I\it{2}_i \\
-\frac{dT_i}{dt} &= p_{isolate} \cdot \gamma_1 \cdot I\it{1}m_i  - \gamma_2 \cdot T_i \\
+\frac{dS_i}{dt} &= -S_{i} \cdot \lambda_{i} - \kappa_i \cdot (1 -\alpha) \cdot \lambda_i \cdot S_i + \eta \cdot S^C_i \\
+\frac{dE\it{1}_i}{dt} &= (1 - \delta_1) \cdot S_{i} \cdot \lambda_{i} - \sigma_1 \cdot E\it{1}_i \\
+\frac{dE\it{2}_i}{dt} &= (1 - \delta_2) \cdot \sigma_1 \cdot E\it{1}_i - \sigma_2 \cdot E2_i \\
+\frac{dI\it{1}m_i}{dt} &= (1 - \delta_3) \cdot (1 - p_{severe}) \cdot \sigma_2 \cdot E2_i  - \gamma_1 \cdot I\it{1}m_1 \\
+\frac{dI\it{1}s_i}{dt} &= (1 - \delta_3) \cdot p_{severe} \cdot \sigma_2 \cdot E2_i  - \gamma_1 \cdot I\it{1}s_i \\
+\frac{dI\it{2}_i}{dt} &= (1 - \delta_4) \cdot (1 - p_{isolate}) \cdot \gamma_1 \cdot I\it{1}m_i  - \gamma_2 \cdot I\it{2}_i \\
+\frac{dT_i}{dt} &= (1 - \delta_4) \cdot p_{isolate} \cdot \gamma_1 \cdot I\it{1}m_i  - \gamma_2 \cdot T_i \\
 \frac{dH_i}{dt} &= \gamma_1 \cdot I\it{1}s_i  - \gamma_2 \cdot H_i \\
-\frac{dS^C_i}{dt} &= 0 \\
-\frac{dE\it{1}^C_i}{dt} &= \delta \cdot S_{i} \cdot \lambda_{i} - \sigma_1 \cdot E\it{1}^C_i \\
-\frac{dE\it{2}^C_i}{dt} &= \sigma_1 \cdot E\it{1}^C_i - \sigma_2 \cdot E2^C_i \\
-\frac{dI\it{1}m^C_i}{dt} &= (1 - p_{severe}) \cdot \sigma_2 \cdot E2^C_i  - \gamma_1 \cdot I\it{1}m^C_1 \\
-\frac{dI\it{1}s^C_i}{dt} &= p_{severe} \cdot \sigma_2 \cdot E2^C_i  - \gamma_1 \cdot I\it{1}s^C_i \\
-\frac{dI\it{2}^C_i}{dt} &= (1 - p_{isolate}) \cdot \gamma_1 \cdot I\it{1}m^C_i  - \gamma_2 \cdot I\it{2}^C_i \\
-\frac{dT^C_i}{dt} &= p_{isolate} \cdot \gamma_1 \cdot I\it{1}m^C_i  - \gamma_2 \cdot T^C_i \\
+\frac{S^C_i}{dt} &= \kappa_i \cdot (1 -\alpha) \cdot \lambda_i \cdot S_i - \eta \cdot S^C_i\\
+\frac{dE\it{1}^C_i}{dt} &= \delta_1 \cdot S_{i} \cdot \lambda_{i} - \sigma_1 \cdot E\it{1}^C_i \\
+\frac{dE\it{2}^C_i}{dt} &= \delta_2 \cdot \sigma_1 \cdot E\it{1}_i + \sigma_1 \cdot E\it{1}^C_i - \sigma_2 \cdot E2^C_i \\
+\frac{dI\it{1}m^C_i}{dt} &= \delta_{3} \cdot (1-p_{severe}) \cdot \sigma_2 \cdot E2_i + (1 - p_{severe}) \cdot \sigma_2 \cdot E2^C_i  - \gamma_1 \cdot I\it{1}m^C_1 \\
+\frac{dI\it{1}s^C_i}{dt} &= \delta_{3} \cdot (p_{severe}) \cdot \sigma_2 E2_i + p_{severe} \cdot \sigma_2 \cdot E2^C_i  - \gamma_1 \cdot I\it{1}s^C_i \\
+\frac{dI2^C_i}{dt} &= \delta_{4} \cdot \gamma_1 \cdot I1m_i + \gamma_1\cdot I1m^C_i - \gamma_2 \cdot I2^C_i \\
 \frac{dH^C_i}{dt} &= \gamma_1 \cdot I\it{1}s^C_i  - \gamma_2 \cdot H^C_i \\
 \frac{dR_i}{dt} &= \gamma_2 \cdot T_i  + \gamma_2 \cdot I\it{2}_i + \gamma_2 \cdot T^C_i  + \gamma_2 \cdot I\it{2}^C_i \\
 \frac{dRh_i}{dt} &= \gamma_2 \cdot H_i  + \gamma_2 \cdot H^C_i
