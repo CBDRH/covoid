@@ -63,13 +63,17 @@ simulate_seithr_qc <- function(t,state_t0,param) {
                        func=seithr_qc_model,
                        parms=list(pt=param$pt,
                                   Qeff=param$Qeff,
-                                  Teff=param$Teff,
+                                  Ieff=param$Ieff,
                                   Heff=param$Heff,
-                                  delta=param$delta,
+                                  delta1=param$delta1,
+                                  delta2=param$delta2,
+                                  delta3=param$delta3,
+                                  delta4=param$delta4,
                                   sigma1=param$sigma1,
                                   sigma2=param$sigma2,
                                   p_severe=param$p_severe,
                                   p_isolate=param$p_isolate,
+                                  p_tested=param$p_tested,
                                   gamma1=param$gamma1,
                                   gamma2=param$gamma2,
                                   cm=param$cm,
@@ -97,7 +101,10 @@ simulate_seithr_qc <- function(t,state_t0,param) {
 #' @param Qeff ...
 #' @param Teff ...
 #' @param Heff ...
-#' @param delta ...
+#' @param delta1 ...
+#' @param delta2 ...
+#' @param delta3 ...
+#' @param delta4 ...
 #' @param sigma1 ...
 #' @param sigma2 ...
 #' @param p_severe ...
@@ -116,7 +123,8 @@ simulate_seithr_qc <- function(t,state_t0,param) {
 #' @return List of SIR model parameters
 #'
 #' @export
-seithr_qc_param <- function(R0,Qeff,Teff,Heff,delta,sigma1,sigma2,p_severe,p_isolate,gamma1,gamma2,cm,dist,
+seithr_qc_param <- function(R0,Qeff,Ieff,Heff,delta1,delta2,delta3,delta4,
+                            sigma1,sigma2,p_severe,p_isolate,p_tested,gamma1,gamma2,cm,dist,
                             contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
     # assertions
     if (is.list(cm)) {
@@ -168,13 +176,17 @@ seithr_qc_param <- function(R0,Qeff,Teff,Heff,delta,sigma1,sigma2,p_severe,p_iso
     # output with class sir_param
     param = list(R0=R0,
                  Qeff=Qeff,
-                 Teff=Teff,
+                 Ieff=Ieff,
                  Heff=Heff,
-                 delta=delta,
+                 delta1=delta1,
+                 delta2=delta2,
+                 delta3=delta3,
+                 delta4=delta4,
                  sigma1=sigma1,
                  sigma2=sigma2,
                  p_severe=p_severe,
                  p_isolate=p_isolate,
+                 p_tested=p_tested,
                  gamma1=gamma1,
                  gamma2=gamma2,
                  cm=cm,
@@ -206,7 +218,6 @@ seithr_qc_param <- function(R0,Qeff,Teff,Heff,delta,sigma1,sigma2,p_severe,p_iso
 #' @param Ic1m
 #' @param Ic1s
 #' @param Ic2
-#' @param Tc
 #' @param Hc
 #' @param R
 #' @param Rh
@@ -214,13 +225,14 @@ seithr_qc_param <- function(R0,Qeff,Teff,Heff,delta,sigma1,sigma2,p_severe,p_iso
 #' @return List of SEIR-QHT model initial states
 #'
 #' @export
-seithr_qc_state0 <- function(S,E1,E2,I1m,I1s,I2,T,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Tc,Hc,R,Rh) {
+seithr_qc_state0 <- function(S,E1,E2,I1m,I1s,I2,I2i,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Hc,R,Rh,Tested,Detect,NotDetect) {
     # assertions
     # add a check
 
     # output with class sir_state0
-    state0 = c(S=S,E1=E1,E2=E2,I1m=I1m,I1s=I1s,I2=I2,T=T,H=H,
-               Sc=Sc,Ec1=Ec1,Ec2=Ec2,Ic1m=Ic1m,Ic1s=Ic1s,Ic2=Ic2,Tc=Tc,Hc=Hc,R=R,Rh=Rh)
+    state0 = c(S=S,E1=E1,E2=E2,I1m=I1m,I1s=I1s,I2=I2,I2i=I2i,H=H,
+               Sc=Sc,Ec1=Ec1,Ec2=Ec2,Ic1m=Ic1m,Ic1s=Ic1s,Ic2=Ic2,
+               Hc=Hc,R=R,Rh=Rh,Tested=Tested,Detect=Detect,NotDetect=NotDetect)
     class(state0) = "seithr_qc_state0"
 
     # return
@@ -247,35 +259,34 @@ seithr_qc_model <- function(t,y,parms) {
         J = ncol(cm_cur)
         S = y[1:(1*J)]
         E1 = y[(J+1):(2*J)]
-        E2 = y[((3-1)*J+1):(3*J)]
-        I1m = y[((4-1)*J+1):(4*J)]
-        I1s = y[((5-1)*J+1):(5*J)]
-        I2 = y[((6-1)*J+1):(6*J)]
-        T = y[((7-1)*J+1):(7*J)]
-        H = y[((8-1)*J+1):(8*J)]
-        Sc = y[((9-1)*J+1):(9*J)]
-        Ec1 = y[((10-1)*J+1):(10*J)]
-        Ec2 = y[((11-1)*J+1):(11*J)]
-        Ic1m = y[((12-1)*J+1):(12*J)]
-        Ic1s = y[((13-1)*J+1):(13*J)]
-        Ic2 = y[((14-1)*J+1):(14*J)]
-        Tc = y[((15-1)*J+1):(15*J)]
-        Hc = y[((16-1)*J+1):(16*J)]
-        R = y[((17-1)*J+1):(17*J)]
-        Rh = y[((18-1)*J+1):(18*J)]
-        N = S+E1+E2+I1m+I1s+I2+T+H+Sc+Ec1+Ec2+Ic1m+Ic1s+Ic2+Tc+Hc+R+Rh
+        E2 = y[(2*J+1):(3*J)]
+        I1m = y[(3*J+1):(4*J)]
+        I1s = y[(4*J+1):(5*J)]
+        I2 = y[(5*J+1):(6*J)]
+        I2i = y[(6*J+1):(7*J)]
+        H = y[(7*J+1):(8*J)]
+        Sc = y[(8*J+1):(9*J)]
+        Ec1 = y[(9*J+1):(10*J)]
+        Ec2 = y[(10*J+1):(11*J)]
+        Ic1m = y[(11*J+1):(12*J)]
+        Ic1s = y[(12*J+1):(13*J)]
+        Ic2 = y[(13*J+1):(14*J)]
+        Hc = y[(14*J+1):(15*J)]
+        R = y[(15*J+1):(16*J)]
+        Rh = y[(16*J+1):(17*J)]
+        Tested = y[(17*J+1):(18*J)]
+        Detect = y[(18*J+1):(19*J)]
+        NotDetect = y[(19*J+1):(20*J)]
 
-        # derived parameters
-        # none
+        N = S+E1+E2+I1m+I1s+I2+I2i+H+Sc+Ec1+Ec2+Ic1m+Ic1s+Ic2+Hc+R+Rh
 
-        # differential equations
         dS = numeric(length=J)
         dE1 = numeric(length=J)
         dE2 = numeric(length=J)
         dI1m = numeric(length=J)
         dI1s = numeric(length=J)
         dI2 = numeric(length=J)
-        dT = numeric(length=J)
+        dI2i = numeric(length=J)
         dH = numeric(length=J)
         dSc = numeric(length=J)
         dEc1 = numeric(length=J)
@@ -283,42 +294,59 @@ seithr_qc_model <- function(t,y,parms) {
         dIc1m = numeric(length=J)
         dIc1s = numeric(length=J)
         dIc2 = numeric(length=J)
-        dTc = numeric(length=J)
         dHc = numeric(length=J)
         dR = numeric(length=J)
         dRh = numeric(length=J)
+        dTested = numeric(length=J)
+        dDetect = numeric(length=J)
+        dNotDetect = numeric(length=J)
 
         for (i in 1:J) {
+            # derived parameters
             lambda = sum(pt_cur*im[,i]*cm_cur[i,]*((E2+I1m+I1s+I2)/N)) +
                 (1-Qeff)*sum(pt_cur*im[,i]*cm_cur[i,]*((Ec2+Ic1m+Ic1s+Ic2)/N)) +
-                (1-Teff)*sum(pt_cur*im[,i]*cm_cur[i,]*((Tc+T)/N)) +
+                (1-Ieff)*sum(pt_cur*im[,i]*cm_cur[i,]*((I2i)/N)) +
                 (1-Heff)*sum(pt_cur*im[,i]*cm_cur[i,]*((H+Hc)/N))
+
+            # case discovery
+            dTested[i] = p_tested*(sigma2*E2[i] + sigma2*Ec2[i])
+            dDetect[i] = gamma1*Ic1s[i] + gamma1*I1s[i] + dTested[i]
+            dNotDetect[i] = (1-p_tested)*sigma2*E2[i]
+            DetectRate = dDetect[i]/(dNotDetect[i] + dDetect[i])
+            DetectRate = replace(DetectRate,is.na(DetectRate),0)
+            delta1_ = delta1*DetectRate
+            delta2_ = delta2*DetectRate
+            delta3_ = delta3*DetectRate
+            delta4_ = delta4*DetectRate
+
+            # differential equations
             dS[i]   = -(S[i])*lambda
-            dE1[i]  = (1-delta)*(S[i])*lambda - sigma1*E1[i]
-            dE2[i]  = sigma1*E1[i] - sigma2*E2[i]
-            dI1m[i] = (1-p_severe)*sigma2*E2[i] - gamma1*I1m[i]
-            dI1s[i] = (p_severe)*sigma2*E2[i] - gamma1*I1s[i]
-            dI2[i]  = (1-p_isolate)*gamma1*I1m[i] - gamma2*I2[i]
-            dT[i]   = (p_isolate)*gamma1*I1m[i] - gamma2*T[i]
+            dE1[i]  = (1-delta1_)*(S[i])*lambda - sigma1*E1[i]
+            dE2[i]  = (1-delta2_)*sigma1*E1[i] - sigma2*E2[i]
+            dI1m[i] = (1-delta3_)*(1-p_severe)*sigma2*E2[i] - gamma1*I1m[i]
+            dI1s[i] = (1-delta3_)*(p_severe)*sigma2*E2[i] - gamma1*I1s[i]
+            dI2[i]  = (1-delta4_)*(1-p_isolate)*gamma1*I1m[i] - gamma2*I2[i]
+            dI2i[i] = (1-delta4_)*(p_isolate)*gamma1*I1m[i] - gamma2*I2i[i]
             dH[i]   = gamma1*I1s[i] - gamma2*H[i]
             dSc[i]  = 0
-            dEc1[i] = (delta)*(S[i])*lambda - sigma1*Ec1[i]
-            dEc2[i] = sigma1*Ec1[i] - sigma2*Ec2[i]
-            dIc1m[i] = (1-p_severe)*sigma2*Ec2[i] - gamma1*Ic1m[i]
-            dIc1s[i] = (p_severe)*sigma2*Ec2[i] - gamma1*Ic1s[i]
-            dIc2[i] = (1-p_isolate)*gamma1*Ic1m[i] - gamma2*Ic2[i]
-            dTc[i]  = p_isolate*gamma1*Ic1m[i] - gamma2*Tc[i]
+            dEc1[i] = (delta1_)*(S[i])*lambda - sigma1*Ec1[i]
+            dEc2[i] = (delta2_)*sigma1*E1[i] + sigma1*Ec1[i] - sigma2*Ec2[i]
+            dIc1m[i] = (delta3_)*(1-p_severe)*sigma2*E2[i] + (1-p_severe)*sigma2*Ec2[i] - gamma1*Ic1m[i]
+            dIc1s[i] = (delta3_)*(p_severe)*sigma2*E2[i] + (p_severe)*sigma2*Ec2[i] - gamma1*Ic1s[i]
+            dIc2[i] = (delta4_)*gamma1*I1m[i] + gamma1*Ic1m[i] - gamma2*Ic2[i]
             dHc[i]  = gamma1*Ic1s[i] - gamma2*Hc[i]
-            dR[i]   = gamma2*Tc[i] + gamma2*Ic2[i] + gamma2*T[i] + gamma2*I2[i]
+            dR[i]   = gamma2*Ic2[i] + gamma2*I2i[i] + gamma2*I2[i]
             dRh[i]  = gamma2*Hc[i] + gamma2*H[i]
         }
 
         # return
-        list(c(dS,dE1,dE2,dI1m,dI1s,dI2,dT,dH,dSc,dEc1,dEc2,dIc1m,dIc1s,dIc2,dTc,dHc,dR,dRh),
+        list(c(dS,dE1,dE2,dI1m,dI1s,dI2,dI2i,dH,dSc,dEc1,dEc2,dIc1m,dIc1s,dIc2,dHc,dR,dRh,
+               dTested,dDetect,dNotDetect),
              S=sum(S,Sc),
-             E=sum(E1,E2,dEc1,dEc2),
-             I=sum(I1m,I1s,I2,T,H,Ic1m,Ic1s,Ic2,Tc,Hc),
+             E=sum(E1,Ec1),
+             I=sum(E2,Ec2,I1m,I1s,I2,I2i,H,Ic1m,Ic1s,Ic2,Hc),
              R=sum(R,Rh),
-             Ntotal=sum(S,E1,E2,I1m,I1s,I2,T,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Tc,Hc,R,Rh))
+             Detect=sum(Detect),
+             Ntotal=sum(S,E1,E2,I1m,I1s,I2,I2i,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Hc,R,Rh))
     })
 }
