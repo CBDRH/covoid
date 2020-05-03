@@ -1,0 +1,199 @@
+---
+title: "The COVOID model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{covoid-model-usage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Background
+
+Model equations: 
+
+$$
+\begin{align}
+\frac{dS_i}{dt}   &= -S \lambda_i \\
+\frac{dE1_i}{dt}  &= (1-\delta_{1}) S_i \lambda_i - \sigma_1 E1_i \\
+\frac{dE2_i}{dt}  &= (1-\delta_{2})\sigma_1 E1_i - \sigma_2 E2_i \\
+\frac{dI1m_i}{dt} &= (1-\delta_{3})(1-p_{severe}) \sigma_2 E2_i - \gamma_1 I1m_i \\
+\frac{dI1s_i}{dt} &= (1-\delta_{3})(p_{severe}) \sigma_2 E2_i - \gamma_1 I1s_i \\
+\frac{dI2_i}{dt}  &= (1-\delta_{4})(1-p_{isolate}) \gamma_1 I1m_i - \gamma_2 I2_i \\
+\frac{dI2i_i}{dt} &= (1-\delta_{4})(p_{isolate}) \gamma_1 I1m_i - \gamma_2 I2i_i \\
+\frac{dH_i}{dt}   &= \gamma_1 I1s_i - \gamma_2 H \\
+\frac{dE1^c_i}{dt} &= \delta_{1} S\lambda - \sigma_1 E1^c_i \\
+\frac{dE2^c_i}{dt} &= \delta_{2} \sigma_1 E1 + \sigma_1 E1^c_i - sigma_2 E2^c_i \\
+\frac{dI1m^c_i}{dt} &= \delta_{3} (1-p_{severe}) \sigma_2 E2_i + (1-p_{severe}) \sigma_2 E2^c_i - \gamma_1 I1m^c \\
+\frac{dI1s^c_i}{dt} &= \delta_{3} (p_{severe}) \sigma_2 E2_i + (p_{severe}) \sigma_2 E2^c_i - \gamma_1 I1s^c \\
+\frac{dI2^c_i}{dt} &= \delta_{4} \gamma_1 I1m_i + \gamma_1 I1m^c_i - \gamma_2 I2^c_i \\
+\frac{dH^c_i}{dt}  &= \gamma_1 I1s^c_i - \gamma_2 H^c_i \\
+\frac{dR_i}{dt}   &= \gamma_2 I2^c_i + \gamma_2 I2i_i + \gamma_2 I2_i \\
+\frac{dRh_i}{dt}  &= \gamma_2 H^c_i + \gamma_2 H_i \\
+\end{align}
+$$
+
+The force of infection and probability of infection: 
+
+$$
+\begin{align}
+\lambda_i &= \sum_{i=1}^{16}\frac{\beta_{ij} C_{ij} (E2+I1m+I1s+I2) +
+    (1-Q_{eff}) \beta_{ij}  C_{ij} (Ec2+Ic1m+Ic1s+Ic2)) +
+    (1-I_{eff}) \beta_{ij}  C_{ij} I2i +
+    (1-H_{eff}) \beta_{ij}  C_{ij} (H+Hc)} {N_{ij}} \\
+\beta_{ij} &= \beta I_{ij}
+\end{align}
+$$
+
+Detection rates:
+
+
+
+Table of states:
+
+```{r, echo=FALSE, include=TRUE, results="asis"}
+states_tab <- data.frame(param = c("S"), 
+                       inter = c("Susceptible"))
+colnames(states_tab) <- c("State", "Interpretation")
+knitr::kable(states_tab, escape=FALSE)
+```
+
+
+Table of parameters:
+
+```{r, echo=FALSE, include=TRUE, results="asis"}
+parameters_tab <- data.frame(param = c("$\\beta$", 
+                                "$\\sigma_1$",
+                                "$\\sigma_2$",
+                                "$\\gamma_1$",
+                                "$\\gamma_2$",
+                                "$\\delta_1$",
+                                "$\\delta_2$",
+                                "$\\delta_3$",
+                                "$\\delta_4$"), 
+                       inter = c("Probability of infection",
+                                 "Inverse ...",
+                                 "Inverse ...",
+                                 "Inverse ...",
+                                 "Inverse ...",
+                                 "detection parameter",
+                                 "detection parameter",
+                                 "detection parameter",
+                                 "detection parameter"))
+colnames(parameters_tab) <- c("Parameter", "Interpretation")
+knitr::kable(parameters_tab, escape=FALSE)
+```
+
+
+```{r setup}
+#library(covoid)
+devtools::load_all()
+```
+
+```{r}
+cm_oz <- import_contact_matrix("Australia","general")
+p_age_oz <- import_age_distribution("Australia")
+param <- seithr_qc_param(R0=2.3,
+                         Qeff=0,
+                         Ieff=0,
+                         Heff=0,
+                         delta1=0,
+                         delta2=0,
+                         delta3=0,
+                         delta4=0,
+                         sigma1=0.3,
+                         sigma2=0.3,
+                         p_severe=0.1,
+                         p_isolate=0,
+                         p_tested=0.0,
+                         gamma1=0.3,
+                         gamma2=0.3,
+                         cm=cm_oz,
+                         dist=p_age_oz)
+nJ = ncol(cm_oz)
+S = p_age_oz*4e6
+E1 = rep(1,nJ)
+E2 = rep(0,nJ)
+I1m = rep(0,nJ)
+I1s = rep(0,nJ)
+I2 = rep(0,nJ)
+I2i = rep(0,nJ)
+H = rep(0,nJ)
+Sc = rep(0,nJ)
+Ec1 = rep(0,nJ)
+Ec2 = rep(0,nJ)
+Ic1m = rep(0,nJ)
+Ic1s = rep(0,nJ)
+Ic2 = rep(0,nJ)
+Hc = rep(0,nJ)
+R = rep(0,nJ)
+Rh = rep(0,nJ)
+Tested = rep(0,nJ)
+Detect = rep(0,nJ)
+NotDetect = rep(0,nJ)
+state0 = seithr_qc_state0(S,E1,E2,I1m,I1s,I2,I2i,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Hc,R,Rh,
+                          Tested,Detect,NotDetect)
+res = simulate_seithr_qc(200,state0,param)
+```
+
+```{r, fig.width=7}
+plot(res,y = c("S","I","R"))
+```
+
+## Some other case
+
+```{r}
+cm_oz <- import_contact_matrix("Australia","general")
+p_age_oz <- import_age_distribution("Australia")
+param <- seithr_qc_param(R0=2.3,
+                         Qeff=0.5,
+                         Ieff=0.5,
+                         Heff=0.5,
+                         delta1=0.1,
+                         delta2=0.2,
+                         delta3=0.3,
+                         delta4=0.4,
+                         sigma1=0.3,
+                         sigma2=0.3,
+                         p_severe=0.1,
+                         p_isolate=0.3,
+                         p_tested=0.7,
+                         gamma1=0.3,
+                         gamma2=0.3,
+                         cm=cm_oz,
+                         dist=p_age_oz)
+nJ = ncol(cm_oz)
+S = p_age_oz*4e6
+E1 = rep(1,nJ)
+E2 = rep(0,nJ)
+I1m = rep(0,nJ)
+I1s = rep(0,nJ)
+I2 = rep(0,nJ)
+I2i = rep(0,nJ)
+H = rep(0,nJ)
+Sc = rep(0,nJ)
+Ec1 = rep(0,nJ)
+Ec2 = rep(0,nJ)
+Ic1m = rep(0,nJ)
+Ic1s = rep(0,nJ)
+Ic2 = rep(0,nJ)
+Hc = rep(0,nJ)
+R = rep(0,nJ)
+Rh = rep(0,nJ)
+Tested = rep(0,nJ)
+Detect = rep(0,nJ)
+NotDetect = rep(0,nJ)
+state0 = seithr_qc_state0(S,E1,E2,I1m,I1s,I2,I2i,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Hc,R,Rh,
+                          Tested,Detect,NotDetect)
+res = simulate_seithr_qc(200,state0,param)
+```
+
+```{r, fig.width=7}
+plot(res,y = c("S","I","R"))
+```
