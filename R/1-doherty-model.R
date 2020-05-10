@@ -16,7 +16,7 @@
 #' @param state_t0 Initial state of the model (see seimrqc_state0)
 #' @param param Model parameters (see seimrqc_param)
 #'
-#' @return Object of class covoidd and dcm (from the package EpiModels)
+#' @return Object of class covoid and dcm (from the package EpiModels)
 #'
 #' @section References
 #'
@@ -94,7 +94,7 @@ simulate_seimrqc <- function(t,state_t0,param) {
     rownames(mod$epi) <- NULL
 
     # return
-    class(mod) = c("covoidd",class(mod))
+    class(mod) = c("covoid",class(mod))
     mod
 }
 

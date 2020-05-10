@@ -9,7 +9,7 @@
 #' @param state_t0 Initial state of the model (see ?sir_state0)
 #' @param param Model parameters (see ?sir_param)
 #'
-#' @return Object of class covoidd and dcm (from the package EpiModels)
+#' @return Object of class covoid and dcm (from the package EpiModels)
 #'
 #' @examples
 #' param <- sir_param(R0 = 2.5,gamma = 0.1)
@@ -54,7 +54,7 @@ simulate_sir <- function(t,state_t0,param) {
   rownames(mod$epi) <- NULL
 
   # return
-  class(mod) = c("covoidd",class(mod))
+  class(mod) = c("covoid",class(mod))
   mod
 }
 

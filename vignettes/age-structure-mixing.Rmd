@@ -15,7 +15,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(covoid)
+#library(covoid)
+devtools::load_all()
 library(ggplot2)
 ```
 
@@ -34,7 +35,7 @@ We first consider the case without any intervention.
 ```{r, fig.width=7}
 param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
-res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+res <- simulate_sir_c(t = 200,state_t0 = state0,param = param)
 plot(res,y=c("S","I","R"),main="No intervention")
 ```
 
@@ -44,10 +45,10 @@ We can add in time varying interventions using `create_intervention`. The below 
 contact by 20%. Simulates physical distancing.
 
 ```{r, fig.width=7}
-phys_dist = create_intervention(start = 10,stop = 150,c_reduce = 0.8,start_delay = 5,stop_delay = 5)
-param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz,intervention = phys_dist)
+phys_dist = contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5)
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz,contact_intervention = phys_dist)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
-res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+res <- simulate_sir_c(t = 200,state_t0 = state0,param = param)
 plot(res,y=c("S","I","R"),main="Physical distancing")
 ```
 
@@ -71,10 +72,28 @@ We can then add in time varying interventions using `create_intervention` to eac
 
 ```{r, fig.width=7}
 cm = list(all = cm_oz_all, sch = cm_oz_sch)
-int = list(sch=create_intervention(start = 10,stop = 150,c_reduce = 0.2,start_delay = 5,stop_delay = 5),
-           all=create_intervention(start = 10,stop = 150,c_reduce = 0.8,start_delay = 5,stop_delay = 5))
-param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=p_age_oz,intervention = int)
+int = list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),
+           all=contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5))
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=p_age_oz,contact_intervention = int)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
-res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
+res <- simulate_sir_c(t = 200,state_t0 = state0,param = param)
 plot(res,y=c("S","I","R"),main="Physical distancing + school closures")
+```
+
+Children under 15 less infectious (as susceptible) and everyone wearing facemasks, hand washing.
+
+```{r, fig.width=7}
+im = matrix(1,ncol=16,nrow=16)
+im[,1:3] = 0.8
+
+cm = list(all = cm_oz_all, sch = cm_oz_sch)
+int_t = transmission_intervention(start = 10,stop = 200,reduce = 0.9,start_delay = 5,stop_delay = 5)
+
+int_c = list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),
+           all=contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5))
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=p_age_oz,contact_intervention = int_c,
+                     transmission_intervention = int_t,im = im)
+state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+res <- simulate_sir_c(t = 200,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"),main="Physical distancing, school closures,\nhandwashing/facemasks and children less infectious")
 ```
