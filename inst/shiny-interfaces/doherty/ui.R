@@ -27,8 +27,8 @@ sidebar <- dashboardSidebar(
                    label = span(tagList(icon('calendar-alt'), 'Date range')),
                    start = '2020-01-01', end = '2020-12-31'),
     sidebarMenu(
-        menuItem("Doherty Model", tabName = "doherty", icon = icon("dashboard")),
-        menuItem("New Model", tabName = "fitzgerald", icon = icon("dashboard"))
+        menuItem("Doherty Model", tabName = "doherty", icon = icon("dashboard"))
+        #menuItem("New Model", tabName = "fitzgerald", icon = icon("dashboard"))
     ) # Closes sidebarMenu
 ) # closes Sideboard
 

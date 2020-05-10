@@ -26,8 +26,11 @@ output$popcount = renderText({
 # Calculate the number of simulation days
 nsteps <- reactive({as.numeric( input$dateRange[2] - input$dateRange[1]) })
 
-# Visualise the contact matrix as a heatmap
+# Update graph range sliders based on nsteps
+observe(updateSliderInput(session, "ndays", max = nsteps()))
+observe(updateSliderInput(session, "ndays_a", max = nsteps()))
 
+# Visualise the contact matrix as a heatmap
 ageMat <- reactive({
   req(default$countryAgeMat())
   import_contact_matrix(default$countryAgeMat(), setting=default$settingAgeMat())
@@ -255,6 +258,7 @@ observe(
                                    mutate(inf = default$i_num()*infDist()) %>%
                                    ggplot(aes(x=x, y=inf, fill=inf)) +
                                    geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(inf, digits=0)))) +
+
                                    labs(x="Age group", y = "Count") +
                                    scale_fill_viridis() +
                                    theme(legend.position = "none")
@@ -771,6 +775,8 @@ param <- reactive({
                  )
 })
 
+output$test <- renderText(paste(intList()))
+
 # Run the model when the button is clicked
 model <- eventReactive(input$runMod, {
     isolate(
@@ -806,11 +812,11 @@ output$get_wide_data <- downloadHandler(
 
 
 ### Model summary
-mainPlot <- reactive({plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+mainPlot <- reactive({plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
 output$plot <- renderggiraph(mainPlot())
 
 # Make static version the plot for download
-staticPlot <- reactive({plotStaticResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+staticPlot <- reactive({plotStaticResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
 
 # Download the current main plot
 output$downloadPlot <- downloadHandler(
@@ -833,7 +839,7 @@ observe({
 ## Prepare animation
 
 # Preview
-output$animation_preview <- renderggiraph(plotResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a))
+output$animation_preview <- renderggiraph(plotResults(df=mod_df(), scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a))
 
 # Animation
 animation <- eventReactive(input$runAni, {
@@ -847,7 +853,7 @@ animation <- eventReactive(input$runAni, {
       progress$inc(1, detail = detail)
     }
 
-    animateResults(df=mod_df(), cuml=input$cuml_a, scale=input$scale_a,
+    animateResults(df=mod_df(), scale=input$scale_a,
                    logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a,
                    update_progress = updateShinyProgress)
 })
@@ -874,14 +880,13 @@ count <- reactiveValues(nPlots = 0)
 observeEvent(input$toreport,
              {
                  if(input$reportFigs==1) {
-                     extra$plot1 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot1 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot1", value = TRUE)
                      count$nPlots <- 1
                      count$param_p1 <- param()
                      count$state0_p1 <- state0()
                      count$nsteps_p1 <- nsteps()
-                     count$cuml_p1 <- input$cuml
                      count$scale_p1 <- input$scale
                      count$logScale_p1 <- input$logScale
                      count$plotvars_p1 <- input$plotvars
@@ -892,14 +897,13 @@ observeEvent(input$toreport,
                  }
 
                  if(input$reportFigs==2) {
-                     extra$plot2 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot2 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot2", value = TRUE)
                      count$nPlots <- 2
                      count$param_p2 <- param()
                      count$state0_p2 <- state0()
                      count$nsteps_p2 <- nsteps()
-                     count$cuml_p2 <- input$cuml
                      count$scale_p2 <- input$scale
                      count$logScale_p2 <- input$logScale
                      count$plotvars_p2 <- input$plotvars
@@ -910,14 +914,13 @@ observeEvent(input$toreport,
                  }
 
                  if(input$reportFigs==3) {
-                     extra$plot3 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot3 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot3", value = TRUE)
                      count$nPlots <- 3
                      count$param_p3 <- param()
                      count$state0_p3 <- state0()
                      count$nsteps_p3 <- nsteps()
-                     count$cuml_p3 <- input$cuml
                      count$scale_p3 <- input$scale
                      count$logScale_p3 <- input$logScale
                      count$plotvars_p3 <- input$plotvars
@@ -928,14 +931,13 @@ observeEvent(input$toreport,
                  }
 
                  if(input$reportFigs==4) {
-                     extra$plot4 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot4 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot4", value = TRUE)
                      count$nPlots <- 4
                      count$param_p4 <- param()
                      count$state0_p4 <- state0()
                      count$nsteps_p4 <- nsteps()
-                     count$cuml_p4 <- input$cuml
                      count$scale_p4 <- input$scale
                      count$logScale_p4 <- input$logScale
                      count$plotvars_p4 <- input$plotvars
@@ -946,14 +948,13 @@ observeEvent(input$toreport,
                  }
 
                  if(input$reportFigs==5) {
-                     extra$plot5 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot5 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot5", value = TRUE)
                      count$nPlots <- 5
                      count$param_p5 <- param()
                      count$state0_p5 <- state0()
                      count$nsteps_p5 <- nsteps()
-                     count$cuml_p5 <- input$cuml
                      count$scale_p5 <- input$scale
                      count$logScale_p5 <- input$logScale
                      count$plotvars_p5 <- input$plotvars
@@ -964,14 +965,13 @@ observeEvent(input$toreport,
                  }
 
                  if(input$reportFigs==6) {
-                     extra$plot6 <- plotResults(df=mod_df(), cuml=input$cuml, scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot6 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot6", value = TRUE)
                      count$nPlots <- 6
                      count$param_p6 <- param()
                      count$state0_p6 <- state0()
                      count$nsteps_p6 <- nsteps()
-                     count$cuml_p6 <- input$cuml
                      count$scale_p6 <- input$scale
                      count$logScale_p6 <- input$logScale
                      count$plotvars_p6 <- input$plotvars

@@ -23,8 +23,15 @@ header <- dashboardHeader(title = "COVID-19 Open-source Infection Dynamics", tit
 
 # Sidebar (icons from https://fontawesome.com/icons)
 sidebar <- dashboardSidebar(
+    h3("COVOID | SIR Model"),
     sidebarMenu(
-        menuItem("SIR Model", tabName = "sir", icon = icon("dashboard"))
+        menuItem("Parameterise model", tabName = "model", icon = icon("project-diagram")),
+        menuItem("Define interventions", tabName = "intervention", icon = icon("user-md")),
+        menuItem("View results", tabName = "results", icon = icon("chart-bar")),
+        menuItem("Animate results", tabName = "video", icon = icon("video")),
+        menuItem("Prepare report", tabName = "canvas", icon = icon("palette")),
+        menuItem("Download data", tabName = "data", icon = icon("file-excel")),
+        menuItem("Information", tabName = "info", icon = icon("info-circle"))
     ), # Closes sidebarMenu
     div(style = 'overflow-y:scroll;height:600px;',
         dateRangeInput('dateRange',
@@ -41,19 +48,18 @@ sidebar <- dashboardSidebar(
 ## Define the Body
 body <- dashboardBody(
 
-tags$head(tags$style(HTML('
-.box {margin: 5px;}'
-    ))),
+
 
     ### Extended Doherty Model
     tabItems(
-        tabItem(tabName = "sir",
-
-                tabsetPanel(
-
                     # The model
-                    tabPanel(title = icon("project-diagram"),
+                    tabItem(tabName = "model",
                            fluidPage(
+                               div(style="text-align:center",
+                                   box(width = "100%", background = "purple",
+                                   h4(HTML(paste(icon("project-diagram"), "Parameterise model"))))
+                                ),
+
                              fluidRow(
                                  column(width=4, h3("Transmission model of COVID-19 infection"),
                                         helpText(HTML("The figure to the right represents the compartmental transition model presented by
@@ -111,20 +117,24 @@ tags$head(tags$style(HTML('
                              )
 
                         )  # Closes fluidPage
-                    ), # Closes tabPanel
-
+                    ), # Closes tabItem
 
                     # Interventions
-                    tabPanel(title = icon("user-md"),
+                    tabItem(tabName = "intervention",
                              fluidPage(
+                                 div(style="text-align:center",
+                                     box(width = "100%", background = "purple",
+                                         h4(HTML(paste(icon("user-md"), "Define interventions"))))
+                                 ),
                                  box(width="100%", title = "Introduce an intervention. Choose the intervention setting(s):", status = "info", solidHeader = FALSE,
                                  checkboxGroupInput("intSetting", NULL, selected = "general", inline = TRUE,
                                                     choices=list("School" = "school", "Work" = "work", "Home" = "home")),
                                  helpText("Separate interventions can be simultaneously applied to contacts within school, work and home settings.
                                           Interventions for all remaining contacts can be controlled with the 'All contacts' box.")
                                  ),
+                                 #textOutput("test"),
 
-                                 div(style = 'overflow-y:scroll;height:500px;',
+                                 div(style = 'overflow-y:scroll;height:600px;',
 
                                      # All
                                          box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("users"), "All contacts")),
@@ -241,7 +251,11 @@ tags$head(tags$style(HTML('
                     ), # Closes tabPanel
 
                     # Results
-                    tabPanel(title = icon("chart-bar"),
+                    tabItem(tabName = "results",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("chart-bar"), "View results"))))
+                            ),
                              fluidRow(
                                  column(width=3,
                                         box(title = NULL, width=NULL, height="600px",
@@ -271,16 +285,16 @@ tags$head(tags$style(HTML('
                                                          selected=c("Count")
                                             ),
                                             materialSwitch("logScale", "Log scale", FALSE, inline=TRUE, status = "info"),
-                                            materialSwitch("cuml", "Cumulative", FALSE, inline=TRUE, status = "info")
+                                            hr(),
+                                            sliderInput("ndays",
+                                                        "Number of days to plot:",
+                                                        min=0, step=1, max=365, value=100)
                                         )
                                  ),
 
                                  column(width=6,
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
                                             width = "100%", height="600px", status = "primary", solidHeader = FALSE,
-                                            sliderInput("ndays",
-                                                        "Number of days to plot:",
-                                                        min=0, step=1, max=365, value=365),
                                             withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
                                         )
                                  ),
@@ -304,16 +318,16 @@ tags$head(tags$style(HTML('
 
 
                     # Animate results
-                    tabPanel(title = icon("video"),
+                    tabItem(tabName = "video",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("video"), "Animate results"))))
+                            ),
 
                              fluidRow(
                                  column(width=3,
                                         box(title = NULL, width="100%", height = "600px",
                                             status = "success", solidHeader = FALSE,
-                                            sliderInput("ndays_a",
-                                                        "Number of days to animate:",
-                                                        min=0, step=1, max=365, value=365),
-                                            br(),
                                             checkboxGroupInput("plotvars_a", "Compartments to include",
                                                                choices = list(
                                                                    "Susceptible" = "S",
@@ -331,7 +345,12 @@ tags$head(tags$style(HTML('
                                                          selected=c("Count")
                                             ),
                                             materialSwitch("logScale_a", "Log scale", FALSE, inline=TRUE, status = "info"),
-                                            materialSwitch("cuml_a", "Cumulative", FALSE, inline=TRUE, status = "info")
+                                            hr(),
+                                            sliderInput("ndays_a",
+                                                        "Number of days to animate:",
+                                                        min=0, step=1, max=365, value=365),
+                                            hr(),
+                                            helpText("Right-click to download the gif")
                                         )
                                  ),
 
@@ -361,7 +380,11 @@ tags$head(tags$style(HTML('
 
 
                     # Dynamic report
-                    tabPanel(title = icon("palette"),
+                    tabItem(tabName = "canvas",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("palette"), "Prepare report"))))
+                            ),
                                  fluidRow(
                                  box(width=NULL, status = "info", solidHeader = FALSE,
                                      column(width=3,
@@ -491,7 +514,11 @@ tags$head(tags$style(HTML('
                     ),
 
                     # Data
-                    tabPanel(title = icon("file-excel"),
+                    tabItem(tabName = "data",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("file-excel"), "Download data"))))
+                            ),
                              helpText("Once you run a model you will be able to view and download the data here."),
                              DT::dataTableOutput("mod_df_wide"),
                              hr(),
@@ -500,17 +527,16 @@ tags$head(tags$style(HTML('
                              )
                     ),
                     # About
-                    tabPanel(title = icon("info-circle"),
+                    tabItem(tabName = "info",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("info-circle"), "Information"))))
+                            ),
                              h3("Well head")
                     )
 
                 ) # Closes tabsetPanel
 
-
-
-                )
-
-    ) # Closes tabItems
 ) # Closes dashboardBody
 
 

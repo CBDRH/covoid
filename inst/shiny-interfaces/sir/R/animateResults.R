@@ -1,4 +1,4 @@
-animateResults <- function(df, cuml, scale, logScale, plotvars, ndays, update_progress = NULL) {
+animateResults <- function(df, scale, logScale, plotvars, ndays, update_progress = NULL) {
 
     # A temp file to save the output. This file will be removed later by renderImage
     outfile <- tempfile(fileext='.gif')
@@ -6,31 +6,32 @@ animateResults <- function(df, cuml, scale, logScale, plotvars, ndays, update_pr
     compcols <- c("S" = "lightblue", "I" = "red", "R" = "lightgreen")
     complabels <- c("S" = "Susceptible", "I" = "Infectious", "R" = "Recovered")
 
-    ### Update graph based on choice of cumulative
-    if(!cuml) {
+    ### Update graph based on choice of scale and cumulative
+
+    # Incidence
+    if(scale=="Count") {
         yvar <- "count"
         part1 <- "Incidence"
+        part2 <- "(Persons)"
         tt <- "lab1"
     }
-    if(cuml) {
-        yvar <- "cum_sum"
-        part1 <- "Cumulative incidence"
-        tt <- "lab2"
+
+    # Percent
+    if(scale=="Percent") {
+        yvar <- 'pct'
+        part1 <- "Incidence"
+        part2 <- "(Percent)"
+        tt <- "lab1"
     }
 
-    # Determine scale
-    if(scale=="Count") {
-        yscale = 1
-        part2 = "(Persons)"
-    }
-    if(scale=="Percent") {
-        yscale = 100
-        part2 = "(Percent)"
-    }
+    # Per 100,000
     if(scale=="Per 100,000") {
-        yscale = 100000
-        part2 = "(Per 100,000 population)"
+        yvar = 'pht'
+        part1 <- "Incidence"
+        part2 <- "(Per 100,000 population)"
+        tt <- "lab1"
     }
+
 
     ### Update graph based on choice of log scale
     if(!logScale) {
@@ -46,11 +47,11 @@ animateResults <- function(df, cuml, scale, logScale, plotvars, ndays, update_pr
     p <- df %>%
         filter(compartment %in% plotvars) %>%
         filter(t <= ndays) %>%
-        ggplot(aes(x=date, y=(!!as.name(yvar))/yscale, group = complong)) +
+        ggplot(aes(x=date, y=!!as.name(yvar), group = complong)) +
         geom_line(aes(colour=complong)) +
-        geom_segment(aes(xend = max(date), yend = (!!as.name(yvar))/yscale), linetype = 2, colour = 'grey') +
+        geom_segment(aes(xend = max(date), yend = !!as.name(yvar)), linetype = 2, colour = 'grey') +
         geom_point(size = 2) +
-        geom_label(aes(x = max(date), label = round((!!as.name(yvar)/yscale), digits=0)), hjust = 0) +
+        geom_label(aes(x = max(date), label = scales::comma(round(!!as.name(yvar), digits=0))), hjust = 0) +
         transition_reveal(t) +
         coord_cartesian(clip = 'off') +
         labs(x = "Date", y = ytitle, color = "Compartment") +
