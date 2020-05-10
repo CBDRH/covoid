@@ -116,7 +116,7 @@ stateVec <- vector()
 paramVec <- vector()
 
 if(input$inclPlot1){
-   model_p1 <- covoid::simulate_c_sir(t = count$nsteps_p1, state_t0 = count$state0_p1, param = count$param_p1)
+   model_p1 <- covoid::simulate_sir_c(t = count$nsteps_p1, state_t0 = count$state0_p1, param = count$param_p1)
    mod_df_p1 <- prepData(df_epi=model_p1$epi, popsize=count$popSize_p1 , day1 = count$startDate_p1)
    plot_p1 <- plotResults(df = mod_df_p1, scale=count$scale_p1, logScale=count$logScale_p1, plotvars=count$plotvars_p1, ndays=count$ndays_p1)
    stateVec <- cbind(stateVec, `Scenario 1` = formatC(round(count$state0_p1, digits=0), format="d", big.mark = ","))
@@ -124,7 +124,7 @@ if(input$inclPlot1){
 }
 
 if(input$inclPlot2){
-   model_p2 <- covoid::simulate_c_sir(t = count$nsteps_p2, state_t0 = count$state0_p2, param = count$param_p2)
+   model_p2 <- covoid::simulate_sir_c(t = count$nsteps_p2, state_t0 = count$state0_p2, param = count$param_p2)
    mod_df_p2 <- prepData(df_epi=model_p2$epi, popsize=count$popSize_p2 , day1 = count$startDate_p2)
    plot_p2 <- plotResults(df = mod_df_p2, scale=count$scale_p2, logScale=count$logScale_p2, plotvars=count$plotvars_p2, ndays=count$ndays_p2)
    stateVec <- cbind(stateVec, `Scenario 2` = formatC(round(count$state0_p2, digits=0), format="d", big.mark = ","))
@@ -132,7 +132,7 @@ if(input$inclPlot2){
   }
 
 if(input$inclPlot3){
-   model_p3 <- covoid::simulate_c_sir(t = count$nsteps_p3, state_t0 = count$state0_p3, param = count$param_p3)
+   model_p3 <- covoid::simulate_sir_c(t = count$nsteps_p3, state_t0 = count$state0_p3, param = count$param_p3)
    mod_df_p3 <- prepData(df_epi=model_p3$epi, popsize=count$popSize_p3 , day1 = count$startDate_p3)
    plot_p3 <- plotResults(df = mod_df_p3, scale=count$scale_p3, logScale=count$logScale_p3, plotvars=count$plotvars_p3, ndays=count$ndays_p3)
    stateVec <- cbind(stateVec, `Scenario 3` = formatC(round(count$state0_p3, digits=0), format="d", big.mark = ","))
@@ -140,7 +140,7 @@ if(input$inclPlot3){
 }
 
 if(input$inclPlot4){
-   model_p4 <- covoid::simulate_c_sir(t = count$nsteps_p4, state_t0 = count$state0_p4, param = count$param_p4)
+   model_p4 <- covoid::simulate_sir_c(t = count$nsteps_p4, state_t0 = count$state0_p4, param = count$param_p4)
    mod_df_p4 <- prepData(df_epi=model_p4$epi, popsize=count$popSize_p4 , day1 = count$startDate_p4)
    plot_p4 <- plotResults(df = mod_df_p4, scale=count$scale_p4, logScale=count$logScale_p4, plotvars=count$plotvars_p4, ndays=count$ndays_p4)
    stateVec <- cbind(stateVec, `Scenario 4` = formatC(round(count$state0_p4, digits=0), format="d", big.mark = ","))
@@ -148,7 +148,7 @@ if(input$inclPlot4){
 }
 
 if(input$inclPlot5){
-   model_p5 <- covoid::simulate_c_sir(t = count$nsteps_p5, state_t0 = count$state0_p5, param = count$param_p5)
+   model_p5 <- covoid::simulate_sir_c(t = count$nsteps_p5, state_t0 = count$state0_p5, param = count$param_p5)
    mod_df_p5 <- prepData(df_epi=model_p5$epi, popsize=count$popSize_p5, day1 = count$startDate_p5)
    plot_p5 <- plotResults(df = mod_df_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p5, ndays=count$ndays_p5)
    stateVec <- cbind(stateVec, `Scenario 5` = formatC(round(count$state0_p5, digits=0), format="d", big.mark = ","))
@@ -156,7 +156,7 @@ if(input$inclPlot5){
 }
 
 if(input$inclPlot6){
-   model_p6 <- covoid::simulate_c_sir(t = count$nsteps_p6, state_t0 = count$state0_p6, param = count$param_p6)
+   model_p6 <- covoid::simulate_sir_c(t = count$nsteps_p6, state_t0 = count$state0_p6, param = count$param_p6)
    mod_df_p6 <- prepData(df_epi=model_p6$epi, popsize=count$popSize_p6, day1 = count$startDate_p6)
    plot_p6 <- plotResults(df = mod_df_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p6, ndays=count$ndays_p6)
    stateVec <- cbind(stateVec, `Scenario 6` = formatC(round(count$state0_p6, digits=0), format="d", big.mark = ","))

@@ -771,16 +771,16 @@ param <- reactive({
                  gamma = default$gamma(),
                  cm = cmList(),
                  dist = ageDist(),
-                 intervention = intList()
+                 contact_intervention = intList()
                  )
 })
 
-output$test <- renderText(paste(intList()))
+output$test <- renderText(names(cmList()))
 
 # Run the model when the button is clicked
 model <- eventReactive(input$runMod, {
     isolate(
-        simulate_c_sir(t = nsteps(),
+        simulate_sir_c(t = nsteps(),
                         state_t0 = state0(),
                         param = param())
     )

@@ -132,7 +132,7 @@ body <- dashboardBody(
                                  helpText("Separate interventions can be simultaneously applied to contacts within school, work and home settings.
                                           Interventions for all remaining contacts can be controlled with the 'All contacts' box.")
                                  ),
-                                 #textOutput("test"),
+                                 textOutput("test"),
 
                                  div(style = 'overflow-y:scroll;height:600px;',
 
