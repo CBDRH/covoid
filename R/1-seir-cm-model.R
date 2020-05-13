@@ -15,7 +15,7 @@
 #' @examples
 #'
 #' cm_oz <- import_contact_matrix("Australia","general")
-#' dist_oz <- import_age_dist("Australia")
+#' dist_oz <- import_age_distribution("Australia")
 #' param <- seir_c_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz,dist=dist_oz)
 #' nJ = ncol(cm_oz)
 #' S = rep(100,nJ)
@@ -210,7 +210,7 @@ seir_c_model <- function(t,y,parms) {
         # return
         list(c(dS,dE,dI,dR),
              S=sum(S),
-             E=sum(S),
+             E=sum(E),
              I=sum(I),
              R=sum(R),
              Ntotal=sum(S) + sum(E) + sum(I) + sum(R))
