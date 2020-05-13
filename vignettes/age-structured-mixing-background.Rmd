@@ -38,63 +38,47 @@ devtools::load_all()
 
 ## Introduction
 
-The SIR and SEIR models assume homogeneous mixing in the population. However, this assumption is unrealistic. People spend a disproportionally large amount of time in environments such kindergatens, school, workplaces, households and nursing homes. This skew their chance of contacting certain age groups. Accounting for differnetial age contacts in epidemic models can aid in understanding the impact and dynamics of disease in a population. For instance, there is strong evidence that COVID-19 has a higher fatality rate in older and comorbid people but in some countries (e.g. Australia) has been found to be more prevalent in younger age groups. By considering age modelling of the impact of control measures and spread of disease allows for fine grained results. We can separate out potential impact of school or university closures from strict distancing measures in nursing homes.  
+The transmission of infectious agents is influenced by several factors, including the biology and behaviour of the host. These components are heavily influenced by age. People spend a disproportionally large amount of time in environments such kindergatens, school, workplaces, households and nursing homes. This skew their chance of contacting certain age groups. Accounting for uneven age contacts in epidemic models can aid in understanding the impact and dynamics of disease in a population. (Therefore, it is crucial to take into account the host age structure to enable realistic modeling for disease prevention policy). For instance, there is strong evidence that COVID-19 has a higher fatality rate in older and comorbid people, suggested as a potential factor in the high mortality rate observed in norther Italy (red). By considering age modelling of the impact of control measures and spread of disease allows for fine grained results. We can separate out potential impact of school or university closures from strict distancing measures in nursing homes.  
 
-Our goal is to describe the considerations necessary when moving from the homogeneous SIR or SEIR models  to more complex (discrete) age structure models (figure 1). Throughout we will assume stable demography, i.e. no migration and birth or death. THis assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
-
-
-```{r,fig.cap="Homogeneous mixing"}
-
-graph1 = grViz("
-digraph SIR {
-
-  # a 'graph' statement
-  graph [overlap = false,
-    fontsize = 10,
-    labelloc = t,
-    label='Placeholder',
-    fontname = Helvetica]
-
-  # several 'node' statements
-  node [shape = box,
-        fontname = Helvetica]
-  S[label='S'];
-  I[label='I'];
-  R[label='R'];
-  S1[label='S'];
-  I1[label='I'];
-
-
-  # several 'edge' statements
-  S->I
-  I->R
-  S1->I1
-}
-")
-graph2 = graph1
-
-library(htmltools)
-browsable(
-  tagList(list(
-    tags$div(
-      style = 'width:50%;align:left;float:left;',
-      graph1
-    ),
-    tags$div(
-      style = 'width:50%;align:left;float:left;',
-      graph2
-    )
-  ))
-)
-```
+This article describes the considerations necessary when moving from the homogeneous SIR or SEIR model to more complex (discrete) age structure models, and how to use covoid to model these situations (figure 1). Throughout we will assume stable demography, i.e. no migration and birth or death. THis assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
 
 ## Age structure population
 
-Previous research by Prem (REF) has created contact matrices for five year age groups for 152 countries.
+In order to introduce heterogeneity additional information is required. A homogeneous compartmental model required knowledge or estimates of the population size N, and breakdowns into the given compartments, along with disease dynamics parameters, at the very least the probability of infection given contact , kappa the contact rate and gamma the invers of the length of illness. A key addition for the heterogeneous case is the contact rates between groups and population distributions. For $J$ groups this An additional $J(J + 1)$ parameters. Thankfully we have available We use contact matrices split into home, school, work and other (Prem et al). 
+Previous research by Prem (REF) has created contact matrices for five year age groups for 152 countries. see figure. These allow us to model our population as being composed of $i = 1,...,I$ discrete age groups (e.g. (0,5], (5,10],...). Within covoid these matrices can be imported for XXXX countries - see `foo` for the full list - using the `import_contact_matrix` function which takes the arguments country and XXX, which is one of "school", "work", "other", "home" or "general". The general matrix is the sum of the other four. A `plot` method utilising ggplot2 has been introduced for these matrices allowing quick visualising (see figure).
 
-In order to introduce heterogeneity additional information is required. A basic SIR model required knowledge or estimates of the population size N, and breakdowns into the SIR compartments, along with disease dynamics parameters beta, the probability of infection given contact , kappa the contact rate and gamma the invers of the length of illness. A key addition for the heterogeneous case is the contact rates between groups and population distributions. For $J$ groups this An additional $J(J + 1)$ parameters. We use contact matrices split into home, school, work and other (Prem). If we also want differing transmission probabilities between groups there are $2 J(J+1)$, although we will assume it is not varying.
+```{r,fig.cap="Contact matrices for school, work, home and other locations (source: Prem et al ()). Note the differing scales.",fig.width=6,fig.height=5}
+cm_oz_s <- import_contact_matrix("Australia","school")
+cm_oz_w <- import_contact_matrix("Australia","work")
+cm_oz_o <- import_contact_matrix("Australia","other")
+cm_oz_h <- import_contact_matrix("Australia","home")
+p1 = plot(cm_oz_s) + 
+    scale_fill_continuous(name="Contact\nrate",type = "viridis") +
+    labs(title="School",x="Age of individual",y="Age of contact") +
+    theme(axis.text = element_text(size = 5))
+p2 = plot(cm_oz_w) + 
+    scale_fill_continuous(name="Contact\nrate",type = "viridis") +
+    labs(title="Work",x="Age of individual",y="Age of contact")+
+    theme(axis.text = element_text(size = 5))
+p4 = plot(cm_oz_o) + 
+    scale_fill_continuous(name="Contact\nrate",type = "viridis") +
+    labs(title="Other",x="Age of individual",y="Age of contact")+
+    theme(axis.text = element_text(size = 5))
+p3 = plot(cm_oz_h) + 
+    scale_fill_continuous(name="Contact\nrate",type = "viridis") +
+    labs(title="Home",x="Age of individual",y="Age of contact")+
+    theme(axis.text = element_text(size = 5))
+gridExtra::grid.arrange(p1,p2,p3,p4,ncol=2)
+```
 
-Suppose we model our population as being composed of $i = 1,...,I$ discrete age groups (e.g. (0,5], (5,10],...). There are $N_i$ individuals in each age group, with susceptible-infected-removed compartments $S_i$, $I_i$ and $R_i$. $p_i = \frac{N_i}{N}$
+The covoid package also contains age distributions for XXX, sourced from XXX. These can be imported imported for XXXX countries - see `foo` for the full list - using the `import_age_distribution` function. A `plot` method utilising ggplot2 has been introduced for these allowing quick visualising (see figure).
+
+```{r,fig.cap="hello",fig.height=2,fig.width=6}
+plot(import_age_distribution("Australia")) +
+    labs(x = "Age (years)",y = "Proportion of the\npopulation")+
+            ggplot2::geom_bar(stat = "identity",fill="midnightblue")+
+    theme_minimal()
+```
 
 The contact rate between an individual in age group $i$ and age group $j$ is $\kappa_{ij}$. As above generally $\kappa_{ij} \ne \kappa_{ji}$ due to the non-uniform distribution of age in human societies. The lack of symmetry is illustrated in figure 1. 
 
@@ -112,6 +96,12 @@ ggplot(df,aes(x=x,y=y,color=factor(col))) +
   theme_void() +
   theme(legend.position = "none")
 ```
+
+In o
+
+
+
+here are $N_i$ individuals in each age group, with susceptible-infected-removed compartments $S_i$, $I_i$ and $R_i$. $p_i = \frac{N_i}{N}$
 
 If an individual in group $i$ meets an individual from group $j$ the chance this contact is infected is $\frac{I_j}{N_j}$.
 
@@ -186,36 +176,28 @@ However, in many models R0 is related ot the peak and final threshold of a epide
 
 R0 a number and a ratio of rates
 
-
-The basic reproduction number $\mathcal{R_0}$ is the expected number of secondary cases produced, in a completely susceptible population, by a typical infected individual during its entire period of infectiousness (Dieckmann et al 1990). For complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$. As shown by Li et al (2010) the various methods give different answers. This suggest that for the discrete heterogeneous model we described can calculate it as 
-
-$$
-\begin{align}
-\mathcal{R_{0,i}} &= \frac{1}{\gamma} \sum_{j=1}^J \tau_{ij} \\ 
-\mathcal{R_0} &= \sum_{i=1}^I p_i R_{0,i}
-\end{align}
-$$
-
-This is equivalent to the survival function method in Li $R_0 = E(?) = \int_0^{\infty}E(infections)p()da$ where we assume everything is exponential.
+In the current model R0 is also a threshold parameter
 
 ```{r}
-beta = 0.1
-gamma = 0.2
-cm
-pa = 2/3
-pc = 1/3
+cm_oz <- import_contact_matrix("Australia","general")
+dist_oz <- import_age_dist("Australia")
+param <- seir_c_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz,dist=dist_oz)
+nJ = ncol(cm_oz)
+S = rep(100,nJ)
+E = rep(1,nJ)
+I = rep(1,nJ)
+R = rep(0,nJ)
+state0 <- seir_c_state0(S = S,E = E,I = I,R = R)
+res <- simulate_seir_c(t = 150,state_t0 = state0,param = param)
+plot(res,y=c("S","E","I","R"),main="Heterogeneous mixing")
 
-# children
-r0_c = (1/gamma)*sum(beta*cm[,1])
-# adults
-r0_a = (1/gamma)*sum(beta*cm[,2])
 
-pa*r0_a + pc*r0_c
+
 ```
 
-Computing the Jacobian.
 
 
+The basic reproduction number $\mathcal{R_0}$ is the expected number of secondary cases produced, in a completely susceptible population, by a typical infected individual during its entire period of infectiousness (Dieckmann et al 1990). For complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$. As shown by Li et al (2010) the various methods give different answers. This suggest that for the discrete heterogeneous model we described can calculate it as 
 
 The next generation approach.
 
@@ -223,7 +205,7 @@ Not the same answer.
 
 The next generation matrix is:
 
-```{r}
+```{r,eval=FALSE}
 gamma = 0.6
 V = diag(rep(gamma,2))
 F1 = t(0.1*cm)
@@ -242,10 +224,40 @@ eigen(K)
 We get an $R_0 = 3.26$
 
 
-```{r}
+```{r,eval=FALSE}
 param <- sir_c_param(R0 = 1.0,gamma = 0.1,cm = cm,p = c(pc,pa))
 state0 <- sir_c_state0(S0 = c(333,666),I0 = c(2,1),R0 = c(0,0))
 res <- simulate_c_sir(t = 200,state_t0 = state0,param = param)
-plot(res,c("S","I","R"))
+plot(res,c("S","E","I","R"))
+```
+
+```{r,fig.cap="Homogeneous mixing"}
+
+graph1 = grViz("
+digraph SEIR {
+
+  # a 'graph' statement
+  graph [overlap = false,
+    fontsize = 10,
+    labelloc = t,
+    fontname = Helvetica]
+
+  # several 'node' statements
+  node [shape = box,
+        fontname = Helvetica]
+  S[label='S_i'];
+  E[label='E_i'];
+  I[label='I_i'];
+  R[label='R_i'];
+
+
+  # several 'edge' statements
+  S->E
+  E->I
+  I->R
+}
+")
+ graph1
+
 ```
 

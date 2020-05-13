@@ -70,7 +70,9 @@ import_age_distribution <- function(country) {
     pop_age_distribution_un = tmp_env$pop_age_distribution_un
     age_dist = pop_age_distribution_un$prop[pop_age_distribution_un$country == country]
     age_dist[16] = age_dist[16] + sum(age_dist[17:19])
-    age_dist[1:16]
+    age_dist = age_dist[1:16]
+    class(age_dist) = c(class(age_dist),"age_distribution")
+    age_dist
 }
 
 

@@ -56,11 +56,29 @@ plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
 #' @export
 plot.contact_matrix <- function(x,...) {
     df = as.data.frame(x)
-    df$age_contact = as.character(seq(5,80,by=5))
-    df$age_contact = factor(df$age_contact,levels=as.character(seq(5,80,by=5)),ordered=TRUE)
+    levs = as.character(seq(5,75,by=5))
+    levs = c(levs,"80+")
+    df$age_contact = levs
+    df$age_contact = factor(df$age_contact,levels=levs,ordered=TRUE)
     df = tidyr::pivot_longer(data = df,cols = 1:16,names_to = "age_individual",values_to = "contact_rate")
-    df$age_individual = factor(df$age_individual,levels=as.character(seq(5,80,by=5)),ordered=TRUE)
+    df$age_individual[df$age_individual == "80"] = "80+"
+    df$age_individual = factor(df$age_individual,levels=levs,ordered=TRUE)
     ggplot2::ggplot(df, ggplot2::aes(y=age_contact, x=age_individual, fill=contact_rate)) +
         ggplot2::geom_tile()
 
 }
+
+#' Plot a contact matrix
+#'
+#' @param x the contact matrix
+#'
+#' @export
+plot.age_distribution <- function(x,...) {
+    df = data.frame(prop = x)
+    levs = as.character(seq(5,75,by=5))
+    levs = c(levs,"80+")
+    df$age = factor(levs,levels=levs,ordered=TRUE)
+    ggplot2::ggplot(df, ggplot2::aes(y=prop, x=age)) +
+        ggplot2::geom_bar(stat = "identity")
+}
+

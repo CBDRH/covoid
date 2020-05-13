@@ -15,20 +15,16 @@
 #' @examples
 #'
 #' cm_oz <- import_contact_matrix("Australia","general")
-#' param <- seir_c_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz)
+#' dist_oz <- import_age_dist("Australia")
+#' param <- seir_c_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz,dist=dist_oz)
 #' nJ = ncol(cm_oz)
-#' S0 = rep(100,nJ)
-#' I0 = rep(1,nJ)
-#' R0 = rep(0,nJ)
-#' state0 <- seir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+#' S = rep(100,nJ)
+#' E = rep(1,nJ)
+#' I = rep(1,nJ)
+#' R = rep(0,nJ)
+#' state0 <- seir_c_state0(S = S,E = E,I = I,R = R)
 #' res <- simulate_seir_c(t = 150,state_t0 = state0,param = param)
 #' plot(res,y=c("S","E","I","R"),main="Heterogeneous mixing")
-#'
-#' # compare with homogeneous
-#' param <- seir_param(R0 = 2.5,gamma = 0.1)
-#' state0 <- seir_state0(S0 = 1600,I0 = 16,R0 = 0)
-#' res <- simulate_seir(t = 150,state_t0 = state0,param = param)
-#' plot(res,c("S","I","R"),main="Homogeneous mixing")
 #'
 #' @export
 simulate_seir_c <- function(t,state_t0,param) {
