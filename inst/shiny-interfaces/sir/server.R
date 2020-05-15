@@ -30,6 +30,12 @@ nsteps <- reactive({as.numeric( input$dateRange[2] - input$dateRange[1]) })
 observe(updateSliderInput(session, "ndays", max = nsteps()))
 observe(updateSliderInput(session, "ndays_a", max = nsteps()))
 
+# Update choice of province, based on choice of country
+provinceChoice <- reactive({
+  covid19_data %>% filter(Country.Region==input$compCountries) %>% select(Province.State) %>% distinct()
+})
+observe(updateSelectizeInput(session, "compProvince", choices = provinceChoice()))
+
 # Visualise the contact matrix as a heatmap
 ageMat <- reactive({
   req(default$countryAgeMat())
@@ -172,7 +178,7 @@ output$network_d <- renderVisNetwork({
         visInteraction(hover = TRUE) %>%
         visPhysics(stabilization = FALSE) %>%
         visEvents(startStabilizing = "function() {
-            this.moveTo({scale:1.0})}") %>%
+            this.moveTo({scale:1.5})}") %>%
         visEvents(selectNode = "function(data) {
                 Shiny.onInputChange('node_id', data.nodes);
                 ;}",
@@ -423,25 +429,25 @@ output$gammainv <- renderText(HTML(paste0("&gamma;", " = 1/" , input$gammainv, "
 ############################################################################
                     ### Set parameter default values ###
 
-# This is neccesary because a lot of the parameter inputs are
-# placed in dialogue boxes and consequenlty are NULL until the
-# user opens the dialogue box. The default values are the value
+# This is necesary because a lot of the parameter inputs are
+# placed in dialogue boxes and consequently are NULL until the
+# user opens the dialogue box. The default values are the values
 # given to an input parameter until the user chooses something else
 ############################################################################
 
 default <- reactiveValues()
 
 # Initial conditions
-default$s_num <- reactive(ifelse(is.null(input$s_num), 4000000, input$s_num))
-default$i_num <- reactive(ifelse(is.null(input$i_num), 300, input$i_num))
-default$r_num <- reactive(ifelse(is.null(input$r_num), 700, input$r_num))
+default$s_num <- reactive(ifelse(is.null(input$s_num), import_total_population(default$countryAgeMat()) - default$i_num() - default$r_num(), input$s_num))
+default$i_num <- reactive(ifelse(is.null(input$i_num), 30, input$i_num))
+default$r_num <- reactive(ifelse(is.null(input$r_num), 0, input$r_num))
 
 default$i_num_dist <- reactive(ifelse(is.null(input$i_num_dist), "Uniform", input$i_num_dist))
 default$r_num_dist <- reactive(ifelse(is.null(input$r_num_dist), "Uniform", input$r_num_dist))
 
 # Model parameters
 default$r0 <- reactive(ifelse(is.null(input$r0), 2.5, input$r0))
-default$gamma <- reactive(ifelse(is.null(input$gammainv), 1/4.0, 1/input$gammainv))
+default$gamma <- reactive(ifelse(is.null(input$gammainv), 1/10, 1/input$gammainv))
 
 # Country choices
 default$countryAgeMat <- reactive(ifelse(is.null(input$countryAgeMat), "Australia", input$countryAgeMat))
@@ -450,9 +456,6 @@ default$countryAgeDist <- reactive(ifelse(is.null(input$countryAgeDist), "Austra
 
 
 # Calculated parameters
-default$beta <- reactive(default$r0()*((default$sigma2())^-1 + (default$gamma1())^-1 + (default$gamma2())^-1)^(-1))
-
-
 default$opts_inf <- reactive(ifelse(is.null(input$opts_inf), 1, input$opts_inf))
 default$opts_rec <- reactive(ifelse(is.null(input$opts_rec), 1, input$opts_rec))
 
@@ -500,12 +503,6 @@ observeEvent(input$opts_rec, {
   }
 })
 
-observeEvent(input$intSetting, {
-  if("general" %in% input$intSetting) {
-    updateCheckboxGroupInput(session, "intSetting", selected = c("general"))
-  }
-})
-
 
 
 ############################################################################
@@ -521,21 +518,8 @@ output$summary1 <- renderText({
         ))
 })
 
-# # Quarantined population
-# output$summary2 <- renderText({
-#     HTML(paste(icon("globe-asia"), em(" Quarantined population"), hr(),
-#               "Latent (1st Period):", code(default$e1q_num()), br(),
-#               "Latent (2nd Period):", code(default$e2q_num()), br(),
-#               "Infectious (1st Period):", code(default$i1q_num()), br(),
-#               "Infectious (2nd Period):", code(default$i2q_num()), br(),
-#               "Managed:", code(default$mq_num()), br(),
-#               "Recovered:", code(default$rq_num()), br(),
-#               "Recovered from managed:", code(default$rmq_num()), br()
-#     ))
-# })
-
 # Model parameters (quarantined population)
-output$summary3 <- renderText({
+output$summary2 <- renderText({
     HTML(paste(icon("sliders-h"), em("Transition params"), hr(),
                code(HTML(paste0("R", tags$sub("0")))), round(default$r0(), digits = 3), br(),
                code(HTML(paste0("&gamma;"))), round(default$gamma(), digits = 3)
@@ -544,16 +528,25 @@ output$summary3 <- renderText({
 })
 
 
-# output$summary4 <- renderText({
-#     HTML(paste(icon("sliders-h"), em("Transition params"), hr(),
-#             code(HTML(paste0("&sigma;", tags$sub("1")))), "1/", round(1/default$sigma1(), digits = 3), br(),
-#             code(HTML(paste0("&sigma;", tags$sub("2")))), "1/", round(1/default$sigma2(), digits = 3), br(),
-#             code(HTML(paste0("&gamma;", tags$sub("1")))), "1/", round(1/default$gamma1(), digits = 3), br(),
-#             code(HTML(paste0("&gamma;", tags$sub("2")))), "1/", round(1/default$gamma2(), digits = 3), br(),
-#             code(HTML(paste0("&gamma;", tags$sub("1"), tags$sup("q")))), "1/", round(1/default$gamma1q(), digits = 3), br(),
-#             code(HTML(paste0("&gamma;", tags$sub("2"), tags$sup("q")))), "1/", round(1/default$gamma2q(), digits = 3), br()
-#     ))
-# })
+output$summary3 <- renderText({
+  HTML(
+    paste(icon("handshake"), em("Transmission probability"), hr(),
+      sparkline::spk_chr(fxGeneral_t()[[2]], chartRangeMin = 0, chartRangeMin = 1), "&mdash;", "General"
+      )
+    )
+})
+
+output$summary4 <- renderText({
+  HTML(
+    paste(icon("users"), em("Social contacts"), hr(),
+          sparkline::spk_chr(fxGeneral_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), "&mdash;", "General", br(),
+          sparkline::spk_chr(fxSchool_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), "&mdash;", "School", br(),
+          sparkline::spk_chr(fxWork_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), "&mdash;", "Work", br(),
+          sparkline::spk_chr(fxHome_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), "&mdash;", "Home"
+    )
+  )
+})
+
 
 
 ############################################################################
@@ -590,77 +583,127 @@ r_num_vec <- reactive({
 int <- reactiveValues()
 
 # Place holder for clicked values
-int$dfSchool <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
-int$dfWork <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
-int$dfHome <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
-int$dfGeneral <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfSchool_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfWork_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfHome_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfGeneral_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfSchool_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfWork_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfHome_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+int$dfGeneral_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())
+
 
 # Place holder for values returned when user hovers
-int$hvSchool <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
-int$hvWork <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
-int$hvHome <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
-int$hvGeneral <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvSchool_c <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvWork_c <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvHome_c <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvGeneral_c <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvSchool_t <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvWork_t <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvHome_t <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
+int$hvGeneral_t <- data.frame(x = numeric(), y = numeric(), lab = character(), fulllab = character() )
 
 # Create plot
-output$intSchool <- renderPlot(clickrPlot(int$dfSchool, input$dateRange[1], input$dateRange[2]))
-output$intWork <- renderPlot(clickrPlot(int$dfWork, input$dateRange[1], input$dateRange[2]))
-output$intHome <- renderPlot(clickrPlot(int$dfHome, input$dateRange[1], input$dateRange[2]))
-output$intGeneral <- renderPlot(clickrPlot(int$dfGeneral, input$dateRange[1], input$dateRange[2]))
+output$intSchool_c <- renderPlot(clickrPlot(int$dfSchool_c, input$dateRange[1], input$dateRange[2]))
+output$intWork_c <- renderPlot(clickrPlot(int$dfWork_c, input$dateRange[1], input$dateRange[2]))
+output$intHome_c <- renderPlot(clickrPlot(int$dfHome_c, input$dateRange[1], input$dateRange[2]))
+output$intGeneral_c <- renderPlot(clickrPlot(int$dfGeneral_c, input$dateRange[1], input$dateRange[2]))
+output$intSchool_t <- renderPlot(clickrPlot(int$dfSchool_t, input$dateRange[1], input$dateRange[2]))
+output$intWork_t <- renderPlot(clickrPlot(int$dfWork_t, input$dateRange[1], input$dateRange[2]))
+output$intHome_t <- renderPlot(clickrPlot(int$dfHome_t, input$dateRange[1], input$dateRange[2]))
+output$intGeneral_t <- renderPlot(clickrPlot(int$dfGeneral_t, input$dateRange[1], input$dateRange[2]))
 
 # Create Table summary
-output$reviewSchool <- renderDT(clickrTable(int$dfSchool, input$dateRange[1]))
-output$reviewWork <- renderDT(clickrTable(int$dfWork, input$dateRange[1]))
-output$reviewHome <- renderDT(clickrTable(int$dfHome, input$dateRange[1]))
-output$reviewGeneral <- renderDT(clickrTable(int$dfGeneral, input$dateRange[1]))
+output$reviewSchool_c <- renderDT(clickrTable(int$dfSchool_c, input$dateRange[1]))
+output$reviewWork_c <- renderDT(clickrTable(int$dfWork_c, input$dateRange[1]))
+output$reviewHome_c <- renderDT(clickrTable(int$dfHome_c, input$dateRange[1]))
+output$reviewGeneral_c <- renderDT(clickrTable(int$dfGeneral_c, input$dateRange[1]))
+output$reviewSchool_t <- renderDT(clickrTable(int$dfSchool_t, input$dateRange[1]))
+output$reviewWork_t <- renderDT(clickrTable(int$dfWork_t, input$dateRange[1]))
+output$reviewHome_t <- renderDT(clickrTable(int$dfHome_t, input$dateRange[1]))
+output$reviewGeneral_t <- renderDT(clickrTable(int$dfGeneral_t, input$dateRange[1]))
 
 # Update labels that are hovered
-observeEvent(input$intSchool_hover, {int$hvSchool <- clickrHover(input$intSchool_hover)})
-observeEvent(input$intWork_hover, {int$hvWork <- clickrHover(input$intWork_hover)})
-observeEvent(input$intHome_hover, {int$hvHome <- clickrHover(input$intHome_hover)})
-observeEvent(input$intGeneral_hover, {int$hvGeneral <- clickrHover(input$intGeneral_hover)})
+observeEvent(input$intSchool_hover_c, {int$hvSchool_c <- clickrHover(input$intSchool_hover_c)})
+observeEvent(input$intWork_hover_c, {int$hvWork_c <- clickrHover(input$intWork_hover_c)})
+observeEvent(input$intHome_hover_c, {int$hvHome_c <- clickrHover(input$intHome_hover_c)})
+observeEvent(input$intGeneral_hover_c, {int$hvGeneral_c <- clickrHover(input$intGeneral_hover_c)})
+observeEvent(input$intSchool_hover_t, {int$hvSchool_t <- clickrHover(input$intSchool_hover_t)})
+observeEvent(input$intWork_hover_t, {int$hvWork_t <- clickrHover(input$intWork_hover_t)})
+observeEvent(input$intHome_hover_t, {int$hvHome_t <- clickrHover(input$intHome_hover_t)})
+observeEvent(input$intGeneral_hover_t, {int$hvGeneral_t <- clickrHover(input$intGeneral_hover_t)})
 
 # Add points that are clicked
-observeEvent(input$intSchool_click, {int$dfSchool <- addPoint(int$dfSchool, input$intSchool_click$x, input$intSchool_click$y)})
-observeEvent(input$intWork_click, {int$dfWork <- addPoint(int$dfWork, input$intWork_click$x, input$intWork_click$y)})
-observeEvent(input$intHome_click, {int$dfHome <- addPoint(int$dfHome, input$intHome_click$x, input$intHome_click$y)})
-observeEvent(input$intGeneral_click, {int$dfGeneral <- addPoint(int$dfGeneral, input$intGeneral_click$x, input$intGeneral_click$y)})
+observeEvent(input$intSchool_click_c, {int$dfSchool_c <- addPoint(int$dfSchool_c, input$intSchool_click_c$x, input$intSchool_click_c$y)})
+observeEvent(input$intWork_click_c, {int$dfWork_c <- addPoint(int$dfWork_c, input$intWork_click_c$x, input$intWork_click_c$y)})
+observeEvent(input$intHome_click_c, {int$dfHome_c <- addPoint(int$dfHome_c, input$intHome_click_c$x, input$intHome_click_c$y)})
+observeEvent(input$intGeneral_click_c, {int$dfGeneral_c <- addPoint(int$dfGeneral_c, input$intGeneral_click_c$x, input$intGeneral_click_c$y)})
+observeEvent(input$intSchool_click_t, {int$dfSchool_t <- addPoint(int$dfSchool_t, input$intSchool_click_t$x, input$intSchool_click_t$y)})
+observeEvent(input$intWork_click_t, {int$dfWork_t <- addPoint(int$dfWork_t, input$intWork_click_t$x, input$intWork_click_t$y)})
+observeEvent(input$intHome_click_t, {int$dfHome_t <- addPoint(int$dfHome_t, input$intHome_click_t$x, input$intHome_click_t$y)})
+observeEvent(input$intGeneral_click_t, {int$dfGeneral_t <- addPoint(int$dfGeneral_t, input$intGeneral_click_t$x, input$intGeneral_click_t$y)})
 
 # Remove points that are double clicked
-observeEvent(input$intSchool_dblclick, {if(nrow(int$dfSchool)) {int$dfSchool <- dropPoint(int$dfSchool, input$intSchool_dblclick$x, input$intSchool_dblclick$y)}})
-observeEvent(input$intWork_dblclick, {if(nrow(int$dfWork)) {int$dfWork <- dropPoint(int$dfWork, input$intWork_dblclick$x, input$intWork_dblclick$y)}})
-observeEvent(input$intHome_dblclick, {if(nrow(int$dfHome)) {int$dfHome <- dropPoint(int$dfHome, input$intHome_dblclick$x, input$intHome_dblclick$y)}})
-observeEvent(input$intGeneral_dblclick, {if(nrow(int$dfGeneral)) {int$dfGeneral <- dropPoint(int$dfGeneral, input$intGeneral_dblclick$x, input$intGeneral_dblclick$y)}})
+observeEvent(input$intSchool_dblclick_c, {if(nrow(int$dfSchool_c)) {int$dfSchool_c <- dropPoint(int$dfSchool_c, input$intSchool_dblclick_c$x, input$intSchool_dblclick_c$y)}})
+observeEvent(input$intWork_dblclick_c, {if(nrow(int$dfWork_c)) {int$dfWork_c <- dropPoint(int$dfWork_c, input$intWork_dblclick_c$x, input$intWork_dblclick_c$y)}})
+observeEvent(input$intHome_dblclick_c, {if(nrow(int$dfHome_c)) {int$dfHome_c <- dropPoint(int$dfHome_c, input$intHome_dblclick_c$x, input$intHome_dblclick_c$y)}})
+observeEvent(input$intGeneral_dblclick_c, {if(nrow(int$dfGeneral_c)) {int$dfGeneral_c <- dropPoint(int$dfGeneral_c, input$intGeneral_dblclick_c$x, input$intGeneral_dblclick_c$y)}})
+observeEvent(input$intSchool_dblclick_t, {if(nrow(int$dfSchool_t)) {int$dfSchool_t <- dropPoint(int$dfSchool_t, input$intSchool_dblclick_t$x, input$intSchool_dblclick_t$y)}})
+observeEvent(input$intWork_dblclick_t, {if(nrow(int$dfWork_t)) {int$dfWork_t <- dropPoint(int$dfWork_t, input$intWork_dblclick_t$x, input$intWork_dblclick_t$y)}})
+observeEvent(input$intHome_dblclick_t, {if(nrow(int$dfHome_t)) {int$dfHome_t <- dropPoint(int$dfHome_t, input$intHome_dblclick_t$x, input$intHome_dblclick_t$y)}})
+observeEvent(input$intGeneral_dblclick_t, {if(nrow(int$dfGeneral_t)) {int$dfGeneral_t <- dropPoint(int$dfGeneral_t, input$intGeneral_dblclick_t$x, input$intGeneral_dblclick_t$y)}})
 
 ## Remove last row on actionButton click
-observeEvent(input$undoSchool, {int$dfSchool <- undo(int$dfSchool)})
-observeEvent(input$undoWork, {int$dfWork <- undo(int$dfWork)})
-observeEvent(input$undoHome, {int$dfHome <- undo(int$dfHome)})
-observeEvent(input$undoGeneral, {int$dfGeneral <- undo(int$dfGeneral)})
+observeEvent(input$undoSchool_c, {int$dfSchool_c <- undo(int$dfSchool_c)})
+observeEvent(input$undoWork_c, {int$dfWork_c <- undo(int$dfWork_c)})
+observeEvent(input$undoHome_c, {int$dfHome_c <- undo(int$dfHome_c)})
+observeEvent(input$undoGeneral_c, {int$dfGeneral_c <- undo(int$dfGeneral_c)})
+observeEvent(input$undoSchool_t, {int$dfSchool_t <- undo(int$dfSchool_t)})
+observeEvent(input$undoWork_t, {int$dfWork_t <- undo(int$dfWork_t)})
+observeEvent(input$undoHome_t, {int$dfHome_t <- undo(int$dfHome_t)})
+observeEvent(input$undoGeneral_t, {int$dfGeneral_t <- undo(int$dfGeneral_t)})
 
 ## Reset on click
-observeEvent(input$resetSchool, {int$dfSchool <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
-observeEvent(input$resetWork, {int$dfWork <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
-observeEvent(input$resetHome, {int$dfHome <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
-observeEvent(input$resetGeneral, {int$dfGeneral <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetSchool_c, {int$dfSchool_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetWork_c, {int$dfWork_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetHome_c, {int$dfHome_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetGeneral_c, {int$dfGeneral_c <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetSchool_t, {int$dfSchool_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetWork_t, {int$dfWork_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetHome_t, {int$dfHome_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
+observeEvent(input$resetGeneral_t, {int$dfGeneral_t <- data.frame(x = numeric(), y = numeric(), dropx = numeric(), dropy = numeric(), dist = numeric(), lab = character())})
 
 # Fill in the timeseries
-fxSchool <- reactive({if(nrow(int$dfSchool)>=1){fillTime(int$dfSchool, input$dateRange[1], input$dateRange[2])}})
-fxWork <- reactive({if(nrow(int$dfWork)>=1){fillTime(int$dfWork, input$dateRange[1], input$dateRange[2])}})
-fxHome <- reactive({if(nrow(int$dfHome)>=1){fillTime(int$dfHome, input$dateRange[1], input$dateRange[2])}})
-fxGeneral <- reactive({if(nrow(int$dfGeneral)>=1){fillTime(int$dfGeneral, input$dateRange[1], input$dateRange[2])}})
+nmsteps <-reactive(nsteps()-1)
+fxSchool_c <- reactive({if(nrow(int$dfSchool_c)>=1){fillTime(int$dfSchool_c, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxWork_c <- reactive({if(nrow(int$dfWork_c)>=1){fillTime(int$dfWork_c, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxHome_c <- reactive({if(nrow(int$dfHome_c)>=1){fillTime(int$dfHome_c, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxGeneral_c <- reactive({if(nrow(int$dfGeneral_c)>=1){fillTime(int$dfGeneral_c, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxSchool_t <- reactive({if(nrow(int$dfSchool_t)>=1){fillTime(int$dfSchool_t, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxWork_t <- reactive({if(nrow(int$dfWork_t)>=1){fillTime(int$dfWork_t, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxHome_t <- reactive({if(nrow(int$dfHome_t)>=1){fillTime(int$dfHome_t, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
+fxGeneral_t <- reactive({if(nrow(int$dfGeneral_t)>=1){fillTime(int$dfGeneral_t, input$dateRange[1], input$dateRange[2])} else data.frame(time = seq(from=0, to=nmsteps(), by=1), reduce = rep(1,nsteps()))})
 
 # Spark line for intervention
-output$sparklineSchool <- renderSparkline(sparkline(fxSchool()[[2]], chartRangeMin = 0, chartRangeMin = 1))
-output$sparklineWork <- renderSparkline(sparkline(fxWork()[[2]], chartRangeMin = 0, chartRangeMin = 1))
-output$sparklineHome <- renderSparkline(sparkline(fxHome()[[2]], chartRangeMin = 0, chartRangeMin = 1))
-output$sparklineGeneral <- renderSparkline(sparkline(fxGeneral()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineSchool_c <- renderSparkline(sparkline(fxSchool_c()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineWork_c <- renderSparkline(sparkline(fxWork_c()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineHome_c <- renderSparkline(sparkline(fxHome_c()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineGeneral_c <- renderSparkline(sparkline(fxGeneral_c()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineSchool_t <- renderSparkline(sparkline(fxSchool_t()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineWork_t <- renderSparkline(sparkline(fxWork_t()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineHome_t <- renderSparkline(sparkline(fxHome_t()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparklineGeneral_t <- renderSparkline(sparkline(fxGeneral_t()[[2]], chartRangeMin = 0, chartRangeMin = 1))
+output$sparkTest <- renderSparkline(sparkline(seq(1:10)))
 
 # Hover text
-output$tooltipSchool <- renderText(paste(int$hvSchool$fulllab))
-output$tooltipWork <- renderText(paste(int$hvWork$fulllab))
-output$tooltipHome <- renderText(paste(int$hvHome$fulllab))
-output$tooltipGeneral <- renderText(paste(int$hvGeneral$fulllab))
-
+output$tooltipSchool_c <- renderText(paste(int$hvSchool_c$fulllab))
+output$tooltipWork_c <- renderText(paste(int$hvWork_c$fulllab))
+output$tooltipHome_c <- renderText(paste(int$hvHome_c$fulllab))
+output$tooltipGeneral_c <- renderText(paste(int$hvGeneral_c$fulllab))
+output$tooltipSchool_t <- renderText(paste(int$hvSchool_t$fulllab))
+output$tooltipWork_t <- renderText(paste(int$hvWork_t$fulllab))
+output$tooltipHome_t <- renderText(paste(int$hvHome_t$fulllab))
+output$tooltipGeneral_t <- renderText(paste(int$hvGeneral_t$fulllab))
 
 
 ### Store contact matrices
@@ -668,7 +711,7 @@ output$tooltipGeneral <- renderText(paste(int$hvGeneral$fulllab))
 cmSchool <- reactive({
   req(default$countryAgeMat())
 
-  if("school" %in% input$intSetting){
+  if("school" %in% input$intSetting_c){
   import_contact_matrix(default$countryAgeMat(), setting="school")
   }
   else NULL
@@ -677,7 +720,7 @@ cmSchool <- reactive({
 cmWork <- reactive({
   req(default$countryAgeMat())
 
-  if("work" %in% input$intSetting){
+  if("work" %in% input$intSetting_c){
   import_contact_matrix(default$countryAgeMat(), setting="work")
   }
   else NULL
@@ -686,7 +729,7 @@ cmWork <- reactive({
 cmHome <- reactive({
   req(default$countryAgeMat())
 
-  if("home" %in% input$intSetting){
+  if("home" %in% input$intSetting_c){
   import_contact_matrix(default$countryAgeMat(), setting="home")
   }
   else NULL
@@ -720,29 +763,27 @@ cmList <- reactive({
 
 })
 
-output$test1 <- reactive(paste("General:", round(sum(cmList()[["general"]]), digits=0)))
-output$test2 <- reactive(paste("School:", round(sum(cmList()[["school"]]), digits=0)))
-output$test3 <- reactive(paste("Work:", round(sum(cmList()[["work"]]), digits=0)))
-output$test4 <- reactive(paste("Home:", round(sum(cmList()[["home"]]), digits=0)))
+# output$test1 <- reactive(paste("General:", round(sum(cmList_t()[["general"]]), digits=0)))
 
-### Prepare intervention matrix list
-intList <- reactive({
+### Prepare contact intervention matrix list
+intList_c <- reactive({
 
-  noInt <- data.frame(time = seq(from=1, to = nsteps()),
-                c_reduce = rep(1, nsteps())
-                )
+  noInt <- data.frame(
+    time = seq(from=0, to = nsteps()-1),
+    reduce = rep(1, nsteps())
+    )
 
-  intSchool <- if(is.null(fxSchool())) noInt
-                else fxSchool()
+  intSchool <- if(is.null(fxSchool_c())) noInt
+                else fxSchool_t()
 
-  intWork <- if(is.null(fxWork())) noInt
-  else fxWork()
+  intWork <- if(is.null(fxWork_c())) noInt
+  else fxWork_c()
 
-  intHome <- if(is.null(fxHome())) noInt
-  else fxHome()
+  intHome <- if(is.null(fxHome_c())) noInt
+  else fxHome_c()
 
-  intGeneral <- if(is.null(fxGeneral())) noInt
-  else fxGeneral()
+  intGeneral <- if(is.null(fxGeneral_c())) noInt
+  else fxGeneral_c()
 
   out <- list(school = intSchool, work = intWork, home = intHome, general = intGeneral)
   if(is.null(cmSchool())) out["school"] <- NULL
@@ -752,6 +793,33 @@ intList <- reactive({
 
 })
 
+### Prepare contact intervention matrix list for transmission interventions
+intList_t <- reactive({
+
+  noInt <- data.frame(
+    time = seq(from=0, to = nsteps()-1),
+    reduce = rep(.32, nsteps())
+  )
+
+  intSchool <- if(is.null(fxSchool_t())) noInt
+  else fxSchool_t()
+
+  intWork <- if(is.null(fxWork_t())) noInt
+  else fxWork_t()
+
+  intHome <- if(is.null(fxHome_t())) noInt
+  else fxHome_t()
+
+  intGeneral <- if(is.null(fxGeneral_t())) noInt
+  else fxGeneral_t()
+
+  out <- list(school = intSchool, work = intWork, home = intHome, general = intGeneral)
+  if(is.null(cmSchool())) out["school"] <- NULL
+  if(is.null(cmWork())) out["work"] <- NULL
+  if(is.null(cmHome())) out["home"] <- NULL
+  out
+
+})
 
 
 ############################################################################
@@ -771,11 +839,12 @@ param <- reactive({
                  gamma = default$gamma(),
                  cm = cmList(),
                  dist = ageDist(),
-                 contact_intervention = intList()
+                 contact_intervention = intList_c(),
+                 transmission_intervention = fxGeneral_t()
                  )
 })
 
-output$test <- renderText(names(cmList()))
+# output$testa <- renderText({ paste(fxGeneral_t()) })
 
 # Run the model when the button is clicked
 model <- eventReactive(input$runMod, {
@@ -810,13 +879,30 @@ output$get_wide_data <- downloadHandler(
 
 )
 
+# output$testx <- renderText(input$compCountries)
 
 ### Model summary
-mainPlot <- reactive({plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+mainPlot <- reactive({
+  plotResults(df=mod_df(),
+              scale=input$scale,
+              logScale=input$logScale,
+              plotvars=input$plotvars,
+              ndays=input$ndays,
+              xtraC=input$compCountries,
+              xtraP=input$compProvince)
+  })
+
 output$plot <- renderggiraph(mainPlot())
 
 # Make static version the plot for download
-staticPlot <- reactive({plotStaticResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)})
+staticPlot <- reactive({
+  plotStaticResults(df=mod_df(),
+                    scale=input$scale,
+                    logScale=input$logScale,
+                    plotvars=input$plotvars,
+                    ndays=input$ndays
+                    )
+  })
 
 # Download the current main plot
 output$downloadPlot <- downloadHandler(
@@ -835,11 +921,16 @@ observe({
     updateSliderInput(session, "ndays_a", max=nsteps(), value=val)
 })
 
+output$testa <- renderText(input$compCountries=="")
 
 ## Prepare animation
 
 # Preview
-output$animation_preview <- renderggiraph(plotResults(df=mod_df(), scale=input$scale_a, logScale=input$logScale_a, plotvars=input$plotvars_a, ndays=input$ndays_a))
+output$animation_preview <- renderggiraph(plotResults(df=mod_df(), scale=input$scale_a, logScale=input$logScale_a,
+                                                      plotvars=input$plotvars_a, ndays=input$ndays_a,
+                                                      xtraC = input$compCountries, xtraP = input$compProvince
+                                                      )
+                                          )
 
 # Animation
 animation <- eventReactive(input$runAni, {
@@ -869,8 +960,6 @@ output$animation <- renderImage({
 
 }, deleteFile=TRUE )
 
-
-
 ## Saving plots for comparison
 
 extra <- reactiveValues() # place holder for additional plots
@@ -880,104 +969,152 @@ count <- reactiveValues(nPlots = 0)
 observeEvent(input$toreport,
              {
                  if(input$reportFigs==1) {
-                     extra$plot1 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot1 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot1", value = TRUE)
                      count$nPlots <- 1
                      count$param_p1 <- param()
+                     count$model_p1 <- model()
                      count$state0_p1 <- state0()
                      count$nsteps_p1 <- nsteps()
                      count$scale_p1 <- input$scale
                      count$logScale_p1 <- input$logScale
                      count$plotvars_p1 <- input$plotvars
                      count$ndays_p1 <- input$ndays
-                     count$startDate_p1 <- input$dateRange[1]
+                     count$xtraC_p1 <- input$compCountries
+                     count$xtraP_p1 <- input$compProvince
+                     count$dateRange_p1 <- input$dateRange
                      count$popSize_p1 <- popcounter()
+                     count$intGeneral_t_p1 = fxGeneral_t()
+                     count$intGeneral_c_p1 = fxGeneral_c()
+                     count$intSchool_c_p1 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p1 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p1 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 2)
                  }
 
                  if(input$reportFigs==2) {
-                     extra$plot2 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot2 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot2", value = TRUE)
                      count$nPlots <- 2
                      count$param_p2 <- param()
+                     count$model_p2 <- model()
                      count$state0_p2 <- state0()
                      count$nsteps_p2 <- nsteps()
                      count$scale_p2 <- input$scale
                      count$logScale_p2 <- input$logScale
                      count$plotvars_p2 <- input$plotvars
                      count$ndays_p2 <- input$ndays
-                     count$startDate_p2 <- input$dateRange[1]
+                     count$xtraC_p2 <- input$compCountries
+                     count$xtraP_p2 <- input$compProvince
+                     count$dateRange_p2 <- input$dateRange
                      count$popSize_p2 <- popcounter()
+                     count$intGeneral_t_p2 = fxGeneral_t()
+                     count$intGeneral_c_p2 = fxGeneral_c()
+                     count$intSchool_c_p2 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p2 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p2 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 3)
                  }
 
                  if(input$reportFigs==3) {
-                     extra$plot3 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot3 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot3", value = TRUE)
                      count$nPlots <- 3
                      count$param_p3 <- param()
+                     count$model_p3 <- model()
                      count$state0_p3 <- state0()
                      count$nsteps_p3 <- nsteps()
                      count$scale_p3 <- input$scale
                      count$logScale_p3 <- input$logScale
                      count$plotvars_p3 <- input$plotvars
+                     count$xtraC_p3 <- input$compCountries
+                     count$xtraP_p3 <- input$compProvince
                      count$ndays_p3 <- input$ndays
-                     count$startDate_p3 <- input$dateRange[1]
+                     count$dateRange_p3 <- input$dateRange
                      count$popSize_p3 <- popcounter()
+                     count$intGeneral_t_p3 = fxGeneral_t()
+                     count$intGeneral_c_p3 = fxGeneral_c()
+                     count$intSchool_c_p3 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p3 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p3 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 4)
                  }
 
                  if(input$reportFigs==4) {
-                     extra$plot4 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot4 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot4", value = TRUE)
                      count$nPlots <- 4
                      count$param_p4 <- param()
+                     count$model_p4 <- model()
                      count$state0_p4 <- state0()
                      count$nsteps_p4 <- nsteps()
                      count$scale_p4 <- input$scale
                      count$logScale_p4 <- input$logScale
                      count$plotvars_p4 <- input$plotvars
                      count$ndays_p4 <- input$ndays
-                     count$startDate_p4 <- input$dateRange[1]
+                     count$xtraC_p4 <- input$compCountries
+                     count$xtraP_p4 <- input$compProvince
+                     count$dateRange_p4 <- input$dateRange
                      count$popSize_p4 <- popcounter()
+                     count$intGeneral_t_p4 = fxGeneral_t()
+                     count$intGeneral_c_p4 = fxGeneral_c()
+                     count$intSchool_c_p4 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p4 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p4 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 5)
                  }
 
                  if(input$reportFigs==5) {
-                     extra$plot5 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot5 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot5", value = TRUE)
                      count$nPlots <- 5
                      count$param_p5 <- param()
+                     count$model_p5 <- model()
                      count$state0_p5 <- state0()
                      count$nsteps_p5 <- nsteps()
                      count$scale_p5 <- input$scale
                      count$logScale_p5 <- input$logScale
                      count$plotvars_p5 <- input$plotvars
                      count$ndays_p5 <- input$ndays
-                     count$startDate_p5 <- input$dateRange[1]
+                     count$xtraC_p5 <- input$compCountries
+                     count$xtraP_p5 <- input$compProvince
+                     count$dateRange_p5 <- input$dateRange
                      count$popSize_p5 <- popcounter()
+                     count$intGeneral_t_p5 = fxGeneral_t()
+                     count$intGeneral_c_p5 = fxGeneral_c()
+                     count$intSchool_c_p5 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p5 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p5 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 6)
                  }
 
                  if(input$reportFigs==6) {
-                     extra$plot6 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays)
+                     extra$plot6 <- plotResults(df=mod_df(), scale=input$scale, logScale=input$logScale, plotvars=input$plotvars, ndays=input$ndays, xtraC=input$compCountries, xtraP=input$compProvince)
                      updateMaterialSwitch(session, "toreport", value = FALSE)
                      updateMaterialSwitch(session, "inclPlot6", value = TRUE)
                      count$nPlots <- 6
                      count$param_p6 <- param()
+                     count$model_p6 <- model()
                      count$state0_p6 <- state0()
                      count$nsteps_p6 <- nsteps()
                      count$scale_p6 <- input$scale
                      count$logScale_p6 <- input$logScale
                      count$plotvars_p6 <- input$plotvars
                      count$ndays_p6 <- input$ndays
-                     count$startDate_p6 <- input$dateRange[1]
+                     count$xtraC_p6 <- input$compCountries
+                     count$xtraP_p6 <- input$compProvince
+                     count$dateRange_p6 <- input$dateRange
                      count$popSize_p6 <- popcounter()
+                     count$intGeneral_t_p6 = fxGeneral_t()
+                     count$intGeneral_c_p6 = fxGeneral_c()
+                     count$intSchool_c_p6 = if ("school" %in% input$intSetting_c) fxSchool_c() else NULL
+                     count$intWork_c_p6 = if ("work" %in% input$intSetting_c) fxWork_c() else NULL
+                     count$intHome_c_p6 = if ("home" %in% input$intSetting_c) fxHome_c() else NULL
                      updateRadioButtons(session, "reportFigs", selected = 1)
                  }
              })

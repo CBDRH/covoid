@@ -74,3 +74,25 @@ import_age_distribution <- function(country) {
 }
 
 
+#' Load population estimates
+#'
+#'
+#' @param country A character indicating which country.
+#'
+#' @section References
+#' United Nations, Department of Economic and Social Affairs, Population Division (2019). World Population Prospects 2019, Online Edition. Rev. 1.
+#'
+#' @examples
+#' import_total_population("Australia")
+#'
+#' @export
+import_total_population <- function(country) {
+    stopifnot(country %in% age_distributions_un())
+    tmp_env = new.env()
+    data(total_population_un,envir = tmp_env)
+    total_population_un = tmp_env$total_population_un
+    pop = total_population_un$pop[total_population_un$country == country]
+    pop
+}
+
+

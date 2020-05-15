@@ -28,11 +28,17 @@ library(googleVis)
 library(prettyunits)
 library(gganimate)
 library(heatmaply)
+library(formattable)
 
 # Source extended EpiModel files
 source_files <- c("prepData.R", "plotResults.R",
                   "plotResults.R", "animateResults.R",
-                  "clickr-utils.R")
+                  "clickr-utils.R", "summariseResults.R")
 for (source_file in source_files) {
     source(paste("R/", source_file, sep = ""))
 }
+
+
+# Internation Covid19 Data from COVID19 package
+data("covid19_data")
+
