@@ -148,7 +148,7 @@ seir_c_state0 <- function(S,E,I,R) {
 #' SEIR with heterogeneous contact differential equations
 #'
 #' @param t Number of time steps over which to sample from the model
-#' @param state_t0 Initial state (S,I,R)
+#' @param state_t0 Initial state (S,E,I,R)
 #' @param param The model parameters (R0,sigma,gamma,cm,dist,intervention)
 #'
 #' @return derivatives of SEIR model states with respect to time
