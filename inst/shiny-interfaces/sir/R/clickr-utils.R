@@ -8,7 +8,7 @@ clickrPlot <- function(df, startDate, endDate) {
         geom_text(x=(startDate + (endDate - startDate)/2), y = 95, label = "Without intervention", color = "pink", size = 5) +
         geom_label(aes(label = lab)) +
         geom_label(aes(x=startDate, y = 100, label = "100%")) +
-        scale_x_date(date_labels="%d%b%Y") +
+        scale_x_date(date_labels="%d%b") +
         coord_cartesian(xlim = c(startDate, endDate), ylim = c(0, 100)) +
         labs(x = "Date", y = "Percentage of daily contacts compared \n to pre-intervention level (%)") +
         theme(panel.background=element_rect(fill = "gray20"),
@@ -58,7 +58,7 @@ fillTime <- function(df, startDate, endDate){
     fx <- left_join(timeframe, tidydata, by='t') %>%
         as.ts() %>%
         imputeTS::na_interpolation(option='linear')
-    out <- data.frame(time = fx[,1], c_reduce = round(fx[,2]/100, digits = 3) )
+    out <- data.frame(time = fx[,1] - 1, reduce = round(fx[,2]/100, digits = 3) )
 
 }
 
@@ -78,7 +78,7 @@ clickrTable <- function(df, startDate){
 rbind(df, data.frame(x=startDate, y=100, dropx=0, dropy=0, dist=0, lab= "100%")) %>%
     dplyr::arrange(x) %>%
     mutate(
-        Date = format(as.Date(x, origin = '1970-01-01'), "%A %d %B, %Y"),
+        Date = format(as.Date(x, origin = '1970-01-01'), "%a %d %b, %Y"),
         Value = lab
     ) %>%
     select("Date", "Value") %>%
