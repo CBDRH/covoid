@@ -4,14 +4,16 @@
 \name{hosp_cap_au}
 \alias{hosp_cap_au}
 \title{Australian healthcare capacity}
-\format{A data frame with 9 rows and 4 variables:
+\format{
+A data frame with 9 rows and 4 variables:
 \describe{
   \item{icu_beds}{Number of available ICU}
   \item{ward_beds}{Number of available Ward beds (minus psychiatric)}
   \item{emergency_consultations_daily}{Maximum number of Emergency Department consulations per day}
   \item{gp_consulatations_daily}{Maximum number of General Practise consulations per day}
   ...
-}}
+}
+}
 \source{
 \url{https://www.aihw.gov.au/reports/hospitals/hospital-resources-2017-18-ahs/contents/hospitals-and-average-available-beds}
 }

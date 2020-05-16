@@ -27,17 +27,18 @@ sidebar <- dashboardSidebar(
     sidebarMenu(
         menuItem("Parameterise model", tabName = "model", icon = icon("project-diagram")),
         menuItem("Define interventions", tabName = "intervention", icon = icon("user-md")),
-        menuItem("View results", tabName = "results", icon = icon("chart-bar")),
-        menuItem("Animate results", tabName = "video", icon = icon("video")),
+        menuItem("Run simulation", tabName = "results", icon = icon("chart-bar")),
         menuItem("Prepare report", tabName = "canvas", icon = icon("palette")),
+        menuItem("Animate results", tabName = "video", icon = icon("video")),
         menuItem("Download data", tabName = "data", icon = icon("file-excel")),
         menuItem("Information", tabName = "info", icon = icon("info-circle"))
     ), # Closes sidebarMenu
-    div(style = 'overflow-y:scroll;height:600px;',
-        dateRangeInput('dateRange',
-                       label = span(tagList(icon('calendar-alt'), 'Date range')),
-                       start = '2020-03-01', end = '2020-09-30')
-    ) # Closes div
+
+    dateRangeInput('dateRange',
+                   label = span(tagList(icon('calendar-alt'), 'Date range')),
+                   start = '2020-03-01', end = '2020-09-30'
+                   )
+
 ) # closes Sideboard
 
 
@@ -82,19 +83,19 @@ body <- dashboardBody(
                                  ),
 
                                  column(width=8,
-                                        box(width=NULL, status = "success", solidHeader = FALSE,
+                                        box(width=NULL, height = "400px", status = "success", solidHeader = FALSE,
                                             visNetworkOutput("network_d", height = "180px", width = "100%")
                                         )
                                  )
                              ),
 
                              fluidRow(
-                                column(width=3,
+                                column(width=2,
                                         box(title=NULL, width=NULL, height = "250px", status = "info", solidHeader = FALSE,
                                             htmlOutput("summary1")
                                         )
                                  ),
-                                column(width=3,
+                                column(width=2,
                                        box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
                                            htmlOutput("summary2")
                                        )
@@ -110,8 +111,7 @@ body <- dashboardBody(
                                            )
                                 ),
                                 column(width=2,
-                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE,
-
+                                       box(width=NULL, status = "info", height = '250px', solidHeader = FALSE
                                        )
                                 )
                              )
@@ -126,64 +126,108 @@ body <- dashboardBody(
                                      box(width = "100%", background = "purple",
                                          h4(HTML(paste(icon("user-md"), "Define interventions"))))
                                  ),
-                                 box(width="100%", title = "Introduce an intervention. Choose the intervention setting(s):", status = "info", solidHeader = FALSE,
-                                 checkboxGroupInput("intSetting", NULL, selected = "general", inline = TRUE,
-                                                    choices=list("School" = "school", "Work" = "work", "Home" = "home")),
-                                 helpText("Separate interventions can be simultaneously applied to contacts within school, work and home settings.
-                                          Interventions for all remaining contacts can be controlled with the 'All contacts' box.")
-                                 ),
-                                 textOutput("test"),
 
-                                 div(style = 'overflow-y:scroll;height:600px;',
+                                 column(width = 4,
+                                     box(width="100%", height = "700px",
+                                         title = "About interventions",
+                                         status = "info", solidHeader = FALSE,
+
+                                         HTML(paste("The", tags$code("COVOID"), "package allows you to implement two different tyoes of intervention: (i)
+                                                    interventions that target the probability of transmission; and (ii) interventions that target the
+                                                    number of contacts between individuals. Both types of interventions can be time-fixed or time-varying.
+                                                    To specify an intervention, use the panels to the right. All interventions are specified in relative terms
+                                                    (i.e. relative to the pre-pandemic levels).")),
+                                         br(), br(),
+
+                                         HTML(paste(icon("handshake"), strong("Transmission probability"))),
+                                         p("These interventions mimic the effect of measures that target the probability of transmitting the virus between
+                                           infectious and susceptible individuals, such as wearing faces masks and hand-washing."),
+
+                                         HTML(paste(icon("users"), strong("Social contacts"))),
+                                         p("These interventions mimic the effect of measures that target the number of face-to-face contacts
+                                           between individuals in the population, such as quarantine, school closures, working from home and
+                                           other 'lockdown' measures."),
+
+
+                                         hr(),
+
+                                         helpText("By default, interventions targetting social contacts are applied to all types of contacts. However,
+                                                    specific interventions can be tailored to contacts in different settings, including school, work
+                                                  and home. If you would like to tailor interventions to contacts in specific settings, select these below."),
+
+                                         checkboxGroupInput("intSetting_c", "Tailor intervention to specific setting(s):", inline = TRUE,
+                                                        choices=list("School" = "school", "Work" = "work", "Home" = "home"))
+
+                                    )
+                                 ),
+
+                                 div(style = 'overflow-y:scroll;height:700px;',
+                                 column(width = 12,
+
+                                        box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
+                                            title = HTML(paste(icon("handshake"), "Transmission probability", sparklineOutput("sparklineGeneral_t"))),
+                                            column(width = 7,
+                                                   plotOutput("intGeneral_t", height = 270,
+                                                              click = "intGeneral_click_t",
+                                                              dblclick = "intGeneral_dblclick_t",
+                                                              hover = hoverOpts("intGeneral_hover_t", delay=100, delayType = "debounce")
+                                                   ),
+                                                   textOutput("tooltipGeneral_t"),
+                                                   helpText("Click to add a point. Double-click to remove."),
+                                                   hr(),
+                                                   actionButton("resetGeneral_t", "Reset"),
+                                                   actionButton("undoGeneral_t", "Undo")
+                                            ),
+
+                                            column(width = 5,
+                                                   DTOutput("reviewGeneral_t")
+                                            )
+                                        ), # Closes box
 
                                      # All
-                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("users"), "All contacts")),
+                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
+                                             title = HTML(paste(icon("users"), "Social contacts", sparklineOutput("sparklineGeneral_c"))),
                                              helpText("If school, work, or home-based interventions are selected, those contacts will be excluded from the intervention specified here."),
-                                             column(width = 2,
-                                                    sparklineOutput("sparklineGeneral"),
-                                                    hr(),
-                                                    strong("Pointer value:"),
-                                                    textOutput("tooltipGeneral"),
+                                             column(width = 7,
+                                                    plotOutput("intGeneral_c", height = 270,
+                                                               click = "intGeneral_click_c",
+                                                               dblclick = "intGeneral_dblclick_c",
+                                                               hover = hoverOpts("intGeneral_hover_c", delay=100, delayType = "debounce")
+                                                               ),
+                                                    textOutput("tooltipGeneral_c"),
                                                     helpText("Click to add a point. Double-click to remove."),
                                                     hr(),
-                                                    actionButton("resetGeneral", "Reset"),
-                                                    actionButton("undoGeneral", "Undo")),
-                                             column(width = 6,
-                                                    plotOutput("intGeneral", height = 270,
-                                                               click = "intGeneral_click",
-                                                               dblclick = "intGeneral_dblclick",
-                                                               hover = hoverOpts("intGeneral_hover", delay=100, delayType = "debounce")),
+                                                    actionButton("resetGeneral_c", "Reset"),
+                                                    actionButton("undoGeneral_c", "Undo")
                                              ),
 
-                                             column(width = 4,
-                                                    DTOutput("reviewGeneral")
+                                             column(width = 5,
+                                                    DTOutput("reviewGeneral_c")
                                              )
                                          ), # Closes box
 
                                  # Schools
                                  conditionalPanel(
 
-                                     condition = "input.intSetting.includes('school')",
-                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("school"), "Contacts at school")),
+                                     condition = "input.intSetting_c.includes('school')",
+                                         box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
+                                             title = HTML(paste(icon("school"), "Contacts at school", sparklineOutput("sparklineSchool_c"))),
                                              helpText("Apply a distinct intervention for school-based contacts"),
-                                             column(width = 2,
-                                                    sparklineOutput("sparklineSchool"),
-                                                    hr(),
-                                                    strong("Pointer value:"),
-                                                    textOutput("tooltipSchool"),
-                                                    helpText("Click to add a point. Double-click to remove."),
-                                                    hr(),
-                                                    actionButton("resetSchool", "Reset"),
-                                                    actionButton("undoSchool", "Undo")),
-                                             column(width = 6,
-                                             plotOutput("intSchool", height = 270,
-                                                        click = "intSchool_click",
-                                                        dblclick = "intSchool_dblclick",
-                                                        hover = hoverOpts("intSchool_hover", delay=100, delayType = "debounce")),
+                                             column(width = 7,
+                                             plotOutput("intSchool_c", height = 270,
+                                                        click = "intSchool_click_c",
+                                                        dblclick = "intSchool_dblclick_c",
+                                                        hover = hoverOpts("intSchool_hover_c", delay=100, delayType = "debounce")
+                                                        ),
+                                             textOutput("tooltipSchool_c"),
+                                             helpText("Click to add a point. Double-click to remove."),
+                                             hr(),
+                                             actionButton("resetSchool_c", "Reset"),
+                                             actionButton("undoSchool_c", "Undo")
                                              ),
 
-                                             column(width = 4,
-                                                    DTOutput("reviewSchool")
+                                             column(width = 5,
+                                                    DTOutput("reviewSchool_c")
                                                     )
                                      ) # Closes box
                                  ), # Closes Conditional panel
@@ -191,27 +235,25 @@ body <- dashboardBody(
                                  # Work
                                  conditionalPanel(
 
-                                     condition = "input.intSetting.includes('work')",
-                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("building"), "Contacts at work")),
+                                     condition = "input.intSetting_c.includes('work')",
+                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
+                                         title = HTML(paste(icon("building"), "Contacts at work", sparklineOutput("sparklineWork_c"))),
                                          helpText("Apply a distinct intervention for work-based contacts"),
-                                         column(width = 2,
-                                                sparklineOutput("sparklineWork"),
-                                                hr(),
-                                                strong("Pointer value:"),
-                                                textOutput("tooltipWork"),
+                                         column(width = 7,
+                                                plotOutput("intWork_c", height = 270,
+                                                           click = "intWork_click_c",
+                                                           dblclick = "intWork_dblclick_c",
+                                                           hover = hoverOpts("intWork_hover_c", delay=100, delayType = "debounce")
+                                                           ),
+                                                textOutput("tooltipWork_c"),
                                                 helpText("Click to add a point. Double-click to remove."),
                                                 hr(),
-                                                actionButton("resetWork", "Reset"),
-                                                actionButton("undoWork", "Undo")),
-                                         column(width = 6,
-                                                plotOutput("intWork", height = 270,
-                                                           click = "intWork_click",
-                                                           dblclick = "intWork_dblclick",
-                                                           hover = hoverOpts("intWork_hover", delay=100, delayType = "debounce")),
+                                                actionButton("resetWork_c", "Reset"),
+                                                actionButton("undoWork_c", "Undo")
                                          ),
 
-                                         column(width = 4,
-                                                DTOutput("reviewWork")
+                                         column(width = 5,
+                                                DTOutput("reviewWork_c")
                                          )
                                      ) # Closes box
                                  ), # Closes Conditional panel
@@ -219,33 +261,33 @@ body <- dashboardBody(
                                  # Home
                                  conditionalPanel(
 
-                                     condition = "input.intSetting.includes('home')",
-                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, title = HTML(paste(icon("home"), "Contacts at home")),
-                                         helpText("Apply a distinct intervention for home-based contacts"),
-                                         column(width = 2,
-                                                sparklineOutput("sparklineHome"),
-                                                hr(),
-                                                strong("Pointer value:"),
-                                                textOutput("tooltipHome"),
+                                     condition = "input.intSetting_c.includes('home')",
+                                     box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
+                                         title = HTML(paste(icon("home"), "Contacts at home")),
+                                         sparklineOutput("sparklineHome_c"),
+                                         helpText("Apply a distinct intervention for work-based contacts"),
+                                         column(width = 7,
+                                                plotOutput("intHome_c", height = 270,
+                                                           click = "intHome_click_c",
+                                                           dblclick = "intHome_dblclick_c",
+                                                           hover = hoverOpts("intHome_hover_c", delay=100, delayType = "debounce")
+                                                ),
+                                                textOutput("tooltipHome_c"),
                                                 helpText("Click to add a point. Double-click to remove."),
                                                 hr(),
-                                                actionButton("resetHome", "Reset"),
-                                                actionButton("undoHome", "Undo")),
-                                         column(width = 6,
-                                                plotOutput("intHome", height = 270,
-                                                           click = "intHome_click",
-                                                           dblclick = "intHome_dblclick",
-                                                           hover = hoverOpts("intHome_hover", delay=100, delayType = "debounce")),
+                                                actionButton("resetHome_c", "Reset"),
+                                                actionButton("undoHome_c", "Undo")
                                          ),
 
-                                         column(width = 4,
-                                                DTOutput("reviewHome")
+                                         column(width = 5,
+                                                DTOutput("reviewHome_c")
                                          )
                                      ) # Closes box
                                  ) # Closes Conditional panel
 
-                                ) # Closes div
-                             )  # Closes fluidPage
+                                 ) # Closes Right-Hand column
+                            ) # Closes div
+                        )  # Closes fluidPage
 
 
                     ), # Closes tabPanel
@@ -254,18 +296,16 @@ body <- dashboardBody(
                     tabItem(tabName = "results",
                             div(style="text-align:center",
                                 box(width = "100%", background = "purple",
-                                    h4(HTML(paste(icon("chart-bar"), "View results"))))
+                                    h4(HTML(paste(icon("chart-bar"), "Run simulation"))))
                             ),
                              fluidRow(
                                  column(width=3,
-                                        box(title = NULL, width=NULL, height="600px",
+                                        box(title = NULL, width=NULL, height="700px",
                                             status = "success", solidHeader = FALSE,
                                             actionButton(inputId = "runMod", "Run Model",
                                                          icon = icon("paper-plane"),
                                                          width = '100%',
                                                          class = "btn-success"),
-                                            hr(),
-                                            downloadButton('downloadPlot','Download Plot', icon=icon("download"), width="100%", class = "btn-info"),
 
                                             hr(),
                                             checkboxGroupInput("plotvars", "Compartments to include",
@@ -273,7 +313,7 @@ body <- dashboardBody(
                                                                    "Susceptible" = "S",
                                                                    "Infectious" = "I",
                                                                    "Recovered" = "R"),
-                                                               selected=c("S", "I", "R")
+                                                               selected=c("I")
                                             ),
                                             hr(),
                                             radioButtons("scale", "Scale",
@@ -281,27 +321,30 @@ body <- dashboardBody(
                                                              "Count",
                                                              "Percent",
                                                              "Per 100,000"),
-                                                         inline = FALSE,
+                                                         inline = TRUE,
                                                          selected=c("Count")
                                             ),
                                             materialSwitch("logScale", "Log scale", FALSE, inline=TRUE, status = "info"),
                                             hr(),
                                             sliderInput("ndays",
                                                         "Number of days to plot:",
-                                                        min=0, step=1, max=365, value=100)
-                                        )
+                                                        min=0, step=1, max=365, value=100),
+                                            selectizeInput("compCountries", "Compare to existing data:", choices = unique(covid19_data$Country.Region), selected = "Australia", multiple = FALSE),
+                                            selectizeInput("compProvince", "Specify province or state (where available):", choices = unique(covid19_data$Province.State), selected = "New South Wales", multiple = FALSE)
+                                            )
                                  ),
 
                                  column(width=6,
                                         box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
-                                            width = "100%", height="600px", status = "primary", solidHeader = FALSE,
-                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif")
+                                            width = "100%", height="700px", status = "primary", solidHeader = FALSE,
+                                            withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif"),
+                                            downloadButton('downloadPlot','Download Plot', icon=icon("download"), width="100%", class = "btn-info")
                                         )
                                  ),
 
                                  column(width=3,
                                         box(title = NULL,
-                                            width = "100%", height="600px", status = "primary", solidHeader = FALSE,
+                                            width = "100%", height="700px", status = "primary", solidHeader = FALSE,
                                             actionButton("toreport", label="Add to my report canvas", icon("palette"), class = "btn-success"),
                                             helpText("Plots that are added to your report canvas can be reviewed and captioned later.
                                                      You can also download these files as part of a customisable report for easy sharing."),
@@ -315,69 +358,6 @@ body <- dashboardBody(
 
                              )
                     ),
-
-
-                    # Animate results
-                    tabItem(tabName = "video",
-                            div(style="text-align:center",
-                                box(width = "100%", background = "purple",
-                                    h4(HTML(paste(icon("video"), "Animate results"))))
-                            ),
-
-                             fluidRow(
-                                 column(width=3,
-                                        box(title = NULL, width="100%", height = "600px",
-                                            status = "success", solidHeader = FALSE,
-                                            checkboxGroupInput("plotvars_a", "Compartments to include",
-                                                               choices = list(
-                                                                   "Susceptible" = "S",
-                                                                   "Infectious" = "I",
-                                                                   "Recovered" = "R"),
-                                                               selected=c("S", "I", "R")
-                                            ),
-                                            hr(),
-                                            radioButtons("scale_a", "Scale",
-                                                         choices = list(
-                                                             "Count",
-                                                             "Percent",
-                                                             "Per 100,000"),
-                                                         inline = FALSE,
-                                                         selected=c("Count")
-                                            ),
-                                            materialSwitch("logScale_a", "Log scale", FALSE, inline=TRUE, status = "info"),
-                                            hr(),
-                                            sliderInput("ndays_a",
-                                                        "Number of days to animate:",
-                                                        min=0, step=1, max=365, value=365),
-                                            hr(),
-                                            helpText("Right-click to download the gif")
-                                        )
-                                 ),
-
-                                 column(width=6,
-                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
-                                            width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
-                                            withLoader(imageOutput("animation"), type="image", loader="SARS-CoV-2.gif")
-                                        )
-                                 ),
-
-                                 column(width=3,
-                                        box(title = NULL,
-                                            width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
-                                            helpText("Here you can visualise disease transition over time. Design the plot you would
-                                                     like to animate then click on Create Animation to view. If no preview appears below, make sure that you have run a model."),
-                                            h4("Animation preview"),
-                                            ggiraphOutput("animation_preview", width='100%', height='200px'),
-                                            actionButton(inputId = "runAni", "Create Animation",
-                                                         icon = icon("play"),
-                                                         width = '100%',
-                                                         class = "btn-success")
-                                        )
-                                        )
-                             )
-
-                    ),
-
 
                     # Dynamic report
                     tabItem(tabName = "canvas",
@@ -512,6 +492,70 @@ body <- dashboardBody(
                                                   )
                                               ))
                     ),
+
+
+
+                    # Animate results
+                    tabItem(tabName = "video",
+                            div(style="text-align:center",
+                                box(width = "100%", background = "purple",
+                                    h4(HTML(paste(icon("video"), "Animate results"))))
+                            ),
+
+                            fluidRow(
+                                column(width=3,
+                                       box(title = NULL, width="100%", height = "600px",
+                                           status = "success", solidHeader = FALSE,
+                                           checkboxGroupInput("plotvars_a", "Compartments to include",
+                                                              choices = list(
+                                                                  "Susceptible" = "S",
+                                                                  "Infectious" = "I",
+                                                                  "Recovered" = "R"),
+                                                              selected=c("I")
+                                           ),
+                                           hr(),
+                                           radioButtons("scale_a", "Scale",
+                                                        choices = list(
+                                                            "Count",
+                                                            "Percent",
+                                                            "Per 100,000"),
+                                                        inline = FALSE,
+                                                        selected=c("Count")
+                                           ),
+                                           materialSwitch("logScale_a", "Log scale", FALSE, inline=TRUE, status = "info"),
+                                           hr(),
+                                           sliderInput("ndays_a",
+                                                       "Number of days to animate:",
+                                                       min=0, step=1, max=365, value=365),
+                                           hr(),
+                                           helpText("Right-click to download the gif")
+                                       )
+                                ),
+
+                                column(width=6,
+                                       box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
+                                           width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
+                                           withLoader(imageOutput("animation"), type="image", loader="SARS-CoV-2.gif")
+                                       )
+                                ),
+
+                                column(width=3,
+                                       box(title = NULL,
+                                           width = "100%", height = "600px", status = "primary", solidHeader = FALSE,
+                                           helpText("Here you can visualise disease transition over time. Design the plot you would
+                                                     like to animate then click on Create Animation to view. If no preview appears below, make sure that you have run a model."),
+                                           h4("Animation preview"),
+                                           ggiraphOutput("animation_preview", width='100%', height='200px'),
+                                           actionButton(inputId = "runAni", "Create Animation",
+                                                        icon = icon("play"),
+                                                        width = '100%',
+                                                        class = "btn-success")
+                                       )
+                                )
+                            )
+
+                    ),
+
 
                     # Data
                     tabItem(tabName = "data",
