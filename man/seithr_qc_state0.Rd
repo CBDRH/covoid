@@ -11,7 +11,7 @@ seithr_qc_state0(
   I1m,
   I1s,
   I2,
-  T,
+  I2i,
   H,
   Sc,
   Ec1,
@@ -19,10 +19,12 @@ seithr_qc_state0(
   Ic1m,
   Ic1s,
   Ic2,
-  Tc,
   Hc,
   R,
-  Rh
+  Rh,
+  Tested,
+  Detect,
+  NotDetect
 )
 }
 \arguments{

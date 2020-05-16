@@ -7,13 +7,17 @@
 seithr_qc_param(
   R0,
   Qeff,
-  Teff,
+  Ieff,
   Heff,
-  delta,
+  delta1,
+  delta2,
+  delta3,
+  delta4,
   sigma1,
   sigma2,
   p_severe,
   p_isolate,
+  p_tested,
   gamma1,
   gamma2,
   cm,
@@ -28,11 +32,15 @@ seithr_qc_param(
 
 \item{Qeff}{...}
 
-\item{Teff}{...}
-
 \item{Heff}{...}
 
-\item{delta}{...}
+\item{delta1}{...}
+
+\item{delta2}{...}
+
+\item{delta3}{...}
+
+\item{delta4}{...}
 
 \item{sigma1}{...}
 
@@ -58,6 +66,8 @@ of interventions with the names matching the list of contact matrices.}
 of interventions with the names matching the list of contact matrices.}
 
 \item{im}{Relative infectiousness matrix. Default is 1.}
+
+\item{Teff}{...}
 }
 \value{
 List of SIR model parameters
