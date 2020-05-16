@@ -40,27 +40,27 @@ devtools::load_all()
 
 This article outlines a minimal theoretical background behind the implementation of age structured epidemic models in covoid, in particular:
 
-* Rationale behind use the use of age structured epidemic models (and heterogeneous models in general).
+* Rationale behind use the use of age structured epidemic models (and heterogeneous models in general)
 * What additional information is needed for the age structured models compared to homogeneous model?
-* The mathematical model (differential equations)  
+* The mathematical model (a system of ordinary differential equations)  
 * Modelling the impact of disease prevention policies    
 * Calculation of the basic reproduction number 
 
 ## Introduction
 
-The transmission and consequences of an infection with a virus such as SAR-Cov-2 is influenced by several factors. These include the biology and behaviour of infected individual (host). Both of these components are heavily influenced by (chronological) age. For example, on average older individuals (>? years) have less contacts with others per day compared to the societal average (REF - original polymod). Lower contact rates reduces their number of opportunities to spread or contract a virus. However, older individuals may have a greater chance of infection given contact (REF). Increasing age is also associated with higher mortality rates, with evidence of a increase from xx for individuals aged x-y to xx for individuals age x-y (REF). Clearly as shown by this example accounting for age important/justificable ... can also account comorbidities, sex....
+The transmission and consequences of an infection with a virus such as SAR-CoV-2 is influenced by several factors. These include the biology and behaviour of infected individual (host). Both of these components are heavily influenced by (chronological) age. People spend a disproportionally large amount of their time in particular settings such kindergartens, school, workplaces and households (REF). This skews their chance of contacting certain age groups. Accounting for non-uniform age contacts in epidemic models can aid in understanding the potential impact and dynamics of disease in a population. Further, it enables more realistic modeling of disease prevention policy. 
 
-(notes) Compartmental model like SIR are often model homogeneous. e.g. we assume that didt = .... with k equal accross the population. While these models are nice it is hard to see how school closuer differs from physical distancing. further however studies such as x and y allow us to data-driven epi - put everthing we know into model. We move to a case where didt = ki where kij is the contact rate between group i and j. These models are more complex and do behave different e.g. R0 no longer a simple ratio as in homogeneous model. Still not networks but quick to solve, quicker turnaround when pre-existing.
+For example, on average older individuals (>? years) have less contacts with others per day compared to the societal average (REF - original polymod). Lower contact rates reduces their number of opportunities to spread or contract a virus. However, older individuals may have a [lower/greater] chance of infection given contact (REF). Increasing age is also associated with higher mortality rates, with evidence of a increase from xx for individuals aged x-y to xx for individuals age x-y (REF). COVOID is motivated by the need to incorporate available data on population structure and the impact of interventions, while building upon ordinary differential equation (ODE) based compartmental epidemic models to enable rapid turnaround in disease modeling.
 
-People spend a disproportionally large amount of their time in particular settings such kindergartens, school, workplaces and households (REF). This skews their chance of contacting certain age groups. Accounting for non-uniform age contacts in epidemic models can aid in understanding the potential impact and dynamics of disease in a population. Further, it enables more realistic modeling of disease prevention policy. We can quantify the potential impact of school or university closures from strict distancing measures in nursing homes.  
+(notes) Compartmental model like SIR are often model as homogeneous - all people interact at random unifmroly. That didt = .... with k equal accross the population. While these models are simple to program and estimate parameters, with well studied behviours (e.g. the relationship parameters such as the basic reprodctuion number $\mathcal{R_0}$ and epidemic size) they combine various interventions and behvoiurs. It is model how school closuer differs from physical distancing (REF), or variation in transmissibiluty acorss age groups (REF). Further however studies such as Prem 1 and Prem 2 provide detailed info about age specific contacts, and XX on age specific incidence rates. This allows for data-driven increases in the realism of these models. We move to a case where didt = ki where kij is the contact rate between group i and j. These models are more complex and do behave different e.g. R0 no longer a simple ratio as in homogeneous model, and this is something that is important to cosider. The role of sensityt analysis important. Still not networks but quick to solve, quicker turnaround when pre-existing.
 
-This article describes the basics of the theoretical background and other considerations when moving from the homogeneous compartmental model to more complex (discrete) age structured models, and the basics of how to use covoid to model these situations (for more see other vingette). We firstly describe what information is needed, the mathematical model for an SIR example and the general SEIR case and calcation of the basic reproduction number. Throughout we will assume stable demography, i.e. no migration and birth or death. This assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
+Looking ahead, this article describes the basics of the theoretical background and other considerations when moving from the homogeneous compartmental model to more complex (discrete) age structured models, and the basics of how to use covoid to model these situations (for more on the programming API see `vigette(??)`). We firstly describe what information is needed, the mathematical model for an SIR example and the general SEIR case and calcation of the basic reproduction number. Throughout we will assume stable demography, i.e. no migration and birth or death. This assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
 
 ## Age structured population
 
-In order to introduce heterogeneity additional information is required. A homogeneous compartmental model required knowledge or estimates of the population size N, and breakdowns into the given compartments, along with disease dynamics parameters, at the very least the probability of infection given contact , kappa the contact rate and gamma the invers of the length of illness. A key addition for the heterogeneous case is the contact rates between groups and population distributions. For $J$ groups this An additional $J(J + 1)$ parameters. Thankfully we have available We use contact matrices split into home, school, work and other (Prem et al). 
+It is clear that in order to introduce heterogeneity in population contact rates, additional information is required. A basic homogeneous compartmental model requires estimates of the population size $N$, broken down into the given compartments (e.g. $S$,$I$ and $R$), along with disease dynamics parameters. At the very least this includes two of $\beta$ probability of infection given contact, $\kappa$ the contact rate and $\gamma$ the inverse of the length of illness. A key addition for the heterogeneous case is the contact rates between groups and population distributions. For $J$ groups this an additional $J(J + 1)$ parameters. Thankfully, previous researchers and organisations have made age distributions and age-sepcific contact matrices split into different settings such as home, school, work and other (Prem et al; UN; Prem 2; social mixing package). 
 
-Previous research by Prem (REF) has created contact matrices for five year age groups for 152 countries. see figure. These allow us to model our population as being composed of $i = 1,...,I$ discrete age groups (e.g. (0,5], (5,10],...). Within covoid these matrices can be imported for XXXX countries - see `foo` for the full list - using the `import_contact_matrix` function which takes the arguments country and XXX, which is one of "school", "work", "other", "home" or "general". The general matrix is the sum of the other four. A `plot` method utilising ggplot2 has been introduced for these matrices allowing quick visualising (see figure).
+Previous research by Prem (REF) has created contact matrices for five year age groups for 152 countries, see figure 1. COVOID builds upon this research to allow the modelling of a particular population as being composed of $i = 1,...,16$ discrete age groups (e.g. (0,5], (5,10],...(80,+). Within covoid these matrices can be imported for ~150 countries - see `available_contact_matrices()` for the full list - using the `import_contact_matrix` function which takes the arguments country and setting. The setting can be one of "school", "work", "other", "home" or "general". The general matrix is the sum of the other four. A `plot` method utilising ggplot2 has been introduced for these matrices allowing quick visualising (see figure 1).
 
 ```{r,fig.cap="*Figure 1:* Contact matrices for school, work, home and other locations (source: Prem et al ()). Note the differing scales.",fig.width=7,fig.height=5}
 cm_oz_s <- import_contact_matrix("Australia","school")
@@ -86,7 +86,7 @@ p3 = plot(cm_oz_h) +
 gridExtra::grid.arrange(p1,p2,p3,p4,ncol=2)
 ```
 
-The covoid package also contains age distributions for XXX, sourced from XXX. These can be imported imported for XXXX countries - see `foo` for the full list - using the `import_age_distribution` function. This returns $p_i$. A `plot` method utilising ggplot2 has been introduced for these allowing quick visualising (see figure).
+The covoid package also contains age distributions for ~150 countries, original compiled by the United Nation Population Division (2019). These are proportions in each age category from (0,5], (5,10],...,(80,+). These can be imported imported using `import_age_distribution` function. - see `age_distributions_un()` for the full list of available countries. A `plot` method utilising ggplot2 has been introduced for these allowing quick visualising (see figure).
 
 ```{r,fig.cap="*Figure 2:* hello",fig.height=2,fig.width=6}
 plot(import_age_distribution("Australia")) +
@@ -99,7 +99,7 @@ plot(import_age_distribution("Australia")) +
           axis.line.y = element_line())
 ```
 
-The contact rate between an individual in age group $i$ and age group $j$ is $\kappa_{ij}$. As above generally $\kappa_{ij} \ne \kappa_{ji}$ due to the non-uniform distribution of age in human societies. The lack of symmetry is illustrated in figure 1. However, it is the case that $p\kappa_{ij} = p\kappa_{ji}$ 
+We note that the contact matrices are not symmetric. The contact rate between an individual in age group $i$ and age group $j$ is $\kappa_{ij}$. Generally $\kappa_{ij} \ne \kappa_{ji}$ due to the non-uniform distribution of age in human societies. The lack of symmetry is illustrated in figure 1. However, it should be the case that $p_i\kappa_{ij} = p_j\kappa_{ji}$. The number of contacts of group $i$ with group $j$ should equal the number of contact by group $j$ with group $i$. As covoid sources the contact matrices and age distributions from different sources this equality is unlikely to hold exactly for all cases. The error can be checked by constructing a matrix of elements $M_{ij} = p_i\kappa_{ij}$ and examining $M - M^t$ where $t$ denotes the transpose. Care should be taken to examine the impact of any error, including any difference in results in cases of certain symmetry (e.g. using $\frac{1}{2}(M + M^t)$).
 
 ```{r,fig.height=3.5,fig.width=3.5,fig.cap="*Figure 3:* Asymmetry of contact rates. Each point represents an individual and the shaded area the individuals they will contact in the next time step. On average each red will contact ~1-3 reds, and 0-1 blues. Blues will meet ~1 red and 0 blues."}
 set.seed(1234)
@@ -116,7 +116,7 @@ ggplot(df,aes(x=x,y=y,color=factor(col))) +
   theme(legend.position = "none")
 ```
 
-## Mathematical model
+## General mathematical model
 
 ```{r,fig.cap="*Figure 4*: SEIR model",fig.align="center"}
 grViz("
@@ -144,7 +144,7 @@ digraph SEIR {
 ",height=200,width=700)
 ```
 
-Extending the SIR/SEIR models to account for heterogenous mixing across a discrete stucture such as age groups is largly an exercise in indexing the dynamics. In the next section we will introduce the approach for interventions. There are $N_j$ individuals in each of the $l = 1,...,J$ age groups, with susceptible-exposed-infected-removed compartments $S_j$, $I_j$ and $R_j$. The proportion of the population in a particular age group is $p_j = \frac{N_j}{N}$.
+Extending the SIR/SEIR models to account for heterogenous mixing across a discrete stucture such as age groups is largly an exercise in indexing the system dynamics. In the next section we will introduce the approach for interventions. There are $N_j$ individuals in each of the $l = 1,...,J$ age groups, with susceptible-exposed-infected-removed compartments $S_j$, $I_j$ and $R_j$. The proportion of the population in a particular age group is $p_j = \frac{N_j}{N}$. 
 
 Taking the viewpoint of a susceptible individual in an arbitarty age group $S_j$, this individual meets $c_{jk}$ individuals in age group $l$ per day. Of these the proportion that are infected is $\frac{I_k}{N_k}$. Assume a constant probability of disease transmission $\beta$. Combining these terms we have the chance a susceptible individual in $S_i$ meets and is infected by an individual in $I_j$ is $\beta \kappa_{jk} \frac{I_k}{N_k}$. Summing this over all susceptible individuals in $i$, and all infected in $j$ gives us time rate of change in $S_j$ due to infections of 
 
@@ -154,14 +154,32 @@ $$
 \frac{dS_j}{dt} &= -S_j \sum_{k=1}^{K} \beta \kappa_{jk} \frac{I_k}{N_k} \\
 \end{align}
 $$
+For infections such as COVID-19 it has become common practise to split the E/I compartments in further subsections, to account for the pattern in which the infectiousness and sympotomatic phases overlap, and wide variation in severity. if we denote these $L = L_E + L_I$ disease periods for age group $k$ as $E_{kl}$ and $I_{kl}$, with infectiousness present from stage $I_{k1}$ the above extends to
+
+$$ 
+\begin{align}
+\frac{dS_j}{dt} &= -S_j \sum_{k=1}^{K} \beta \kappa_{jk} \sum_{l=1}^{L_E} \frac{I_{kl}}{N_k} \\
+\end{align}
+$$
+The remainder of the disease dynamics is relatively straighforwards, letting the average amount of time spent in $E_{*l}$ to be $\sigma_l$ and $I_{*l}$ to be $\gamma_l$ we have a system of the form
+
+$$ 
+\begin{align}
+\frac{dS_j}{dt} &= -S_j \sum_{k=1}^{K} \beta \kappa_{jk} \sum_{l=1}^{L_E} \frac{I_{kl}}{N_k} \\
+\frac{dE_{j1}}{dt} &= S_j \sum_{k=1}^{K} \beta \kappa_{jk} \sum_{l=1}^{L_E} \frac{I_{kl}}{N_k} - \sigma_1 E_{j1} \\
+... \\
+\frac{dI_{j1}}{dt} &= \sigma_{L_E} I_{jL_E} - \gamma_{1} I_{j1}\\
+... \\
+\frac{dR_{j}}{dt} &= \gamma_{L_I} I_{jL_I} \\
+... \\
+\end{align}
+$$
+
+In COVOID these models are solved using the `deSolve::ode` function from the R package deSolve which uses numerical integration methods such as the [Runge-Kutta algorithms](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods).
 
 ## A simple example
 
-This example is aimed at illustrating how the introduction of contact matrices alters the behaviour of the system.
-
-Consider a population with two age groups - adults and children. Our contact matrix in table 1 shows that a child has on average 5.8 contacts per day with other children and 2.6 contacts with an adult. The proportion of adults and children in the population is $p_a = \frac{2}{3}$ and $p_c = \frac{1}{3}$, with the subscripts $a$ and $c$ denoting adult and child.
-
-Notice that pj kappa = pk kappa.
+This example is aimed at illustrating how the introduction of contact matrices influences the behaviour of the system. Consider a population with two age groups - adults and children. Our contact matrix in table 1 shows that a child has on average 5.8 contacts per day with other children and 2.6 contacts with an adult. The proportion of adults and children in the population is $p_a = \frac{2}{3}$ and $p_c = \frac{1}{3}$, with the subscripts $a$ and $c$ denoting adult and child. Notice that $p_a \kappa_{ac} = p_c \kappa_{ca}$ as expected.
 
 ```{r}
 cm = matrix(c(5.8,1.3,2.6,1.9),ncol=2,byrow = TRUE)
@@ -172,7 +190,7 @@ knitr::kable(cm,
              caption="Source: Blackwood, Childs")
 ```
 
-Our SIR system is
+Our SIR system, dropping $\frac{dR_i}{dt}$ as it is not relevant to the spread of the infection, is
 
 $$ 
 \begin{align}
@@ -182,11 +200,23 @@ $$
 \frac{dI_a}{dt} &= S_a\beta(\kappa_{aa}\frac{I_a}{N_a} + \kappa_{ac}\frac{I_c}{N_c}) - \gamma I_a\\
 \end{align}
 $$
-We drop $\frac{dR_i}{dt}$ as it is not relevant to the spread of the infection.
 
-Now, the initial conditions and contact matrices can alter the timing and evolution of the epidemic.
+An initial run of the model, with with $\beta = 0.1$, $\gamma = 0.2$ and a population size of $N=10,000$. We see that... Now, the initial conditions and contact matrices can alter the timing and evolution of the epidemic.
 
-Simulating this example, with $\beta = 0.1$, $\gamma = 0.2$ and a population size of $N=10,000$, we see that even though we start with an inial 10 infections by varying the starting compartment distribution we can have a large impact on the timing of the epidemic peak. 
+```{r}
+cm <- matrix(c(5.8,1.3,2.6,1.9),ncol=2,byrow = TRUE)
+dist <- c(1/3,2/3)
+param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=dist)
+nJ <- ncol(cm)
+S <- c(3333,6666)
+I <- c(5,5)
+R <- c(0,0)
+state0 <- sir_c_state0(S = S,I = I,R = R)
+res <- simulate_sir_c(t = 150,state_t0 = state0,param = param)
+plot(res,y=c("S","I","R"))
+```
+
+Simulating this example, with $\beta = 0.1$, $\gamma = 0.2$ and a population size of $N=10,000$, we see that even though we start with an initial 10 infections by varying the starting compartment distribution we can have a large impact on the timing of the epidemic peak. 
 
 ```{r, fig.cap="*Figure 5*: Impact of initial conditions on disease peak. All simulations atart with 10 infected individuals, dispersed over ",fig.height=4,fig.width=6}
 cm <- matrix(c(5.8,1.3,2.6,1.9),ncol=2,byrow = TRUE)
@@ -271,43 +301,23 @@ ggplot(res_pp) +
          x = "Proportional reduction in inter-group contact") 
 ```
 
-Clearly even this simple addition illustrating the importance of careful consideration and thought in how these models are structured and the need for sensitivity analysis.  The choice of contact matrix, and distributions across compartments influence the final epidemic size and timing.
+Clearly even in this simple case ... this illustrates the importance of careful consideration and thought in how these models are structured and the need for sensitivity analysis. The choice of contact matrix, and distributions across compartments influence the final epidemic size and timing.
 
 ## Interventions
 
-Interventions (e.g. social distancing) can reduce either the contact rate $\kappa_{ij}$ or the probabililty of transmission $\beta$. As these terms are linearly combined in the SIR/SEIR models we don't differentiate our interventions act upon one or both. An intervention that reduces the transmissability $\beta \kappa_{ij} = \tau_{ij}$ of the disease from group $i$ to $j$ is denoted by $Y_{ij}$ and takes a value in $(0,1)$. For example, social distancing.... Some interventions may act at certain stages, for example self-isolation of people with respiratory symptoms, leading to a general form
+Interventions (e.g. social distancing) can reduce either the contact rate $\kappa_{ij}$ or the probabililty of transmission $\beta$. As these terms are linearly combined in the SIR/SEIR models we don't differentiate our interventions act upon one or both. An intervention that reduces the transmissability $\beta \kappa_{ij} = \tau_{ij}$ of the disease from group $i$ to $j$ is denoted by $Y_{ij}(t)$ and takes a value in $(0,1)$. For example, social distancing.... Some interventions may act at certain stages, for example self-isolation of people with respiratory symptoms, leading to a general form
 
 $$\frac{dS}{dt} = - S_i \sum_{j=1}^{J} \tau_{ij} \sum_{k=1}^{K} Y_{kij} \frac{I_{kj}}{N_j}$$
 
-Some sort of logistic function, steps etc.
+COVOID allows some sort of logistic function, steps etc. to allow for cases where an intervention $Y_{ij}(t)$ takes effect immediately (e.g. no flights) or gradually (e.g. voluntary physical distancing).
 
-We disagrrgate our contact matrix into a contact matrices for different settings school (e.g. figure) so we can assess the impact of interventions. For instance, suppose closing school reduces contact rates of students with other students by 80% on average. One way to achive this is  multiply our contact matrix $C$ by a diagonal matrix $CC$ with elements 0.2 getting $C_i = C CM$.
+Key to good modelling of interventions is disagregate our contact matrix into a contact matrices for different settings school (e.g. figure) so we can assess the impact of interventions. For instance, suppose closing school reduces contact rates of students with other students by 80% on average. One way to achive this is  multiply our contact matrix $C$ by a diagonal matrix $CC$ with elements 0.2 getting $C_i = C CM$. See graph below:
 
-Maybe difference over ages, e.g. reducing contact between group i and everyone else by 90% and group j by not at all then 
-
-
-```{r}
-CC = diag(c(0.5,1))
-
-MM = CC
-MM[MM == 1] = 0
-MM = 2*MM
-# before
-cm
-# after
-tmp = CC %*% cm %*% CC 
-tmp + MM %*% tmp %*% MM
-```
 
 
 ## The basic reproduction number
 
-For complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$. As shown by Li et al (2010) the various methods give different answers. This suggest that for the discrete heterogeneous model we described can calculate it as 
-
-Note that the basic reproduction number is a threshold
-parameter for invasion of a disease organism into a completely susceptible
-population; once the disease has begun to spread, conditions favouring spread
-will change and Ro may no longer be a good measure of disease transmission. (Driessche & Watmough). Further, in many models R0 is related to the peak and final threshold of a epidemic. In the current model R0 is also a threshold parameter for exponential growth (see figure) (although N must be large - in small samples it is possible that no exponential growth occurs).
+(notes) Average number of secondary infections. Note that the basic reproduction number is a threshold parameter for invasion of a disease organism into a completely susceptible population; once the disease has begun to spread, conditions favouring spread will change and Ro may no longer be a good measure of disease transmission. (Driessche & Watmough). Further, in many models R0 is related to the peak and final threshold of a epidemic. For complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$. As shown by Li et al (2010) the various methods give different answers. In the current model R0 is also a threshold parameter for exponential growth (see figure) (although N must be large - in small samples it is possible that no exponential growth occurs).
 
 ```{r,fig.cap="*Figure 4:* Potential for expontial growth and $R_0$",fig.height=4,fig.width=6}
 cm_oz <- import_contact_matrix("Australia","general")
@@ -345,9 +355,9 @@ ggplot(df) +
 
 The next generation approach.
 
-THe disease free equilibrium 
+THe disease free equilibrium is nobody in any disease compartments. Linearlise.
 
-The next generation matrix is:
+The next generation matrix is constructed from two matrices F and V. For a model with $L_I$ infectious states F contains the flows into *infectious* states in . V contains the flow out of infectious states. $FV^{-1}$ a generalisation of the SIR identity that 
 
 For example using the .... and with gamma = ... we can code the calculation of R0 as
 
