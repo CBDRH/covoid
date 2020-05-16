@@ -70,7 +70,7 @@ recDist <- reactive({
 
 # Update second country choice based on first country choice
 choiceCountry <- eventReactive(input$countryAgeMat ,{
-  ifelse(input$countryAgeMat %in% age_distributions_un(), input$countryAgeMat, "Not found, please choose manually")
+  ifelse(input$countryAgeMat %in% covoid::age_distributions_un(), input$countryAgeMat, "Not found, please choose manually")
 })
 
 observe(updateSelectizeInput(session, "countryAgeDist", selected = choiceCountry()))
@@ -396,7 +396,7 @@ observe(
                 ),
 
                 column(width = 6,
-                       selectizeInput("countryAgeDist", "Age distribution", choices = c(age_distributions_un(), "Not found, please choose manually"), selected = default$countryAgeDist(), multiple = FALSE, options = NULL),
+                       selectizeInput("countryAgeDist", "Age distribution", choices = c(covoid::age_distributions_un(), "Not found, please choose manually"), selected = default$countryAgeDist(), multiple = FALSE, options = NULL),
                        ggiraphOutput("ageHist", height = "400px", width = "200px")
                 )
                 ),
