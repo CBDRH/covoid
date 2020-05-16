@@ -9,7 +9,7 @@ ui <- fluidPage(
 titlePanel("Minimal working example of visNetwork issue"),
 helpText("Desired functionality is for the user to click on a node or edge to open a dialogue box and set the related parameter"),
 strong("Issue:"),
-p("The dialogue box does not launch when the user clicks on the same node/edge consecutively, or on a node adjacent to the last clicked edge."),
+p("The dialogue box does not launch when the user clicks on the same node/edge consecutively, or on an edge adjacent to the last clicked node."),
 strong("Troubleshooting | Current Node and Edge values:"),
 htmlOutput("troubleshoot"),
 visNetworkOutput("network")
