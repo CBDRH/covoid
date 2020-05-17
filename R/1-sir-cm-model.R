@@ -1,5 +1,8 @@
 
-#' Simulate a deterministic SIR model
+#' Simulate a deterministic age structured SIR model
+#'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
 #'
 #' S = Susceptible
 #' I = Infectious
@@ -37,7 +40,7 @@ simulate_sir_c <- function(t,state_t0,param) {
     stopifnot(class(param) == "sir_c_param")
 
     # simulation
-    mod = deSolve::ode(y=state_t0,
+    mod <- deSolve::ode(y=state_t0,
                        times=1:t,
                        func=sir_c_model,
                        parms=list(pt=param$pt,
@@ -60,9 +63,12 @@ simulate_sir_c <- function(t,state_t0,param) {
 }
 
 
-#' SIR model parameters
+#' Age structured SIR model parameters
 #'
-#' Setup function
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+#'
+#' Define parameter values for age structured SIR models
 #'
 #' @param R0 Basic/empirical reproduction number (S -> I), can be a function of t.
 #' @param gamma Inverse of the average length of infectious period (I -> R)
@@ -107,27 +113,27 @@ sir_c_param <- function(R0,gamma,cm,dist,contact_intervention=NULL,transmission_
 
     # calculate prob transmission
     if (is.list(cm)) {
-        cm_gen = Reduce('+', cm)
+        cm_gen <- Reduce('+', cm)
     } else {
-        cm_gen = cm
+        cm_gen <- cm
     }
     if (is.null(im)) {
-        im = matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
+        im <- matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
     }
-    J = ncol(cm_gen)
-    V = diag(rep(gamma,J))
-    F1 = cm_gen
+    J <- ncol(cm_gen)
+    V <- diag(rep(gamma,J))
+    F1 <- cm_gen
     for (i in 1:J) {
         for (j in 1:J) {
-            F1[i,j] = dist[i]/dist[j]*F1[i,j]*im[i,j]
+            F1[i,j] <- dist[i]/dist[j]*F1[i,j]*im[i,j]
         }
     }
-    K1 = F1 %*% solve(V)
-    l1 = max(Re(eigen(K1)$values))
-    pt = R0/l1
+    K1 <- F1 %*% solve(V)
+    l1 <- max(Re(eigen(K1)$values))
+    pt <- R0/l1
 
     # output with class sir_param
-    param = list(R0=R0,
+    param <- list(R0=R0,
                  gamma=gamma,
                  cm=cm,
                  pt=pt,
@@ -135,15 +141,18 @@ sir_c_param <- function(R0,gamma,cm,dist,contact_intervention=NULL,transmission_
                  contact_intervention=contact_intervention,
                  transmission_intervention=transmission_intervention,
                  im=im)
-    class(param) = "sir_c_param"
+    class(param) <- "sir_c_param"
 
     # return
     param
 }
 
-#' SIR model inital state
+#' Age structured SIR model inital state
 #'
-#' Setup function
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+#'
+#' Define intial state values for age structured SIR models
 #'
 #' @param S0 Initial number of susceptibles
 #' @param I0 Initial number of infected
@@ -159,8 +168,8 @@ sir_c_state0 <- function(S0,I0,R0) {
     stopifnot(any(I0 >= 0))
 
     # output with class sir_state0
-    state0 = c(S=S0,I=I0,R=R0)
-    class(state0) = "sir_c_state0"
+    state0 <- c(S=S0,I0=I0,R=R0)
+    class(state0) <- "sir_c_state0"
 
     # return
     state0
@@ -179,27 +188,27 @@ sir_c_model <- function(t,y,parms) {
     with(as.list(c(y, parms)), {
 
         # account for interventions
-        cm_cur = calculate_current_cm(cm,contact_intervention,t,dist)
-        pt_cur = calculate_current_pt(pt,transmission_intervention,t)
+        cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
+        pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
 
         # population size
-        J = ncol(cm_cur)
-        S = y[1:J]
-        I = y[(J+1):(2*J)]
-        R = y[(2*J+1):(3*J)]
-        N = S + I + R
+        J <- ncol(cm_cur)
+        S <- y[1:J]
+        I <- y[(J+1):(2*J)]
+        R <- y[(2*J+1):(3*J)]
+        N <- S + I + R
 
         # derived parameters
         # none
 
         # differential equations
-        dS = numeric(length=J)
-        dI = numeric(length=J)
-        dR = numeric(length=J)
+        dS <- numeric(length=J)
+        dI <- numeric(length=J)
+        dR <- numeric(length=J)
         for (i in 1:J) {
-            dS[i] = -(S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N))
-            dI[i] = (S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N)) - gamma*I[i]
-            dR[i] = gamma*I[i]
+            dS[i] <- -(S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N))
+            dI[i] <- (S[i])*sum(pt_cur*im[,i]*cm_cur[i,]*(I/N)) - gamma*I[i]
+            dR[i] <- gamma*I[i]
         }
 
         # return

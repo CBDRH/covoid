@@ -39,6 +39,8 @@ By default an exponential decay form "exp" is assumed where 99% uptake occurs by
 Alteratives include the uniform "unif" distribution where 100% uptake occurs at start+delay..}
 }
 \description{
+\lifecycle{deprecated}
+
 Use `add_intervention` to model the impact of a epidemic control measure, for
 example "social distancing", on the trajectory of a epidemic.
 Is this measure adopted instantly or gradually over a number of units of time?

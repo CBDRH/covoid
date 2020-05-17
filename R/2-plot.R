@@ -17,7 +17,7 @@ dcm2df <- function(mod) {
 #' @param main string Main title for the plot
 #' @param ... see ggplot2::qplot
 #'
-#' @method plot covoidd
+#' @method plot covoid
 #'
 #' @export
 plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
@@ -53,6 +53,8 @@ plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
 #'
 #' @param x the contact matrix
 #'
+#' @method plot contact_matrix
+#'
 #' @export
 plot.contact_matrix <- function(x,...) {
     df = as.data.frame(x)
@@ -71,6 +73,8 @@ plot.contact_matrix <- function(x,...) {
 #' Plot a contact matrix
 #'
 #' @param x the contact matrix
+#'
+#' @method plot age_distribution
 #'
 #' @export
 plot.age_distribution <- function(x,...) {

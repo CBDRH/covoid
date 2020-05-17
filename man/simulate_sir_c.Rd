@@ -2,7 +2,7 @@
 % Please edit documentation in R/1-sir-cm-model.R
 \name{simulate_sir_c}
 \alias{simulate_sir_c}
-\title{Simulate a deterministic SIR model}
+\title{Simulate a deterministic age structured SIR model}
 \usage{
 simulate_sir_c(t, state_t0, param)
 }
@@ -17,6 +17,8 @@ simulate_sir_c(t, state_t0, param)
 Object of class covoid and dcm (from the package EpiModels)
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
 S = Susceptible
 I = Infectious
 R = Removed

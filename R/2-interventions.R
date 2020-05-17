@@ -212,6 +212,9 @@ calculate_current_pt <- function(pt,intervention,t) {
 
 #' Add an intervention (deprecated)
 #'
+#' @description
+#' \lifecycle{deprecated}
+#'
 #' Use `add_intervention` to model the impact of a epidemic control measure, for
 #' example "social distancing", on the trajectory of a epidemic.
 #' Is this measure adopted instantly or gradually over a number of units of time?

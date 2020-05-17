@@ -2,7 +2,7 @@
 % Please edit documentation in R/1-sir-cm-model.R
 \name{sir_c_param}
 \alias{sir_c_param}
-\title{SIR model parameters}
+\title{Age structured SIR model parameters}
 \usage{
 sir_c_param(
   R0,
@@ -36,5 +36,7 @@ of interventions with the names matching the list of contact matrices.}
 List of SIR model parameters
 }
 \description{
-Setup function
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
+Define parameter values for age structured SIR models
 }

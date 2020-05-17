@@ -1,5 +1,9 @@
 # COVID-19 Open-source Infection Dynamics (COVOID)
 
+  <!-- badges: start -->
+  [![R build status](https://github.com/CBDRH/covoid/workflows/R-CMD-check/badge.svg)](https://github.com/CBDRH/covoid/actions)
+  <!-- badges: end -->
+
 COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular covoid allows the simulataneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
 
 ## Modelling COVID-19

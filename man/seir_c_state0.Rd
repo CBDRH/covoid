@@ -2,14 +2,14 @@
 % Please edit documentation in R/1-seir-cm-model.R
 \name{seir_c_state0}
 \alias{seir_c_state0}
-\title{SEIR model inital state}
+\title{Age structured SEIR model inital state}
 \usage{
 seir_c_state0(S, E, I, R)
 }
 \arguments{
 \item{S}{Initial number of susceptibles}
 
-\item{E}{Initial number of incubating}
+\item{E}{Initial number of exposed (latent period)}
 
 \item{I}{Initial number of infectious}
 
@@ -19,5 +19,7 @@ seir_c_state0(S, E, I, R)
 List of SEIR model initial states
 }
 \description{
-Setup function
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
+Define intial state values for age structured SEIR models
 }

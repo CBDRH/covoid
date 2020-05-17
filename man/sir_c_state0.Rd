@@ -2,7 +2,7 @@
 % Please edit documentation in R/1-sir-cm-model.R
 \name{sir_c_state0}
 \alias{sir_c_state0}
-\title{SIR model inital state}
+\title{Age structured SIR model inital state}
 \usage{
 sir_c_state0(S0, I0, R0)
 }
@@ -17,5 +17,7 @@ sir_c_state0(S0, I0, R0)
 List of SIR model initial states
 }
 \description{
-Setup function
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
+Define intial state values for age structured SIR models
 }

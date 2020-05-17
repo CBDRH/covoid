@@ -4,12 +4,21 @@
 \alias{seir_c_param}
 \title{Age structured SEIR model parameters}
 \usage{
-seir_c_param(R0, sigma, gamma, cm, dist, intervention = NULL)
+seir_c_param(
+  R0,
+  sigma,
+  gamma,
+  cm,
+  dist,
+  contact_intervention = NULL,
+  transmission_intervention = NULL,
+  im = NULL
+)
 }
 \arguments{
 \item{R0}{Basic/empirical reproduction number (S -> E).}
 
-\item{sigma}{Inverse of the average length of the incubation period (E -> I)}
+\item{sigma}{Inverse of the average length of the latent period (E -> I)}
 
 \item{gamma}{Inverse of the average length of infectious period (I -> R)}
 
@@ -18,12 +27,19 @@ be all contacts in the population.}
 
 \item{dist}{Proportion of the population in each age category. Should sum to 1.}
 
-\item{intervention}{An intervention created using `create_intervention` or named list
+\item{contact_intervention}{An intervention created using `contact_intervention` or named list
 of interventions with the names matching the list of contact matrices.}
+
+\item{transmission_intervention}{An intervention created using `create_intervention` or named list
+of interventions with the names matching the list of contact matrices.}
+
+\item{im}{Relative infectiousness matrix. Default is 1.}
 }
 \value{
 List of SEIR model parameters
 }
 \description{
-Setup function
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
+Define parameter values for age structured SEIR models
 }
