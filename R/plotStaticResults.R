@@ -1,34 +1,50 @@
-plotStaticResults <- function(df, cuml, scale, logScale, plotvars, ndays) {
+plotStaticResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtraP = NULL) {
 
-    compcols <- c("S" = "lightblue", "Itotal" = "red", "Mtotal" = "pink", "H" = "maroon", "Q" = "Purple", "Rtotal" = "lightgreen", "D" = "Black" )
-    complabels <- c("S" = "Susceptible", "Itotal" = "Infected", "MTotal" = "Managed", "H" = "Hospitalised", "Q" = "Quarantined", "Rtotal" = "Recovered", "D" = "Case fatality")
+    # Dynamically set colors, labels and breaks, based on extra specified countries
 
+    if (xtraC!="") {
+        x1 <- c('gray90')
+        names(x1) = xtraC
+        compcols <- c(c("S" = "lightblue", "E" = "orange", "I" = "red", "R" = "lightgreen"), x1)
 
-    ### Update graph based on choice of cumulative
-    if(!cuml) {
+        x2 <- if (xtraP=="") xtraC else xtraP
+        names(x2) = xtraC
+        complabels <- c(c("S" = "Susceptible", "E" = "Exposed", "I" = "Infectious", "R" = "Recovered"), x2)
+
+        compbreaks <- c(c("S", "E", "I", "R"), xtraC)
+    }
+    else {
+        compcols <- c("S" = "lightblue", "E" = "orange", "I" = "red", "R" = "lightgreen")
+        complabels <- c("S" = "Susceptible", "E" = "Exposed", "I" = "Infectious", "R" = "Recovered")
+        compbreaks <- c("S", "E", "I", "R")
+    }
+
+    ### Update graph based on choice of scale and cumulative
+
+    # Incidence
+    if(scale=="Count") {
         yvar <- "count"
         part1 <- "Incidence"
+        part2 <- "(Persons)"
         tt <- "lab1"
     }
-    if(cuml) {
-        yvar <- "cum_sum"
-        part1 <- "Cumulative incidence"
-        tt <- "lab2"
+
+    # Percent
+    if(scale=="Percent") {
+        yvar <- 'pct'
+        part1 <- "Incidence"
+        part2 <- "(Percent)"
+        tt <- "lab1"
     }
 
-    # Determine scale
-    if(scale=="Count") {
-        yscale = 1
-        part2 = "(Persons)"
-    }
-    if(scale=="Percent") {
-        yscale = 100
-        part2 = "(Percent)"
-    }
+    # Per 100,000
     if(scale=="Per 100,000") {
-        yscale = 100000
-        part2 = "(Per 100,000 population)"
+        yvar = 'pht'
+        part1 <- "Incidence"
+        part2 <- "(Per 100,000 population)"
+        tt <- "lab1"
     }
+
 
     ### Update graph based on choice of log scale
     if(!logScale) {
@@ -44,19 +60,38 @@ plotStaticResults <- function(df, cuml, scale, logScale, plotvars, ndays) {
     p <- df %>%
         filter(compartment %in% plotvars) %>%
         filter(t <= ndays) %>%
-        ggplot(aes(x=date, y=(!!as.name(yvar))/yscale, colour=compartment)) +
-        geom_line(size=2, alpha=0.7) +
-        scale_x_date(date_labels="%d%b%Y") +
-        theme_dark() +
-        theme(legend.position = "right", legend.title = element_blank()) +
-        guides(col = guide_legend(ncol = 1)) +
-        labs(x="Date", y=ytitle) +
-        scale_colour_manual(values = compcols, labels=complabels)
+        ggplot(aes(x=date, y=!!as.name(yvar), colour=compartment))
 
-    # Add log sclae where neccessary
+    # Comparison country if requested
+    if(xtraC != "") {
+        dx <- covid19_data %>%
+            filter(Province.State==xtraP & Country.Region==xtraC & type=="confirmed")
+        p <- p + geom_point(data=dx,
+                                        aes(x=date, y=cases,
+                                            colour = Country.Region,
+                                            tooltip = paste("Cases =", formatC(cases, format="d", big.mark=',')))
+        ) +
+            geom_line(data=dx, aes(x=date, y=cases, color=Country.Region))
+    }
+
+    p <- p +
+        geom_line(size=2, alpha=0.7) +
+        scale_x_date(date_labels="%d%b") +
+        theme_dark() +
+        theme(legend.position = "bottom", legend.title = element_blank()) +
+        guides(col = guide_legend(nrow = 1)) +
+        labs(x="Date", y=ytitle) +
+        scale_colour_manual(values = compcols, labels = complabels, breaks = compbreaks) +
+        scale_y_continuous(labels = scales::comma) +
+        geom_point()
+
+
+
+
+    # Add log scale where necessary
     if(logScale) {
         p <- p + scale_y_log10()
     }
 
-p
+    p
 }

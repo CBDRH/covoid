@@ -1,0 +1,340 @@
+---
+title: "Model Summary Report"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+always_allow_html: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(shiny)
+library(ggplot2)
+library(formattable)
+library(sparkline)
+
+### Re-run models and prepare graphs
+## Could this be done more elegantly with a loop? surely?
+## for(i in 1:6){I don't know how to loop through sequenced variables in R}
+
+# Initialise an empty vector for initial states and initial parameters
+# These get added to if the results have been saved in the report
+summaryVec <- vector()
+stateVec <- vector()
+paramVec <- vector()
+nameVec <- c(" ")
+
+if(input$inclPlot1){
+   mod_df_p1 <- prepData(df_epi=count$model_p1$epi, popsize=count$popSize_p1 , day1 = count$dateRange_p1[1])
+   plot_p1 <- plotResults(df = mod_df_p1, scale=count$scale_p1, logScale=count$logScale_p1, plotvars=count$plotvars_p1, ndays=count$ndays_p1,
+              xtraC=count$xtraC_p1, xtraP=count$xtraP_p1)
+   summaryVec <- cbind(summaryVec, `Scenario 1` = summary <- summariseResults(count$model_p1$epi, 
+                            count$state0_p1, 
+                            count$param_p1, 
+                            count$dateRange_p1, 
+                            ig_t = count$intGeneral_t_p1,
+                            ig_c = count$intGeneral_c_p1,
+                            is_c = count$intSchool_c_p1,
+                            iw_c = count$intWork_c_p1,
+                            ih_c = count$intHome_c_p1
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 1")
+   stateVec <- cbind(stateVec, `Scenario 1` = formatC(round(count$state0_p1, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 1` = round(unlist(count$param_p1), digits=3))
+}
+
+if(input$inclPlot2){
+   mod_df_p2 <- prepData(df_epi=count$model_p2$epi, popsize=count$popSize_p2 , day1 = count$dateRange_p2[1])
+   plot_p2 <- plotResults(df = mod_df_p2, scale=count$scale_p2, logScale=count$logScale_p2, plotvars=count$plotvars_p2, ndays=count$ndays_p2, xtraC=count$xtraC_p2, xtraP=count$xtraP_p2)
+      summaryVec <- cbind(summaryVec, `Scenario 2` = summary <- summariseResults(count$model_p2$epi, 
+                            count$state0_p2, 
+                            count$param_p2, 
+                            count$dateRange_p2, 
+                            ig_t = count$intGeneral_t_p2,
+                            ig_c = count$intGeneral_c_p2,
+                            is_c = count$intSchool_c_p2,
+                            iw_c = count$intWork_c_p2,
+                            ih_c = count$intHome_c_p2
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 2")
+   stateVec <- cbind(stateVec, `Scenario 2` = formatC(round(count$state0_p2, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 2` = round(unlist(count$param_p2), digits=3))
+  }
+
+if(input$inclPlot3){
+   mod_df_p3 <- prepData(df_epi=count$model_p3$epi, popsize=count$popSize_p3 , day1 = count$dateRange_p3[1])
+   plot_p3 <- plotResults(df = mod_df_p3, scale=count$scale_p3, logScale=count$logScale_p3, plotvars=count$plotvars_p3, ndays=count$ndays_p3, xtraC=count$xtraC_p3, xtraP=count$xtraP_p3)
+      summaryVec <- cbind(summaryVec, `Scenario 3` = summary <- summariseResults(count$model_p3$epi, 
+                            count$state0_p3, 
+                            count$param_p3, 
+                            count$dateRange_p3, 
+                            ig_t = count$intGeneral_t_p3,
+                            ig_c = count$intGeneral_c_p3,
+                            is_c = count$intSchool_c_p3,
+                            iw_c = count$intWork_c_p3,
+                            ih_c = count$intHome_c_p3
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 3")
+   stateVec <- cbind(stateVec, `Scenario 3` = formatC(round(count$state0_p3, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 3` = round(unlist(count$param_p3), digits=3))
+}
+
+if(input$inclPlot4){
+   mod_df_p4 <- prepData(df_epi=count$model_p4$epi, popsize=count$popSize_p4 , day1 = count$dateRange_p4[1])
+   plot_p4 <- plotResults(df = mod_df_p4, scale=count$scale_p4, logScale=count$logScale_p4, plotvars=count$plotvars_p4, ndays=count$ndays_p4, xtraC=count$xtraC_p4, xtraP=count$xtraP_p4)
+      summaryVec <- cbind(summaryVec, `Scenario 4` = summary <- summariseResults(count$model_p4$epi, 
+                            count$state0_p4, 
+                            count$param_p4, 
+                            count$dateRange_p4, 
+                            ig_t = count$intGeneral_t_p4,
+                            ig_c = count$intGeneral_c_p4,
+                            is_c = count$intSchool_c_p4,
+                            iw_c = count$intWork_c_p4,
+                            ih_c = count$intHome_c_p4
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 4")
+   stateVec <- cbind(stateVec, `Scenario 4` = formatC(round(count$state0_p4, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 4` = round(unlist(count$param_p4), digits=3))
+}
+
+if(input$inclPlot5){
+   mod_df_p5 <- prepData(df_epi=count$model_p5$epi, popsize=count$popSize_p5, day1 = count$dateRange_p5[1])
+   plot_p5 <- plotResults(df = mod_df_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p5, ndays=count$ndays_p5, xtraC=count$xtraC_p5, xtraP=count$xtraP_p5)
+      summaryVec <- cbind(summaryVec, `Scenario 5` = summary <- summariseResults(count$model_p5$epi, 
+                            count$state0_p5, 
+                            count$param_p5, 
+                            count$dateRange_p5, 
+                            ig_t = count$intGeneral_t_p5,
+                            ig_c = count$intGeneral_c_p5,
+                            is_c = count$intSchool_c_p5,
+                            iw_c = count$intWork_c_p5,
+                            ih_c = count$intHome_c_p5
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 5")
+   stateVec <- cbind(stateVec, `Scenario 5` = formatC(round(count$state0_p5, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 5` = round(unlist(count$param_p5), digits=3))
+}
+
+if(input$inclPlot6){
+   mod_df_p6 <- prepData(df_epi=count$model_p6$epi, popsize=count$popSize_p6, day1 = count$dateRange_p6[1])
+   plot_p6 <- plotResults(df = mod_df_p5, scale=count$scale_p5, logScale=count$logScale_p5, plotvars=count$plotvars_p6, ndays=count$ndays_p6, xtraC=count$xtraC_p6, xtraP=count$xtraP_p6)
+      summaryVec <- cbind(summaryVec, `Scenario 6` = summary <- summariseResults(count$model_p6$epi, 
+                            count$state0_p6, 
+                            count$param_p6, 
+                            count$dateRange_p6, 
+                            ig_t = count$intGeneral_t_p6,
+                            ig_c = count$intGeneral_c_p6,
+                            is_c = count$intSchool_c_p6,
+                            iw_c = count$intWork_c_p6,
+                            ih_c = count$intHome_c_p6
+                            ))
+   nameVec <- cbind(nameVec, "Scenario 6")
+   stateVec <- cbind(stateVec, `Scenario 6` = formatC(round(count$state0_p6, digits=0), format="d", big.mark = ","))
+   paramVec <- cbind(paramVec, `Scenario 6` = round(unlist(count$param_p6), digits=3))
+ }
+
+```
+
+
+## Overview of simulations
+```{r}
+
+summary <- data.frame(
+  cbind(
+    c(
+      "Simulation start date",
+      "Simulation end date",
+      "Simulation length (days)", 
+      "Number susceptible at start of simulation", 
+      "Number infectious at start of simulation", 
+      "Number recovered at start of simulation", 
+      "Assumed R0 at outbreak of epidemic",
+      "Assumed duration of infection",
+      "Intervention: Relative probability of transmission", 
+      "Intervention: Relative contact rate (General)", 
+      "Intervention: Relative contact rate (School)", 
+      "Intervention: Relative contact rate (Work)", 
+      "Intervention: Relative contact rate (Home)",
+      "Peak of epidemic", 
+      "Number infectious at peak" 
+    ),
+    summaryVec
+  ), stringsAsFactors = FALSE
+)
+
+names(summary) <- nameVec
+
+summary %>% 
+  formattable(align = c("l", rep("r", NCOL(summary) - 1))) %>% 
+  as.htmlwidget() %>% 
+  spk_add_deps() 
+
+```
+
+
+## Simulation results
+
+### `r if(input$inclPlot1){input$p1title}`
+```{r}
+if(input$inclPlot1){
+plot_p1
+}
+```
+`r if(input$inclPlot1){input$p1comment}`
+
+
+### `r if(input$inclPlot2){input$p2title}`
+```{r}
+if(input$inclPlot2){
+plot_p2
+}
+```
+`r if(input$inclPlot2){input$p2comment}`
+
+### `r if(input$inclPlot3){input$p3title}`
+```{r}
+if(input$inclPlot3){
+plot_p3
+}
+```
+`r if(input$inclPlot3){input$p3comment}`
+
+### `r if(input$inclPlot4){input$p4title}`
+```{r}
+if(input$inclPlot4){
+plot_p4
+}
+```
+`r if(input$inclPlot4){input$p4comment}`
+
+### `r if(input$inclPlot5){input$p5title}`
+```{r}
+if(input$inclPlot5){
+plot_p5
+}
+```
+`r if(input$inclPlot5){input$p5comment}`
+
+### `r if(input$inclPlot6){input$p5title}`
+```{r}
+if(input$inclPlot6){
+plot_p6
+}
+```
+`r if(input$inclPlot6){input$p6comment}`
+
+
+
+
+## Appendices
+
+### Appendix 1. The SEIR Compartment Model
+
+```{r}
+
+    nodes <- data.frame(id = 1:4,
+
+        # add labels on nodes
+        label = c('S', 'E', 'I', 'R'),
+
+        # size adding value
+        size = c(rep(10, 4)),
+
+        # Hierarchical level
+        level = rep(0,4),
+
+        # Group
+        group = c("Susceptible", "Exposed", "Infectious", "Recovered"),
+
+        # control shape of nodes
+        shape = c(rep("square", 4)),
+
+        font.color = c(rep("grey", 4)),
+
+        # Don't need physics
+        physics = rep(FALSE, 4),
+
+        # tooltip (html or character), when the mouse is above
+        title = c(HTML(paste0("S", br(), 'Susceptible')),
+                  HTML(paste0("E", br(), "Exposed")),
+                  HTML(paste0("I", br(), "Infectious")),
+                  HTML(paste0("R", br(), "Recovered"))
+        )
+
+    )
+
+    edges <- data.frame(from = seq(1,3),
+        to = seq(2,4),
+        id = LETTERS[seq(1,3)],
+        dashes = c(rep(FALSE,3)),
+
+        # Hover titles
+        title = c(HTML('&beta;I/N'),
+                  HTML('&sigma;'),
+                  HTML('&gamma;')
+                  )
+    )
+
+
+    visNetwork(nodes, edges) %>%
+        visHierarchicalLayout(direction = "UD", levelSeparation = 80) %>%
+        visEdges(arrows = "to") %>%
+        visGroups(groupname = "Susceptible", color = "lightblue") %>%
+        visGroups(groupname = "Susceptible", color = "orange") %>%
+        visGroups(groupname = "Infectious", color = "red") %>%
+        visGroups(groupname = "Recovered", color = "lightgreen") %>%
+        visLegend(width = 0.1, position = "left", main = "Compartment", stepX = 50, stepY = 50) %>%
+        visInteraction(hover = TRUE) %>%
+        visPhysics(stabilization = FALSE) %>% 
+        visEvents(startStabilizing = "function() {
+            this.moveTo({scale:1.5})}") 
+
+```
+
+#### Summary of compartments
+```{r}
+
+initTable <- data.frame(
+  Compartment = c("$S$",
+                  "$E$",
+                  "$I$",
+                  "$R$"),
+
+  Description = c("Susceptible",
+                  "Exposed",
+                  "Infectious",
+                  "Recovered")
+)
+
+knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the model compartments")  %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(1, bold = T, border_right = T, width = '20%') %>%
+  column_spec(2, width = "80%")
+
+```
+
+
+### Appendix 2. Initial conditions
+
+```{r}
+
+initTable <- cbind(
+  Compartment = c(rep("$S$",16),
+                  rep("$E$",16),
+                  rep("$I$",16),
+                  rep("$R$",16)),
+
+  Description = c(rep("Susceptible",16),
+                  rep("Exposed",16),
+                  rep("Infectious",16),
+                  rep("Recovered",16)),
+
+  `Age group` = paste0(seq(from=5, to=80, by=5), "-", seq(from=10, to=85, by=5)),
+
+   stateVec
+)
+
+knitr::kable(initTable, escape = FALSE, caption = "Initial conditions for the model compartments")  %>%
+  kableExtra::kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  column_spec(1, bold = T, border_right = T)
+
+```
