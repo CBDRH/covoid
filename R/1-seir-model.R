@@ -14,7 +14,7 @@
 #'
 #' @examples
 #' param <- seir_param(R0 = 2.5,gamma = 0.1,sigma=0.1)
-#' state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
+#' state0 <- seir_state0(S = 100,E = 1, I = 0,R = 0)
 #' res <- simulate_seir(t = 100,state_t0 = state0,param = param)
 #' plot(res,c("S","E","I","R"))
 #'
@@ -24,7 +24,7 @@
 #' else 1.1
 #' }
 #' param <- seir_param(R0 = R_t,gamma = 0.1,sigma=0.1)
-#' state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
+#' state0 <- seir_state0(S = 100,E = 1, I = 0,R = 0)
 #' res <- simulate_seir(t = 100,state_t0 = state0,param = param)
 #' plot(res,c("S","E","I","R"))
 #'
@@ -35,30 +35,22 @@ simulate_seir <- function(t,state_t0,param) {
     stopifnot(class(param) == "seir_param")
 
     # simulation
-    param = EpiModel::param.dcm(gamma=param$gamma,
-                                beta=param$beta,
-                                sigma=param$sigma,
-                                R0=param$R0)
-    init = EpiModel::init.dcm(S=state_t0$S,
-                              E=state_t0$E,
-                              I=state_t0$I,
-                              R=state_t0$R)
-    control = EpiModel::control.dcm(nsteps=t,
-                                    dt=0.1,
-                                    new.mod=seir_model)
-    mod = EpiModel::dcm(param,init,control)
+    mod <- deSolve::ode(y=state_t0,
+                        times=1:t,
+                        func=seir_model,
+                        parms=list(gamma=param$gamma,
+                                   beta=param$beta,
+                                   sigma=param$sigma,
+                                   R0=param$R0))
 
     # make the output a dataframe
-    epi_tmp = lapply(mod$epi, function(x) x$run1)
-    mod$epi = data.frame(epi_tmp)
-    mod$epi$t = mod$control$timesteps
-    # keep the integer time steps
-    mod$epi = mod$epi[mod$epi$t == round(mod$epi$t),]
-    rownames(mod$epi) <- NULL
+    out <- list(param = param,
+                epi = data.frame(mod))
+    names(out$epi)[1] = "t"
 
     # return
-    class(mod) = c("covoid",class(mod))
-    mod
+    class(out) = c("covoid",class(out))
+    out
 }
 
 #' SEIR model parameters
@@ -112,12 +104,12 @@ seir_param <- function(R0,beta,sigma,gamma) {
 #' @return List of SEIR model initial states
 #'
 #' @export
-seir_state0 <- function(S0,E0,I0=0,R0=0) {
+seir_state0 <- function(S,E,I=0,R=0) {
     # assertions
-    stopifnot(E0 >= 1)
+    stopifnot(E >= 1)
 
     # output with class seir_state0
-    state0 = list(S=S0,E=E0,I=I0,R=R0)
+    state0 = c(S=S,E=E,I=I,R=R)
     class(state0) = "seir_state0"
 
     # return

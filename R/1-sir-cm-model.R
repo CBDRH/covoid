@@ -20,16 +20,16 @@
 #' cm_oz <- 0.5*(cm_oz +t(cm_oz))  # while no age groups available
 #' param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz)
 #' nJ = ncol(cm_oz)
-#' S0 = rep(100,nJ)
-#' I0 = rep(1,nJ)
-#' R0 = rep(0,nJ)
-#' state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
+#' S = rep(100,nJ)
+#' I = rep(1,nJ)
+#' R = rep(0,nJ)
+#' state0 <- sir_c_state0(S = S,I = I,R = R)
 #' res <- simulate_sir_c(t = 150,state_t0 = state0,param = param)
 #' plot(res,y=c("S","I","R"),main="Heterogeneous mixing")
 #'
 #' # compare with homogeneous
 #' param <- sir_param(R0 = 2.5,gamma = 0.1)
-#' state0 <- sir_state0(S0 = 1600,I0 = 16,R0 = 0)
+#' state0 <- sir_state0(S = 1600,I = 16,R = 0)
 #' res <- simulate_sir(t = 150,state_t0 = state0,param = param)
 #' plot(res,c("S","I","R"),main="Homogeneous mixing")
 #'
@@ -154,21 +154,21 @@ sir_c_param <- function(R0,gamma,cm,dist,contact_intervention=NULL,transmission_
 #'
 #' Define intial state values for age structured SIR models
 #'
-#' @param S0 Initial number of susceptibles
-#' @param I0 Initial number of infected
-#' @param R0 Initial number of removed
+#' @param S Initial number of susceptibles
+#' @param I Initial number of infected
+#' @param R Initial number of removed
 #'
 #' @return List of SIR model initial states
 #'
 #' @export
-sir_c_state0 <- function(S0,I0,R0) {
+sir_c_state0 <- function(S,I,R) {
     # assertions
-    stopifnot(length(S0) == length(I0))
-    stopifnot(length(I0) == length(R0))
-    stopifnot(any(I0 >= 0))
+    stopifnot(length(S) == length(I))
+    stopifnot(length(I) == length(R))
+    stopifnot(any(I >= 0))
 
     # output with class sir_state0
-    state0 <- c(S=S0,I0=I0,R=R0)
+    state0 <- c(S=S,I=I,R=R)
     class(state0) <- "sir_c_state0"
 
     # return
