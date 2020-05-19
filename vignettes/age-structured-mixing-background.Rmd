@@ -30,7 +30,6 @@ knitr::opts_chunk$set(
 )
 library(covoid)
 library(ggplot2)
-library(DiagrammeR)
 ```
 
 
@@ -117,7 +116,7 @@ ggplot(df,aes(x=x,y=y,color=factor(col))) +
 ## General mathematical model
 
 ```{r,fig.cap="*Figure 4*: SEIR model",fig.align="center"}
-grViz("
+DiagrammeR::grViz("
 digraph SEIR {
 
   # a 'graph' statement
