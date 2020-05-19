@@ -83,7 +83,11 @@ simulate_seir_c <- function(t,state_t0,param) {
     # make the output a dataframe
     out <- list(param = param,
                epi = data.frame(mod))
-    names(out$epi)[1] = "t"
+    names(out$epi)[1] <- "t"
+    nJ <- length(param$dist)
+    incidences <- out$epi[c("I",paste0("I",1:nJ))]*param$sigma
+    names(incidences) <- c("incidence",paste0("incidence",1:nJ))
+    out$epi <- cbind(out$epi,incidences)
 
     # return
     class(out) <- c("covoid",class(out))
