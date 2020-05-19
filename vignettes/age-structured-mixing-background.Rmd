@@ -28,11 +28,9 @@ knitr::opts_chunk$set(
 	message = FALSE,
 	warning = FALSE
 )
-#library(covoid)
+library(covoid)
 library(ggplot2)
 library(DiagrammeR)
-
-devtools::load_all()
 ```
 
 

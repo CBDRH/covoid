@@ -92,8 +92,7 @@ knitr::kable(parameters_tab, escape=FALSE)
 
 
 ```{r setup}
-#library(covoid)
-devtools::load_all()
+library(covoid)
 ```
 
 ```{r}
