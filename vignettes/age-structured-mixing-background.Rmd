@@ -35,23 +35,23 @@ library(ggplot2)
 
 ## Outline
 
-This article outlines a minimal theoretical background behind the implementation of age structured epidemic models in covoid, in particular:
+This article introduces the background behind the implementation of age structured epidemic models in covoid, in particular:
 
-* Rationale behind use the use of age structured epidemic models (and heterogeneous models in general)
-* What additional information is needed for the age structured models compared to homogeneous model?
-* The mathematical model (a system of ordinary differential equations)  
-* Modelling the impact of disease prevention policies    
-* Calculation of the basic reproduction number 
+* The rationale behind use the use of age structured epidemic models (and heterogeneous models in general).
+* The additional information needed for the age structured models, compared to homogeneous model.
+* The mathematical model (as a system of ordinary differential equations).  
+* Approaches to modelling the impact of population behaviour changes (e.g. physical distancing) and/or disease prevention policies (e.g. school closures).
+* Calculation of the basic reproduction number and its role in the system dynamics.
 
 ## Introduction
 
-The transmission and consequences of an infection with a virus such as SAR-CoV-2 is influenced by several factors. These include the biology and behaviour of infected individual (host). Both of these components are heavily influenced by (chronological) age. People spend a disproportionally large amount of their time in particular settings such kindergartens, school, workplaces and households (REF). This skews their chance of contacting certain age groups. Accounting for non-uniform age contacts in epidemic models can aid in understanding the potential impact and dynamics of disease in a population. Further, it enables more realistic modeling of disease prevention policy. 
+The transmission and consequences of infection with a virus such as SAR-CoV-2 is influenced by several factors. These include the biology and behaviour of infected individual (host). Both of these components are heavily influenced by (chronological) age. People spend a disproportionally large amount of their time in particular settings such kindergartens, school, workplaces and households (REF). This skews their chance of contacting certain age groups. Accounting for non-uniform age contacts in compartmental epidemic models can aid in understanding the potential impact and dynamics of disease in a population. Further, it enables more realistic modeling of disease prevention policy. 
 
-For example, on average older individuals (>? years) have less contacts with others per day compared to the societal average (REF - original polymod). Lower contact rates reduces their number of opportunities to spread or contract a virus. However, older individuals may have a [lower/greater] chance of infection given contact (REF). Increasing age is also associated with higher mortality rates, with evidence of a increase from xx for individuals aged x-y to xx for individuals age x-y (REF). COVOID is motivated by the need to incorporate available data on population structure and the impact of interventions, while building upon ordinary differential equation (ODE) based compartmental epidemic models to enable rapid turnaround in disease modeling.
+For example, on average older individuals (>? years) have less contacts with others per day compared to the societal average (REF - original polymod). Lower contact rates reduces their number of opportunities to spread or contract a virus. However, older individuals may have a [lower/greater] chance of infection given contact (REF). Considering COVID-19, increaed age is also associated with higher mortality rates, with evidence of a increase from xx for individuals aged x-y to xx for individuals age x-y (REF). COVOID is motivated by the need to incorporate available data on population structure and the impact of interventions, while building upon ordinary differential equation (ODE) based compartmental epidemic models to enable rapid turnaround in disease modeling.
 
-(notes) Compartmental model like SIR are often model as homogeneous - all people interact at random unifmroly. That didt = .... with k equal accross the population. While these models are simple to program and estimate parameters, with well studied behviours (e.g. the relationship parameters such as the basic reprodctuion number $\mathcal{R_0}$ and epidemic size) they combine various interventions and behvoiurs. It is model how school closuer differs from physical distancing (REF), or variation in transmissibiluty acorss age groups (REF). Further however studies such as Prem 1 and Prem 2 provide detailed info about age specific contacts, and XX on age specific incidence rates. This allows for data-driven increases in the realism of these models. We move to a case where didt = ki where kij is the contact rate between group i and j. These models are more complex and do behave different e.g. R0 no longer a simple ratio as in homogeneous model, and this is something that is important to cosider. The role of sensityt analysis important. Still not networks but quick to solve, quicker turnaround when pre-existing.
+Compartmental models (e.g. the SIR model) are a key tool of mathematical epidemiology that involve .... Model averages. They have traditionally been used assuming homogeneous mixing - that the distribution of contact rates for individuals can be well described by an (empirical) average contact rate. If we consider any partition of the population into $j=1,...J$ groups (e.g. age, gender) the homogeneous case assumes a contact rate between indivduals in group i and j of $\kappa_{ij} = \kappa$. Homogeneous models have several advantages; they enable easy programming and estimation of parameters, and have well studied behaviours (e.g. the relationship parameters such as the basic reproduction number $\mathcal{R_0}$ and epidemic size). However, by ... combine various interventions and behaviours they .... For example, it is difficult to model how school closure differs from physical distancing (REF), or variation in transmissibility across age groups (REF). Further, they limit incorporation of data available on a more fine-grained level. Studies such as Prem 1 and Prem 2 provide detailed info about age specific contacts, and NSW Health? on age specific incidence rates (REF). This allows for data-driven increases in the realism of these models. We move to a case where $\kappa_{ij}$ or $\beta$ are not fixed for all $i$ and $j$. These models are more complex and exhibit different behave different e.g. R0 no longer a simple ratio as in homogeneous model, and this is something that is important to cosider. The role of sensitivity analysis important. Still not networks but quick to solve, quicker turnaround when pre-existing.
 
-Looking ahead, this article describes the basics of the theoretical background and other considerations when moving from the homogeneous compartmental model to more complex (discrete) age structured models, and the basics of how to use covoid to model these situations (for more on the programming API see `vigette(??)`). We firstly describe what information is needed, the mathematical model for an SIR example and the general SEIR case and calcation of the basic reproduction number. Throughout we will assume stable demography, i.e. no migration and birth or death. This assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
+Looking ahead, this article describes the basics of the theoretical background and other considerations when moving from the homogeneous compartmental model to more complex (discrete) age structured models, and the basics of how to use covoid to model these situations (for more on the programming API see `vignette('age-structure-mixing')`). We firstly describe what information is needed, the mathematical model for an SIR example and the general SEIR case and calcation of the basic reproduction number. Throughout we will assume stable demography, i.e. no migration and birth or death. This assumption is reasonable over short time frames where the distribution of individuals is unlkely to shift sufficiently to result in large groups of newly uninfected individuals. However it should be relaxed for longer time frames.
 
 ## Age structured population
 
@@ -151,7 +151,7 @@ $$
 \frac{dS_j}{dt} &= -S_j \sum_{k=1}^{K} \beta \kappa_{jk} \frac{I_k}{N_k} \\
 \end{align}
 $$
-For infections such as COVID-19 it has become common practise to split the E/I compartments in further subsections, to account for the pattern in which the infectiousness and sympotomatic phases overlap, and wide variation in severity. if we denote these $L = L_E + L_I$ disease periods for age group $k$ as $E_{kl}$ and $I_{kl}$, with infectiousness present from stage $I_{k1}$ the above extends to
+For infections such as COVID-19 it has become common practise to split the E/I compartments in further subsections, to account for the pattern in which the infectiousness and sympotomatic phases overlap, and wide variation in severity. If we denote these $L = L_E + L_I$ disease periods for age group $k$ as $E_{kl}$ and $I_{kl}$, with infectiousness present from stage $I_{k1}$ the above extends to
 
 $$ 
 \begin{align}
@@ -174,7 +174,7 @@ $$
 
 In COVOID these models are solved using the `deSolve::ode` function from the R package deSolve which uses numerical integration methods such as the [Runge-Kutta algorithms](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods).
 
-## A simple example
+## An example: two age groups
 
 This example is aimed at illustrating how the introduction of contact matrices influences the behaviour of the system. Consider a population with two age groups - adults and children. Our contact matrix in table 1 shows that a child has on average 5.8 contacts per day with other children and 2.6 contacts with an adult. The proportion of adults and children in the population is $p_a = \frac{2}{3}$ and $p_c = \frac{1}{3}$, with the subscripts $a$ and $c$ denoting adult and child. Notice that $p_a \kappa_{ac} = p_c \kappa_{ca}$ as expected.
 
@@ -200,7 +200,7 @@ $$
 
 An initial run of the model, with with $\beta = 0.1$, $\gamma = 0.2$ and a population size of $N=10,000$. We see that... Now, the initial conditions and contact matrices can alter the timing and evolution of the epidemic.
 
-```{r}
+```{r,fig.height=3.5,fig.width=7}
 cm <- matrix(c(5.8,1.3,2.6,1.9),ncol=2,byrow = TRUE)
 dist <- c(1/3,2/3)
 param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=dist)
@@ -256,7 +256,7 @@ p3 = ggplot(res_pp) +
 gridExtra::grid.arrange(p1,p2,p3,layout_matrix=matrix(c(1,1,2,3),ncol=2,byrow = TRUE))
 ```
 
-To further illustrate the impact of the contact matrix notice what happens when we alter the contact matrix to reduce inter-group contact while maintaining the same overall levels of contact. In this case we see that ... Note the difference between adults and children in this example. The model reflects an intuition that epidemics are driven by those with large numbers of contacts.
+To further illustrate the impact of the contact matrix notice what happens when we alter the contact matrix to reduce inter-group contact while maintaining the same overall levels of contact. In this case we see that ... Note the difference between adults and children in this example. The model reflects an intuition that epidemics are driven by those with large numbers of contacts. For more on this topic see Andreasen (2011)
 
 ```{r}
 cm = matrix(c("5.8 + ($1-\\alpha$) 2.6","$\\alpha$ 1.3 ","$\\alpha$ 2.6","1.9 + ($1-\\alpha$) 1.3"),ncol=2,byrow = TRUE)
@@ -300,7 +300,7 @@ ggplot(res_pp) +
 
 Clearly even in this simple case ... this illustrates the importance of careful consideration and thought in how these models are structured and the need for sensitivity analysis. The choice of contact matrix, and distributions across compartments influence the final epidemic size and timing.
 
-## Interventions
+## Modelling interventions
 
 Interventions (e.g. social distancing) can reduce either the contact rate $\kappa_{ij}$ or the probabililty of transmission $\beta$. As these terms are linearly combined in the SIR/SEIR models we don't differentiate our interventions act upon one or both. An intervention that reduces the transmissability $\beta \kappa_{ij} = \tau_{ij}$ of the disease from group $i$ to $j$ is denoted by $Y_{ij}(t)$ and takes a value in $(0,1)$. For example, social distancing.... Some interventions may act at certain stages, for example self-isolation of people with respiratory symptoms, leading to a general form
 
@@ -310,11 +310,9 @@ COVOID allows some sort of logistic function, steps etc. to allow for cases wher
 
 Key to good modelling of interventions is disagregate our contact matrix into a contact matrices for different settings school (e.g. figure) so we can assess the impact of interventions. For instance, suppose closing school reduces contact rates of students with other students by 80% on average. One way to achive this is  multiply our contact matrix $C$ by a diagonal matrix $CC$ with elements 0.2 getting $C_i = C CM$. See graph below:
 
-
-
 ## The basic reproduction number
 
-(notes) Average number of secondary infections. Note that the basic reproduction number is a threshold parameter for invasion of a disease organism into a completely susceptible population; once the disease has begun to spread, conditions favouring spread will change and Ro may no longer be a good measure of disease transmission. (Driessche & Watmough). Further, in many models R0 is related to the peak and final threshold of a epidemic. For complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$. As shown by Li et al (2010) the various methods give different answers. In the current model R0 is also a threshold parameter for exponential growth (see figure) (although N must be large - in small samples it is possible that no exponential growth occurs).
+The basic reproduction number $\mathcal{R_0}$ is defined as the average number of secondary infections arising from a single individual during their entire infectious period, in a population of susceptibles (Heffernan, Smith, & Wahl, 2005). In many models (including those under discussion) $\mathcal{R_0}$ is related to the peak and final spread of a epidemic, and acts as a threshold parameter for invasion of a disease organism into a completely susceptible population (Driessche & Watmough). However, for complex models there is not a uniformly accepted mathod for calculating $\mathcal{R_0}$ (REF). As shown by Li et al (2010) the various methods give different answers. With this qualification we descibe the next generation approach to calculation of $\mathcal{R_0}$. This approach is used by in COVOID package and other xxx (REFS) to calculate $\mathcal{R_0}$ and/or translate $\mathcal{R_0}$ into more basic quantities.
 
 ```{r,fig.cap="*Figure 4:* Potential for expontial growth and $R_0$",fig.height=4,fig.width=6}
 cm_oz <- import_contact_matrix("Australia","general")
@@ -349,31 +347,56 @@ ggplot(df) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 ```
 
+We will consider the generalised SEIR case, in which E and I may be further decomposed into compartments E1,...,En and I1,...,In. Changing nomenclature a little, let $y \in \mathbb{R}^m$ be m-vector of nondisease compartments (e.g. S) and $x$ the disease compartments. For example $y=S$ and $x=\{E,I\}$. Note that we can ignore R for the case of no reinfection as it simply acts as an end-state reservoir. The time derivative of x $x_i' =\mathcal{F_i}(x) - \mathcal{V_i}(x)$, where $\mathcal{F}(x)$ is the rate secondary infections increase the $i^{th}$ compartment and $\mathcal{V}$ is the rate of disease progression. We then construct the matrices $F$ with elements $\frac{\partial \mathcal{F_i}}{\partial x_i}(x_0)$ and $V$ with elements $\frac{\partial \mathcal{V_i}}{\partial x_i}(0)$. The state vector $x_0$ is a vector of zeros refered to as the disease free equilibrium, the point at which no disease is present in the population (Morris, 2010). The next generation matrix $K = FV^{-1}$, with $\mathcal{R_0} = \rho(K)$ where $\rho(K)$ is teh spectral radious of maximum of the absolute values of the eigenvalues of $K$.
 
-The next generation approach.
+For example using the contact matrix and population distribution information from the  and with with $\beta = 0.1$, $\gamma = 0.2$ the calculation of R0 is
 
-THe disease free equilibrium is nobody in any disease compartments. Linearlise.
+$$
+\begin{align}
+\mathcal{F} &= ... \\
+\mathcal{F} &= ... \\
+F &= \begin{pmatrix}
+a_{1,1} & a_{1,2} \\
+a_{2,1} & a_{2,2} \\
+\end{pmatrix} \\
+ &= \begin{pmatrix}
+a_{1,1} & a_{1,2} \\
+a_{2,1} & a_{2,2} \\
+\end{pmatrix}
+\end{align}
+$$
+Where p = .. and S = N since disease free equilibrium. Since $\mathcal{V} = $ its derivative with respect to ... is just $\gamma$ we have that $V = \gamma I_n$, where $I_n$ is an $n \times n$ identity matrix, and $V^{-1} = \frac{1}{\gamma} I_n$. Multiply $F$ and $V^{-1}$ gives
 
-The next generation matrix is constructed from two matrices F and V. For a model with $L_I$ infectious states F contains the flows into *infectious* states in . V contains the flow out of infectious states. $FV^{-1}$ a generalisation of the SIR identity that 
+$$
+\begin{align}
+K &= ... \\
+\end{align}
+$$
+This give a characteristic equation with solutions a and b. Notice the role of the population weights p and the comparison with the R0 for a homogenrous SIR model of beta/gamma. We can also numerically solve for $\mathcal{R_0}$ as
 
-For example using the .... and with gamma = ... we can code the calculation of R0 as
-
-```{r,eval=FALSE}
-gamma = 0.6
-V = diag(rep(gamma,2))
-F1 = t(0.1*cm)
-p = c(pc,pa)
+```{r,echo=TRUE}
+gamma <- 0.2
+beta <- 0.1
+V <- diag(rep(gamma,2))
+cm <- matrix(c(5.8,1.3,2.6,1.9),ncol=2,byrow = TRUE)
+dist <- c(1/3,2/3)
+F1 <- cm
 for (i in 1:2) {
   for (j in 1:2) {
-    F1[i,j] = (p[i]/p[j])*F1[i,j]
+    F1[i,j] <- (dist[i]/dist[j])*beta*F1[i,j]
   }
 }
-F = F1
-
-K = F %*% solve(V)
-eigen(K)
+FF <- F1
+K <- FF %*% solve(V)
+ee <- eigen(K)
+R0 <- max(abs(Re(ee$values)))
+cat("R0:",R0)
 ```
 
-This gives an $R_0 = 3.26$. Further the eigenvectors are 
-
 ## References
+
+Heffernan, J. M., Smith, R. J., & Wahl, L. M. (2005). Perspectives on the basic reproductive ratio. Journal of the Royal Society Interface, 2(4), 281-293.
+
+Morris, Q. (2010). Analysis of a Co-Epidemic Model.
+
+Andreasen, V. (2011). The final size of an epidemic and its relation to the basic reproduction number. Bulletin of mathematical biology, 73(10), 2305-2321.
