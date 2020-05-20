@@ -13,5 +13,7 @@ coviz(example)
 Launch an interactive Shiny session
 }
 \examples{
-coviz("dcm.models")
+\dontrun{
+#coviz("dcm.models")
+}
 }

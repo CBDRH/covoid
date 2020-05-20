@@ -4,14 +4,14 @@
 \alias{sir_state0}
 \title{SIR model inital state}
 \usage{
-sir_state0(S0, I0, R0 = 0)
+sir_state0(S, I, R = 0)
 }
 \arguments{
-\item{S0}{Initial number of susceptibles}
+\item{S}{Initial number of susceptibles}
 
-\item{I0}{Initial number of infected}
+\item{I}{Initial number of infected}
 
-\item{R0}{Initial number of removed}
+\item{R}{Initial number of removed}
 }
 \value{
 List of SIR model initial states

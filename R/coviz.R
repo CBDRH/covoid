@@ -2,7 +2,9 @@
 #'
 #' @param example A Shiny app
 #' @examples
-#' coviz("dcm.models")
+#' \dontrun{
+#' #coviz("dcm.models")
+#' }
 #' @export
 coviz <- function(example) {
     # locate all the shiny app examples that exist

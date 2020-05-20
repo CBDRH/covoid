@@ -27,6 +27,7 @@ R = Removed (recovered or died)
 \examples{
 # Example 1: no interventions
 cm_oz <- import_contact_matrix("Australia","general")
+nJ <- ncol(cm_oz)
 dist_oz <- import_age_distribution("Australia")
 S <- rep(1000,nJ)
 E <- rep(1,nJ)
@@ -34,14 +35,13 @@ I <- rep(0,nJ)
 R <- rep(0,nJ)
 state0 <- seir_c_state0(S = S,E = E,I = I,R = R)
 param1 <- seir_c_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz,dist=dist_oz)
-nJ <- ncol(cm_oz)
 res1 <- simulate_seir_c(t = 150,state_t0 = state0,param = param1)
 plot(res1,y=c("S","E","I","R"))
 
 # Example 2: general physical distancing, school closures and masks/handwashing
-cm <- list(all = cm_oz_all, sch = cm_oz_sch)
 cm_oz_all <- import_contact_matrix("Australia","general")
 cm_oz_sch <- import_contact_matrix("Australia","school")
+cm <- list(all = cm_oz_all, sch = cm_oz_sch)
 # separate out school and general population contact rates
 cm_oz_all <- cm_oz_all - cm_oz_sch
 int <- list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),

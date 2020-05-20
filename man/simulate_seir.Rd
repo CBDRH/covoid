@@ -24,7 +24,7 @@ R = Removed
 }
 \examples{
 param <- seir_param(R0 = 2.5,gamma = 0.1,sigma=0.1)
-state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
+state0 <- seir_state0(S = 100,E = 1, I = 0,R = 0)
 res <- simulate_seir(t = 100,state_t0 = state0,param = param)
 plot(res,c("S","E","I","R"))
 
@@ -34,7 +34,7 @@ if (t < 30) 2.5
 else 1.1
 }
 param <- seir_param(R0 = R_t,gamma = 0.1,sigma=0.1)
-state0 <- seir_state0(S0 = 100,E0 = 1, I0 = 0,R0 = 0)
+state0 <- seir_state0(S = 100,E = 1, I = 0,R = 0)
 res <- simulate_seir(t = 100,state_t0 = state0,param = param)
 plot(res,c("S","E","I","R"))
 

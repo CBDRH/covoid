@@ -23,7 +23,7 @@ R = Removed
 }
 \examples{
 param <- sir_param(R0 = 2.5,gamma = 0.1)
-state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+state0 <- sir_state0(S = 100,I = 1,R = 0)
 res <- simulate_sir(t = 100,state_t0 = state0,param = param)
 plot(res,c("S","I","R"))
 
@@ -33,7 +33,7 @@ if (t < 30) 2.5
 else 1.1
 }
 param <- sir_param(R0 = R_t,gamma = 0.1)
-state0 <- sir_state0(S0 = 100,I0 = 1,R0 = 0)
+state0 <- sir_state0(S = 100,I = 1,R = 0)
 res <- simulate_sir(t = 100,state_t0 = state0,param = param)
 plot(res,c("S","I","R"))
 

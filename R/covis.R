@@ -2,7 +2,10 @@
 #'
 #' @param example A Shiny app
 #' @examples
-#' covis("dcm.models")
+#' \dontrun{
+#' # not run
+#' #covis("dcm.models")
+#' }
 #' @export
 covis <- function(example) {
     # locate all the shiny app examples that exist

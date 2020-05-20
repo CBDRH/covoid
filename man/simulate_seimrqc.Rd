@@ -31,17 +31,15 @@ Object of class covoid and dcm (from the package EpiModels)
 (In progress) Implementation of the model outlined in Moss et al (2020).
 }
 \examples{
-(In progress)
+# (In progress)
 # Non-Indigenous,  aged 50-59, no self-quarantine
 param <- seimrqc_param(R0=2.53,lambdaimp=0,sigma1=1/1.6,sigma2=1/1.6,gamma1=1/4.0,gamma2=1/5.68,gammaq1=1/4.0,gammaq2=1/5.68,Qeff=0.5,Meff=0,rho=0,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
 state0 <- seimrqc_state0(S0=100,E10=1)
 res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
-plot(res,c("S","Itotal","M","Rtotal"))
 
 # with self-quarantine
-param <- seimrqc_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,gammaq1=0.3,gammaq2=0.3,Qeff=0.5,Meff=0.99,rho=0.8,eta=1/sqrt(2),alphamBeta=0.5,delta=0.2,kappa=20,pm=1)
+param <- seimrqc_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,gammaq1=0.3,gammaq2=0.3,Qeff=0.5,Meff=0.99,rho=0.8,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
 state0 <- seimrqc_state0(S0=100,E10=1)
 res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
-plot(res,c("S","Itotal","M","Rtotal"))
 
 }

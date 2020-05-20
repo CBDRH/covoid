@@ -23,22 +23,8 @@
 #' Churches, T. & Jorm, L. (2020). COVOID: A flexible, freely available stochastic individual contact model for exploring COVID-19 intervention and control strategies (Preprint). 10.2196/preprints.18965.
 #'
 #' @examples
-#' param <- seihrq_param(R0=2.5,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
-#' state0 <- seihrq_state0(S0=100,E0=1)
-#' res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
-#' plot(res,c("S","E","Is","Hp","Rc","F"))
 #'
-#' # if the reproduction number is time varying (e.g. due to control measures)
-#' R_t <- function(t) {
-#' if (t < 30) 2.5
-#' else 1.1
-#' }
-#' param <- seihrq_param(R0=R_t,sigma=0.3,gamma1=0.3,gamma2=0.3,gamma3=0.3,Qeff=0.5,Heff=0.99,rho=0.1,alpha=0.2,eta=0.01)
-#' state0 <- seihrq_state0(S0=100,E0=1)
-#' res <- simulate_seihrq(t = 100,state_t0 = state0,param = param)
-#' plot(res,c("S","E","Is","Hp","Rc","F"))
 #'
-#' @export
 simulate_seihrq <- function(t,state_t0,param) {
     # assertions
     stopifnot(class(state_t0) == "seihrq_state0")
@@ -105,7 +91,6 @@ simulate_seihrq <- function(t,state_t0,param) {
 #'
 #' @return List of SEIHR-Q model parameters
 #'
-#' @export
 seihrq_param <- function(R0,beta,sigma,gamma1,gamma2,gamma3,Qeff,Heff,rho,alpha,eta) {
     # work out missing parameter
     infectious_period = 1/sigma + 1/gamma1 + (1-alpha)*(1/gamma2) + alpha*1/gamma3
@@ -153,7 +138,6 @@ seihrq_param <- function(R0,beta,sigma,gamma1,gamma2,gamma3,Qeff,Heff,rho,alpha,
 #'
 #' @return List of SEIHR-Q model initial states
 #'
-#' @export
 seihrq_state0 <- function(S0,E0,I10=0,I20=0,H0=0,Rh0=0,R0=0,Iq10=0,Iq20=0,Hq0=0,Rqh0=0,Rq0=0) {
     # assertions
     stopifnot(E0 >= 1)

@@ -30,9 +30,9 @@
 #' plot(res1,y=c("S","E","I","R"))
 #'
 #' # Example 2: general physical distancing, school closures and masks/handwashing
-#' cm <- list(all = cm_oz_all, sch = cm_oz_sch)
 #' cm_oz_all <- import_contact_matrix("Australia","general")
 #' cm_oz_sch <- import_contact_matrix("Australia","school")
+#' cm <- list(all = cm_oz_all, sch = cm_oz_sch)
 #' # separate out school and general population contact rates
 #' cm_oz_all <- cm_oz_all - cm_oz_sch
 #' int <- list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),

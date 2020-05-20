@@ -4,7 +4,7 @@
 \alias{seir_state0}
 \title{SEIR model inital state}
 \usage{
-seir_state0(S0, E0, I0 = 0, R0 = 0)
+seir_state0(S, E, I = 0, R = 0)
 }
 \arguments{
 \item{S0}{Initial number of susceptibles}

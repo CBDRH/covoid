@@ -26,38 +26,4 @@ R = Removed
 }
 \examples{
 
-cm_oz <- import_contact_matrix("Australia","general")
-p_age_oz <- import_age_distribution("Australia")
-param <- seithr_qc_model(R0=2.3,Qeff=0,Teff=0,Heff=0,delta=0,sigma1=0.3,
-sigma2=0.3,p_severe=0.1,p_isolate=0,gamma1=0.3,gamma2=0.3,cm=cm_oz,dist=p_age_oz)
-nJ = ncol(cm_oz)
-S = rep(1000,nJ)
-E1 = rep(10,nJ)
-E2 = rep(0,nJ)
-I1m = rep(0,nJ)
-I1s = rep(0,nJ)
-I2 = rep(0,nJ)
-T = rep(0,nJ)
-H = rep(0,nJ)
-Sc = rep(0,nJ)
-Ec1 = rep(0,nJ)
-Ec2 = rep(0,nJ)
-Ic1m = rep(0,nJ)
-Ic1s = rep(0,nJ)
-Ic2 = rep(0,nJ)
-Tc = rep(0,nJ)
-Hc = rep(0,nJ)
-R = rep(0,nJ)
-Rh = rep(0,nJ)
-
-state0 <- sir_c_state0(S,E1,E2,I1m,I1s,I2,T,H,Sc,Ec1,Ec2,Ic1m,Ic1s,Ic2,Tc,Hc,R,Rh)
-res <- simulate_c_sir(t = 150,state_t0 = state0,param = param)
-plot(res,y=c("S","I","R"),main="Heterogeneous mixing")
-
-# compare with homogeneous
-param <- sir_param(R0 = 2.5,gamma = 0.1)
-state0 <- sir_state0(S0 = 1600,I0 = 16,R0 = 0)
-res <- simulate_sir(t = 150,state_t0 = state0,param = param)
-plot(res,c("S","I","R"),main="Homogeneous mixing")
-
 }

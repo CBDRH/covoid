@@ -17,8 +17,9 @@
 #' @examples
 #'
 #' cm_oz <- import_contact_matrix("Australia","general")
-#' cm_oz <- 0.5*(cm_oz +t(cm_oz))  # while no age groups available
-#' param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz)
+#' nJ <- ncol(cm_oz)
+#' dist_oz <- import_age_distribution("Australia")
+#' param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=dist_oz)
 #' nJ = ncol(cm_oz)
 #' S = rep(100,nJ)
 #' I = rep(1,nJ)
