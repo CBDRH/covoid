@@ -6,6 +6,12 @@
 
 COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular covoid allows the simulataneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
 
+## Acknowledgements
+
+Work on COVOID is facilitated by the genrous assiatnce of Ian Sharp, philanthropic supporter of UNSW research. 
+
+If you would like to support our work, please click on the **Sponsor** button at the top of this page for details of how to donate.
+
 ## Modelling COVID-19
 
 * Shiny app, screenshot, links.
