@@ -345,7 +345,7 @@ body <- dashboardBody(
                                  ),
 
                                  column(width=6,
-                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results: Incidence over time"),
+                                        box(title = tagList(shiny::icon("chart-area"), "Simulation results"),
                                             width = "100%", height="700px", status = "primary", solidHeader = FALSE,
                                             withLoader(ggiraphOutput("plot"), type="image", loader="SARS-CoV-2.gif"),
                                             downloadButton('downloadPlot','Download Plot', icon=icon("download"), width="100%", class = "btn-info")
