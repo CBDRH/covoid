@@ -33,7 +33,9 @@ import_contact_matrix <- function(country,setting) {
     stopifnot(country %in% available_contact_matrices())
     tmp_env = new.env()
     data(list = paste0(country,"_",setting),envir = tmp_env)
-    cm = tmp_env$cm_all
+    cm_name <- gsub(" ","_",paste0(country,"_",setting))
+    cm_name <- gsub("[(),'-]","",cm_name)
+    cm = tmp_env[[cm_name]]
     class(cm) = c(class(cm),"contact_matrix")
     cm
 }
