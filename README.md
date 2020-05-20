@@ -8,7 +8,7 @@ COVOID is a R package for modelling COVID-19 and other infectious diseases using
 
 ## Acknowledgements
 
-Work on COVOID is facilitated by the genrous assiatnce of **Ian Sharp**, philanthropic supporter of UNSW research. 
+Work on COVOID is facilitated by the generous assistance of **Ian Sharp**, philanthropic supporter of UNSW research. 
 
 If you would like to support our work, please click on the **Sponsor** button at the top of this page for details of how to donate.
 
