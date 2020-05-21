@@ -393,7 +393,7 @@ R0 <- max(abs(Re(ee$values)))
 cat("R0:",R0)
 ```
 
-## References
+## References and further reading
 
 Heffernan, J. M., Smith, R. J., & Wahl, L. M. (2005). Perspectives on the basic reproductive ratio. Journal of the Royal Society Interface, 2(4), 281-293.
 

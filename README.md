@@ -27,11 +27,6 @@ You can install the development version of COVOID from
 # install.packages("devtools")
 devtools::install_github("cbdrh/covoid",build_vignettes = TRUE)
 ```
-
-## Vignettes
-
-
-
 ## Example
 
 This is a basic introduction to COVOID package syntax. We demonstrate how to simulate an epidemic along with the impact of disease prevention policies using an age structured SIR model. The populations demographics are matched to that of Australia, with a population of 4 million and 10 initial cases. The functions `import_contact_matrix` and `import_age_distribution` import data from Prem et al (2017) and the United Nations Population Division (2019) on age specific contact rates and distributions, both grouped by 5 years. There are ~150 countries with both contact and age demogrpahic information available in COVOID.
@@ -99,7 +94,20 @@ plot(res,y=c("S","I","R"),main="Physical distancing + school closures")
 
 <img src="man/figures/README-example-4.png" width="100%" height="50%">
 
-For more information check out the package vignettes `vignette(package = "covoid")` or visit the [COVOID website](https://cbdrh.github.io/covoidance/)
+For more information check out the package vignettes (below) or visit the [COVOID website](https://cbdrh.github.io/covoidance/)
+
+```r
+# A description of the models available in COVOID:
+vignette("available-models")
+
+# An instroduction to modelling epidemics and the impact of their 
+# interventions using age structured DCMs:
+vignette("age-structured-mixing")
+
+# An overview of the mathematical background of age structured DCMs, 
+# with links to more further reading: 
+vignette("age-structured-mixing-background")
+```
 
 ## References
 
