@@ -8,6 +8,8 @@ Description: COVOID is a R package for modelling COVID-19 and other infectious d
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Depends: 
+    R (>= 3.5.0)
 Imports: 
     lifecycle,
     DiagrammeR,
