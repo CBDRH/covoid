@@ -15,28 +15,28 @@ p.caption {
 }
 </style>
 
-```{r message=FALSE, warning=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  warning = FALSE, 
+  message = FALSE
 )
 ```
 
 ```{r setup}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(covoid)
 ```
 
-
 ## Homogeneous mixing
 
-These models assume....
+These models assume the contact rates between individuals in the population can be adequately described by a single value, rather than varying by age or setting.
 
 ### SIR model
 
-`sir_state0` `sir_param` and `simulate_sir`
+The key functions for this model are `sir_state0` `sir_param` and `simulate_sir`.
 
-```{r echo=FALSE,fig.cap="*Figure 1a:* SIR model forward dynamics",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 1a:* SIR model forward dynamics",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SIR {
 
@@ -58,9 +58,9 @@ digraph SIR {
 }",height=50)
 ```
 
-```{r echo=FALSE,fig.cap="*Figure 1b:* SIR model infection dynamics",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 1b:* SIR model infection dynamics",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
-digraph SIR {
+digraph SEIR_inf {
 
   graph [overlap = false,
         fontsize = 10
@@ -72,15 +72,13 @@ digraph SIR {
 
   S[label='S\nsusceptible'];
   I[label='I\ninfected'];
-  R[label='R\nremoved'];
 
-  edge [color = 'black']
-  S -> I
-  I -> R
+  edge [color = 'red' style=dashed]
+  I -> S
 }",height=50)
 ```
 
-```{r,fig.height=3,fig.width=7}
+```{r,fig.height=3,fig.width=7,fig.retina=3}
 # A minimal example
 param <- sir_param(R0 = 2.5,gamma = 0.1)
 state0 <- sir_state0(S = 100,I = 1,R = 0)
@@ -90,9 +88,9 @@ plot(res,y=c("S","I","R"),main="SIR model")
 
 ### SEIR model
 
-`seir_state0` `seir_param` and `simulate_seir`
+The key functions for this model are `seir_state0` `seir_param` and `simulate_seir`.
 
-```{r echo=FALSE,fig.cap="*Figure 2a:* SEIR model forward dynamics",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 2a:* SEIR model forward dynamics",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SEIR {
 
@@ -116,7 +114,7 @@ digraph SEIR {
 }",height=50)
 ```
 
-```{r  echo=FALSE,fig.cap="*Figure 2b:* SEIR model infection dynamics",fig.height=200,fig.align="left"}
+```{r  echo=FALSE,fig.cap="*Figure 2b:* SEIR model infection dynamics",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SEIR_inf {
 
@@ -137,7 +135,7 @@ digraph SEIR_inf {
 ```
 
 
-```{r,fig.height=3,fig.width=7}
+```{r,fig.height=3,fig.width=7,fig.retina=3}
 # A minimal example
 param <- seir_param(R0 = 2.5,gamma = 0.1,sigma=0.1)
 state0 <- seir_state0(S = 100,E = 1, I = 0,R = 0)
@@ -146,17 +144,208 @@ plot(res,y=c("S","E","I","R"),main="SEIR model")
 ```
 
 
-### Expanded SEIR model
+### Expanded SEIR model I
 
-This model is recommended for modelling COVID-19 (e.g. REFS)
+This model is recommended for modelling COVID-19, it is based on Churches and Jorm (2020) and Moss et al (2020).
 
-### Expanded SEIR model (Moss et al, 2020)
+The key functions for this model are `seir1_state0` `seir1_param` and `simulate_seir1`.
+
+```{r echo=FALSE,fig.cap="*Figure 3a:* Expanded SEIR model I forward dynamics",fig.height=200,fig.align="left",fig.retina=3}
+DiagrammeR::grViz("
+digraph SEIR1 {
+
+  graph [overlap = false,
+        fontsize = 10
+        rankdir = LR]
+
+  node [shape = box,
+        fontname = Helvetica,
+        color='grey']
+
+
+  S[label=<S<BR/>susceptible>]
+  E1[label=<E<SUB>1</SUB><BR/><BR/>latent period<BR/>(asymptomatic)>]
+  E2[label=<E<SUB>2</SUB><BR/><BR/>latent period<BR/>(symptomatic)>]
+  I1[label=<I<SUB>1</SUB><BR/><BR/>infectious period>];
+  I2[label=<I<SUB>2</SUB><BR/><BR/>infectious period<BR/>(mild)>];
+  H[label=<H<BR/>hospitalised>];
+  R[label=<R<BR/>recovered>];
+  F[label=<R<BR/>fatality>];
+  E1q[label=<E<SUB>1</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(asymptomatic; isolated)>]
+  E2q[label=<E<SUB>2</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(symptomatic; isolated)>]
+  I1q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(isolated)>];
+  I2q[label=<I<SUB>2</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(mild; isolated)>];
+  Hq[label=<H<SUP>q</SUP><BR/>hospitalised<BR/>(isolated)>];
+  Rq[label=<R<BR/>recovered<BR/>(isolated)>];
+  Fq[label=<R<BR/>fatality<BR/>(isolated)>];
+
+  edge [color = 'black']
+  S -> E1
+  E1 -> E2
+  E2 -> I1
+  I1 -> I2
+  I1 -> H
+  I2 -> R
+  H -> R
+  I2 -> F
+  H -> F
+  S -> E1q
+  E1q -> E2q
+  E2q -> I1q
+  I1q -> I2q
+  I1q -> Hq
+  I2q -> Rq
+  Hq -> Rq
+  I2q -> Fq
+  Hq -> Fq
+
+}",height=200,width=600)
+```
+
+```{r  echo=FALSE,fig.cap="*Figure 3b:* Expanded SEIR model I infection dynamics",fig.height=200,fig.align="left",fig.retina=3}
+DiagrammeR::grViz("
+digraph SEIR1 {
+
+  graph [overlap = false,
+        fontsize = 10
+        rankdir = LR]
+
+  node [shape = box,
+        fontname = Helvetica,
+        color='grey']
+
+  S[label=<S<BR/>susceptible>]
+  E2[label=<E<SUB>2</SUB><BR/><BR/>latent period<BR/>(symptomatic)>]
+  I1[label=<I<SUB>1</SUB><BR/><BR/>infectious period>];
+  I2[label=<I<SUB>2</SUB><BR/><BR/>infectious period<BR/>(mild)>];
+  H[label=<H<BR/>hospitalised>];
+  E2q[label=<E<SUB>2</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(symptomatic; isolated)>]
+  I1q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(isolated)>];
+  I2q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(mild; isolated)>];
+  Hq[label=<H<SUP>q</SUP><BR/>hospitalised<BR/>(isolated)>];
+
+  edge [color = 'red' style=dashed]
+  E2 -> S
+  I1 -> S
+  I2 -> S
+  H -> S
+  E2q -> S
+  I1q -> S
+  I2q -> S
+  Hq -> S
+}",height=300,width=600)
+```
+
+```{r,fig.height=3,fig.width=7,fig.retina=3}
+# A minimal example
+state0 <- seir1_state0(S = 1e5, E1 = 90, E2 = 40)
+param <- seir1_param(R0=2.5,sigma1=0.2,sigma2=0.2,gamma1=0.2,gamma2=0.2,gamma3=0.2,
+                     Qeff=0.5,Heff=0.9,rho=0.1,alpha=0.1,eta=0.02)
+res <- simulate_seir1(t = 250,state_t0 = state0,param = param)
+plot(res,y=c("S","E","I","Recov","Fatal"),main="Expanded SEIR model I")
+```
+
+### Expanded SEIR model II
+
+This model is recommended for modelling COVID-19, it is a (partial) reproduction Moss et al (2020).
+
+The key functions for this model are `seir2_state0` `seir2_param` and `simulate_seir2`.
+
+```{r echo=FALSE,fig.cap="*Figure 4a:* Expanded SEIR model II (Doherty model) forward dynamics",fig.height=200,fig.align="left",fig.retina=3}
+DiagrammeR::grViz("
+digraph SEIR2 {
+
+  graph [overlap = false,
+        fontsize = 10
+        rankdir = LR]
+
+  node [shape = box,
+        fontname = Helvetica,
+        color='grey']
+
+
+  S[label=<S<BR/>susceptible>]
+  E1[label=<E<SUB>1</SUB><BR/><BR/>latent period<BR/>(asymptomatic)>]
+  E2[label=<E<SUB>2</SUB><BR/><BR/>latent period<BR/>(symptomatic)>]
+  I1[label=<I<SUB>1</SUB><BR/><BR/>infectious period>];
+  I2[label=<I<SUB>2</SUB><BR/><BR/>infectious period<BR/>(mild)>];
+  M[label=<H<BR/>medical management>];
+  R[label=<R<BR/>recovered>];
+  E1q[label=<E<SUB>1</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(asymptomatic; isolated)>]
+  E2q[label=<E<SUB>2</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(symptomatic; isolated)>]
+  I1q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(isolated)>];
+  I2q[label=<I<SUB>2</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(mild; isolated)>];
+  Mq[label=<H<SUP>q</SUP><BR/>medical management<BR/>(isolated)>];
+  Rq[label=<R<BR/>recovered<BR/>(isolated)>];
+
+  edge [color = 'black']
+  S -> E1
+  E1 -> E2
+  E2 -> I1
+  I1 -> I2
+  I1 -> M
+  I2 -> R
+  M -> R
+  S -> E1q
+  E1q -> E2q
+  E2q -> I1q
+  I1q -> I2q
+  I1q -> Hq
+  I2q -> Rq
+  Mq -> Rq
+
+}",height=200,width=600)
+```
+
+```{r  echo=FALSE,fig.cap="*Figure 4b:* Expanded SEIR model II (Doherty model) infection dynamics",fig.height=200,fig.align="left",fig.retina=3}
+DiagrammeR::grViz("
+digraph SEIR2 {
+
+  graph [overlap = false,
+        fontsize = 10
+        rankdir = LR]
+
+  node [shape = box,
+        fontname = Helvetica,
+        color='grey']
+
+  S[label=<S<BR/>susceptible>]
+  E2[label=<E<SUB>2</SUB><BR/><BR/>latent period<BR/>(symptomatic)>]
+  I1[label=<I<SUB>1</SUB><BR/><BR/>infectious period>];
+  I2[label=<I<SUB>2</SUB><BR/><BR/>infectious period<BR/>(mild)>];
+  M[label=<H<BR/>medical management>];
+  E2q[label=<E<SUB>2</SUB><SUP>q</SUP><BR/><BR/>exposed<BR/>(symptomatic; isolated)>]
+  I1q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(isolated)>];
+  I2q[label=<I<SUB>1</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(mild; isolated)>];
+  Mq[label=<H<SUP>q</SUP><BR/>medical management<BR/>(isolated)>];
+
+  edge [color = 'red' style=dashed]
+  E2 -> S
+  I1 -> S
+  I2 -> S
+  M -> S
+  E2q -> S
+  I1q -> S
+  I2q -> S
+  Mq -> S
+}",height=300,width=600)
+```
+
+```{r,fig.height=3,fig.width=7,fig.retina=3}
+# A minimal example
+state0 <- seir2_state0(S = 1e5, E1 = 90, E2 = 40)
+param <- seir2_param(R0=2.5,lambdaimp=0,sigma1=0.2,sigma2=0.2,gamma1=0.2,gamma2=0.2,
+                     gammaq1=0.1,gammaq2=0.1,Qeff=0.5,Meff=0.99,rho=0.0,eta=1/sqrt(2),
+                     alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
+res <- simulate_seir2(t = 250,state_t0 = state0,param = param)
+plot(res,y=c("S","E","I","Recov","Fatal"),main="Moss et al (2020) model")
+```
 
 ## Age structured mixing
 
-These models structure the population ... Contact is assumed to be age and setting dependent (see figure). 
+These models structure the population by discrete age partitions, with the contact rate assumed to be age and setting dependent (see figure). 
 
-```{r echo=FALSE, fig.align="left", fig.height=5, fig.cap= "Figure Y:* Contact matrices for school, work, home and other locations (source: Prem et al ()). Note the differing scales.",fig.width=7}
+```{r echo=FALSE, fig.align="left", fig.height=5, fig.cap= "Figure 5:* Contact matrices for school, work, home and other locations (source: Prem, Cook and Jit (2017)). Note the differing scales.",fig.width=7,fig.retina=3}
 library(ggplot2)
 cm_oz_s <- import_contact_matrix("Australia","school")
 cm_oz_w <- import_contact_matrix("Australia","work")
@@ -183,9 +372,9 @@ gridExtra::grid.arrange(p1,p2,p3,p4,ncol=2)
 
 ### SIR model
 
-The key functions are `sir_c_state0` `sir_c_param` and `simulate_sir_c`
+The key functions for this model are `sir_c_state0` `sir_c_param` and `simulate_sir_c`.
 
-```{r echo=FALSE,fig.cap="*Figure Xa:* Age structured SIR model forward dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 6a:* Age structured SIR model forward dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SIR_C {
 
@@ -207,7 +396,7 @@ digraph SIR_C {
 }",height=50)
 ```
 
-```{r echo=FALSE,fig.cap="*Figure Xb:* Age structured SIR model infection dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 6b:* Age structured SIR model infection dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SEIR_C_inf {
 
@@ -220,7 +409,7 @@ digraph SEIR_C_inf {
         color='grey']
 
   S[label='S\nsusceptible'];
-  I1[label='I1\ninfected'];
+  I1[label=<I<SUB>1</SUB><BR/><BR/>infectious>];
   
   node [color = 'white']
   I2[label='...'];
@@ -228,7 +417,7 @@ digraph SEIR_C_inf {
   node [shape = box,
         fontname = Helvetica,
         color='grey']
-  IN[label='IN\ninfected'];
+  IN[label=<I<SUB>n</SUB><BR/><BR/>infectious>];
 
 
   edge [color = 'red' style=dashed]
@@ -239,8 +428,7 @@ digraph SEIR_C_inf {
 }",height=150)
 ```
 
-
-```{r,fig.height=3,fig.width=7}
+```{r,fig.height=3,fig.width=7,fig.retina=3}
 # A minimal example
 cm_oz <- import_contact_matrix("Australia","general")
 dist_oz <- import_age_distribution("Australia")
@@ -256,9 +444,9 @@ plot(res,y=c("S","I","R"),main="Age structured SIR model")
 
 ### SEIR model
 
-The key functions for this model are `seir_c_state0` `seir_c_param` and `simulate_seir_c`
+The key functions for this model are `seir_c_state0` `seir_c_param` and `simulate_seir_c`.
 
-```{r echo=FALSE,fig.cap="*Figure Xa:* Age structured SEIR model forward dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 7a:* Age structured SEIR model forward dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SEIR_C {
 
@@ -283,7 +471,7 @@ digraph SEIR_C {
 ```
 
 
-```{r echo=FALSE,fig.cap="*Figure Xb:* Age structured SEIR model infection dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left"}
+```{r echo=FALSE,fig.cap="*Figure 7b:* Age structured SEIR model infection dynamics. There are j=1,...,J age groups.",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
 digraph SEIR_C_inf {
 
@@ -314,7 +502,7 @@ digraph SEIR_C_inf {
 }",height=150)
 ```
 
-```{r,fig.height=3,fig.width=7}
+```{r,fig.height=3,fig.width=7,fig.retina=3}
 # A minimal example
 cm_oz <- import_contact_matrix("Australia","general")
 nJ <- ncol(cm_oz)
@@ -332,3 +520,8 @@ plot(res1,y=c("S","E","I","R"),main="Age structured SEIR model")
 ## References and notes
 
 All graphs created using [**DiagrammR**](https://rich-iannone.github.io/DiagrammeR/)
+
+Churches, T. & Jorm, L. (2020). COVOID: A flexible, freely available stochastic individual contact model for exploring COVID-19 intervention and control strategies (Preprint). 10.2196/preprints.18965.
+
+Moss R., Wood J., Brown D., Shearer F., Black, A.J., Cheng A.C., McCaw J.M., McVernon J. (2020). Modelling the impact of COVID-19 in Australia to inform transmission reducing measures and health system preparedness. The Peter Doherty Institute for Infection and Immunity, VIC, Australia. https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf
+
