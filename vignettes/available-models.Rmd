@@ -263,7 +263,7 @@ DiagrammeR::grViz("
 digraph SEIR_C {
 
   graph [overlap = false,
-        fontsize = 10
+        fontsize = 10,
         rankdir = LR]
 
   node [shape = box,
