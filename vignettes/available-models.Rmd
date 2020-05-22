@@ -24,9 +24,13 @@ knitr::opts_chunk$set(
 )
 ```
 
+## Overview
+
 ```{r setup}
 library(covoid)
 ```
+
+Each model is associated with an initial state, parameter and simulation function. If you are using a model with the code * we pass the parameters for the ODE system to the `*_param` function, the initial compartment states to `*_state0` and finally run the system using `simulate_*`. Models named `*_c` are age-structured, and require a contact matrix and age distribution. These are also the most mature models, all models come with a lifecycle badge making clear the potential for future changes.
 
 ## Homogeneous mixing
 
@@ -277,6 +281,8 @@ digraph SEIR2 {
   I2q[label=<I<SUB>2</SUB><SUP>q</SUP><BR/><BR/>infectious period<BR/>(mild; isolated)>];
   Mq[label=<H<SUP>q</SUP><BR/>medical management<BR/>(isolated)>];
   Rq[label=<R<BR/>recovered<BR/>(isolated)>];
+  CTnm[label=<CT<SUB>nm</SUB><BR/><BR/>Contact of<BR/>non-managed case>];
+  CTm[label=<CT<SUB>nm</SUB><BR/><BR/>Contact of<BR/>managed case>];
 
   edge [color = 'black']
   S -> E1
@@ -435,8 +441,8 @@ dist_oz <- import_age_distribution("Australia")
 param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=dist_oz)
 nJ <- ncol(cm_oz)
 S <- rep(100,nJ)
-I = rep(1,nJ)
-R = rep(0,nJ)
+I <- rep(1,nJ)
+R <- rep(0,nJ)
 state0 <- sir_c_state0(S = S,I = I,R = R)
 res <- simulate_sir_c(t = 150,state_t0 = state0,param = param)
 plot(res,y=c("S","I","R"),main="Age structured SIR model")

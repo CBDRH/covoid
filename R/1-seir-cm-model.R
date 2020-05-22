@@ -146,9 +146,9 @@ seir_c_param <- function(R0,sigma,gamma,cm,dist,contact_intervention=NULL,transm
 
     # calculate prob transmission
     if (is.list(cm)) {
-        cm_gen = Reduce('+', cm)
+        cm_gen <- Reduce('+', cm)
     } else {
-        cm_gen = cm
+        cm_gen <- cm
     }
     if (is.null(im)) {
         im <- matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))

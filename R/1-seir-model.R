@@ -1,6 +1,9 @@
 
 #' Simulate a deterministic SEIR model
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+#'
 #' S = Susceptible
 #' E = Exposed (non-infectious)
 #' I = Infectious
@@ -55,6 +58,9 @@ simulate_seir <- function(t,state_t0,param) {
 
 #' SEIR model parameters
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' Setup function
 #'
 #' @param R0 Basic/empirical reproduction number (S -> E), can be a function of t.
@@ -70,23 +76,23 @@ seir_param <- function(R0,beta,sigma,gamma) {
     # work out missing parameter
     if(missing(R0)) {
         if (is.function(beta)) {
-            R0 = function(t) beta(t)/gamma
+            R0 <- function(t) beta(t)/gamma
         } else {
-            R0 = function(t) beta/gamma
+            R0 <- function(t) beta/gamma
         }
     } else if(missing(beta)) {
         if (is.function(R0)) {
-            beta = function(t) gamma*R0(t)
+            beta <- function(t) gamma*R0(t)
         } else {
-            beta = function(t) gamma*R0
+            beta <- function(t) gamma*R0
         }
     } else if(!missing(R0) & ! missing(beta)) {
         stop("Supply either R0 or beta")
     }
 
     # output with class seir_param
-    param = list(R0=R0,beta=beta,sigma=sigma,gamma=gamma)
-    class(param) = "seir_param"
+    param <- list(R0=R0,beta=beta,sigma=sigma,gamma=gamma)
+    class(param) <- "seir_param"
 
     # return
     param
@@ -94,12 +100,15 @@ seir_param <- function(R0,beta,sigma,gamma) {
 
 #' SEIR model inital state
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+#'
 #' Setup function
 #'
-#' @param S0 Initial number of susceptibles
-#' @param E0 Initial number of exposed (non-infectious)
-#' @param I0 Initial number of infected
-#' @param R0 Initial number of removed
+#' @param S Initial number of susceptibles
+#' @param E Initial number of exposed (non-infectious)
+#' @param I Initial number of infected
+#' @param R Initial number of removed
 #'
 #' @return List of SEIR model initial states
 #'
@@ -109,8 +118,8 @@ seir_state0 <- function(S,E,I=0,R=0) {
     stopifnot(E >= 1)
 
     # output with class seir_state0
-    state0 = c(S=S,E=E,I=I,R=R)
-    class(state0) = "seir_state0"
+    state0 <- c(S=S,E=E,I=I,R=R)
+    class(state0) <- "seir_state0"
 
     # return
     state0
@@ -131,13 +140,13 @@ seir_model <- function(t,state_t0,param) {
         N <- S + E + I + R
 
         # derived parameters
-        lambda = beta(t)*I
+        lambda <- beta(t)*I
 
         # differential equations
-        dS = -(S/N)*lambda
-        dE = (S/N)*lambda - sigma*E
-        dI = sigma*E - gamma*I
-        dR = gamma*I
+        dS <- -(S/N)*lambda
+        dE <- (S/N)*lambda - sigma*E
+        dI <- sigma*E - gamma*I
+        dR <- gamma*I
 
         # return
         list(c(dS,dE,dI,dR))

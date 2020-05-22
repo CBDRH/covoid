@@ -1,6 +1,9 @@
 
 #' Simulate a deterministic SIR model
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+#'
 #' S = Susceptible
 #' I = Infectious
 #' R = Removed
@@ -53,6 +56,9 @@ simulate_sir <- function(t,state_t0,param) {
 
 #' SIR model parameters
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' Setup function
 #'
 #' @param R0 Basic/empirical reproduction number (S -> I), can be a function of t.
@@ -67,33 +73,36 @@ sir_param <- function(R0,beta,gamma) {
 
   if(missing(R0)) {
     if (is.function(beta)) {
-      R0 = function(t) beta(t)/gamma
+      R0 <- function(t) beta(t)/gamma
     } else {
-      beta_val = beta
-      R0 = function(t) beta_val/gamma
-      beta = function(t) beta_val
+      beta_val <- beta
+      R0 <- function(t) beta_val/gamma
+      beta <- function(t) beta_val
     }
   } else if(missing(beta)) {
     if (is.function(R0)) {
-      beta = function(t) gamma*R0(t)
+      beta <- function(t) gamma*R0(t)
     } else {
-      R0_val = R0
-      beta = function(t) gamma*R0_val
-      R0 = function(t) R0_val
+      R0_val <- R0
+      beta <- function(t) gamma*R0_val
+      R0 <- function(t) R0_val
     }
   } else if(!missing(R0) & ! missing(beta)) {
     stop("Supply either R0 or beta")
   }
 
   # output with class sir_param
-  param = list(R0=R0,beta=beta,gamma=gamma)
-  class(param) = "sir_param"
+  param <- list(R0=R0,beta=beta,gamma=gamma)
+  class(param) <- "sir_param"
 
   # return
   param
 }
 
 #' SIR model inital state
+#
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
 #'
 #' Setup function
 #'
@@ -109,8 +118,8 @@ sir_state0 <- function(S,I,R=0) {
   stopifnot(I >= 1)
 
   # output with class sir_state0
-  state0 = c(S=S,I=I,R=R)
-  class(state0) = "sir_state0"
+  state0 <- c(S=S,I=I,R=R)
+  class(state0) <- "sir_state0"
 
   # return
   state0
@@ -128,15 +137,15 @@ sir_model <- function(t,state_t0,param) {
   with(as.list(c(state_t0, param)), {
 
     # population size
-    N = S + I + R
+    N <- S + I + R
 
     # derived parameters
-    lambda = beta(t)*I
+    lambda <- beta(t)*I
 
     # differential equations
-    dS = -(S/N)*lambda
-    dI = (S/N)*lambda - gamma*I
-    dR = gamma*I
+    dS <- -(S/N)*lambda
+    dI <- (S/N)*lambda - gamma*I
+    dR <- gamma*I
 
     # return
     list(c(dS,dI,dR),

@@ -59,5 +59,7 @@ seir2_state0(
 List of seir2 model initial states
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 Setup function
 }

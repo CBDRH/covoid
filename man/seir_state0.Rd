@@ -7,17 +7,19 @@
 seir_state0(S, E, I = 0, R = 0)
 }
 \arguments{
-\item{S0}{Initial number of susceptibles}
+\item{S}{Initial number of susceptibles}
 
-\item{E0}{Initial number of exposed (non-infectious)}
+\item{E}{Initial number of exposed (non-infectious)}
 
-\item{I0}{Initial number of infected}
+\item{I}{Initial number of infected}
 
-\item{R0}{Initial number of removed}
+\item{R}{Initial number of removed}
 }
 \value{
 List of SEIR model initial states
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
 Setup function
 }

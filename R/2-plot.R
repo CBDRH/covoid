@@ -4,8 +4,8 @@
 #' @param mod DCM model
 #'
 dcm2df <- function(mod) {
-    mod_df = tidyr::pivot_longer(mod$epi,-t,names_to = "compartment",values_to = "number")
-    mod_df$compartment = factor(mod_df$compartment,levels=unique(mod_df$compartment),ordered=TRUE)
+    mod_df <- tidyr::pivot_longer(mod$epi,-t,names_to = "compartment",values_to = "number")
+    mod_df$compartment <- factor(mod_df$compartment,levels=unique(mod_df$compartment),ordered=TRUE)
     mod_df
 }
 
@@ -42,7 +42,7 @@ plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
      }
     }
     xlab <- "time since outbreak (days)"
-    p = ggplot2::ggplot(df) + ggplot2::labs(y=ylab, y=xlab) +
+    p <- ggplot2::ggplot(df) + ggplot2::labs(y=ylab, y=xlab) +
         ggplot2::ggtitle(main) +
         ggplot2::geom_line(ggplot2::aes(x = t, y = number, col = compartment)) +
         ggplot2::theme_bw()
@@ -57,17 +57,18 @@ plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
 #'
 #' @export
 plot.contact_matrix <- function(x,...) {
-    df = as.data.frame(x)
-    levs = as.character(seq(5,75,by=5))
-    levs = c(levs,"80+")
-    df$age_contact = levs
-    df$age_contact = factor(df$age_contact,levels=levs,ordered=TRUE)
-    df = tidyr::pivot_longer(data = df,cols = 1:16,names_to = "age_individual",values_to = "contact_rate")
-    df$age_individual[df$age_individual == "80"] = "80+"
-    df$age_individual = factor(df$age_individual,levels=levs,ordered=TRUE)
+    df <- as.data.frame(x)
+    levs <- as.character(seq(5,80,by=5))
+    df$age_contact <- levs
+    df <- tidyr::pivot_longer(data = df,cols = 1:16,names_to = "age_individual",values_to = "contact_rate")
+    df$age_contact <- as.numeric(df$age_contact) - 2.5
+    df$age_individual <- as.numeric(df$age_individual) - 2.5
     ggplot2::ggplot(df, ggplot2::aes(y=age_contact, x=age_individual, fill=contact_rate)) +
-        ggplot2::geom_tile()
-
+        ggplot2::geom_tile() +
+        scale_x_continuous(breaks = seq(0,80,5)) +
+        scale_y_continuous(breaks = seq(0,80,5)) +
+        coord_cartesian(expand = FALSE) +
+        scale_fill_continuous(type ="viridis")
 }
 
 #' Plot a contact matrix
@@ -78,10 +79,9 @@ plot.contact_matrix <- function(x,...) {
 #'
 #' @export
 plot.age_distribution <- function(x,...) {
-    df = data.frame(prop = x)
-    levs = as.character(seq(5,75,by=5))
-    levs = c(levs,"80+")
-    df$age = factor(levs,levels=levs,ordered=TRUE)
+    df <- data.frame(prop = x)
+    levs <- seq(2.5,77.5,by=5)
+    df$age <- levs
     ggplot2::ggplot(df, ggplot2::aes(y=prop, x=age)) +
         ggplot2::geom_bar(stat = "identity")
 }

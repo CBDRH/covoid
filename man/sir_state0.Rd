@@ -17,5 +17,7 @@ sir_state0(S, I, R = 0)
 List of SIR model initial states
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 Setup function
 }

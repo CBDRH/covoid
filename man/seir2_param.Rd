@@ -64,5 +64,7 @@ It should be in (0,1) and in Beta draw in Moss et al 2020).}
 List of seir2 model parameters
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 Setup function
 }

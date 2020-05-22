@@ -91,30 +91,30 @@ create_intervention <- function(start,stop,reduce,type,start_delay=0,start_delay
     stopifnot(stop_delay >= 0)
     stopifnot(type %in% c("contact","transmission"))
 
-    times = seq(from = start,to = stop+stop_delay-1,by = 1)
-    reduce = rep(reduce,times = length(times))
+    times <- seq(from = start,to = stop+stop_delay-1,by = 1)
+    reduce <- rep(reduce,times = length(times))
 
     if (start_delay != 0) {
-        delay_p = switch(start_delay_dist,
+        delay_p <- switch(start_delay_dist,
                          exp=exp_decay(start_delay,start_stop="start"),
                          logis=logis_decay(start_delay,start_stop="start"))
-        vals = reduce[1:start_delay]
+        vals <- reduce[1:start_delay]
         reduce[1:start_delay] = vals + (1-vals)*delay_p
     }
 
     if (stop_delay != 0) {
-        delay_p = switch(stop_delay_dist,
+        delay_p <- switch(stop_delay_dist,
                          exp=exp_decay(start_delay,start_stop="stop"),
                          logis=logis_decay(start_delay,start_stop="stop"))
-        offset = stop-start+1
-        vals = reduce[offset:(offset+stop_delay-1)]
-        reduce[offset:(offset+stop_delay-1)] = vals + (1-vals)*delay_p
+        offset <- stop-start+1
+        vals <- reduce[offset:(offset+stop_delay-1)]
+        reduce[offset:(offset+stop_delay-1)] <- vals + (1-vals)*delay_p
     }
 
     # return
-    reduce = data.frame(time = start:(stop+stop_delay-1), reduce = reduce)
-    class(reduce) = c(class(reduce),"intervention")
-    attr(reduce, "type") = type
+    reduce <- data.frame(time = start:(stop+stop_delay-1), reduce = reduce)
+    class(reduce) <- c(class(reduce),"intervention")
+    attr(reduce, "type") <- type
     reduce
 }
 
@@ -125,11 +125,11 @@ create_intervention <- function(start,stop,reduce,type,start_delay=0,start_delay
 #' @param start_stop whether at beginning or end of intervention
 #'
 exp_decay <- function(delay,start_stop) {
-    lambda = -log(1-0.99)/delay
+    lambda <- -log(1-0.99)/delay
     if(start_stop == "start") {
-        delay_p = rev(pexp(q = 1:delay,rate = lambda,lower.tail = TRUE))
+        delay_p <- rev(pexp(q = 1:delay,rate = lambda,lower.tail = TRUE))
     } else if(start_stop == "stop") {
-        delay_p = pexp(q = 1:delay,rate = lambda,lower.tail = TRUE)
+        delay_p <- pexp(q = 1:delay,rate = lambda,lower.tail = TRUE)
     }
     delay_p
 }
@@ -141,11 +141,11 @@ exp_decay <- function(delay,start_stop) {
 #' @param start_stop whether at beginning or end of intervention
 #'
 logis_decay <- function(delay,start_stop) {
-    s = (delay/2)/log(0.99/(1-0.99))
+    s <- (delay/2)/log(0.99/(1-0.99))
     if(start_stop == "start") {
-        delay_p = rev(plogis(q = 1:delay,location=delay/2,scale=s,lower.tail = TRUE))
+        delay_p <- rev(plogis(q = 1:delay,location=delay/2,scale=s,lower.tail = TRUE))
     } else if(start_stop == "stop") {
-        delay_p = plogis(q = 1:delay,location=delay/2,scale=s,lower.tail = TRUE)
+        delay_p <- plogis(q = 1:delay,location=delay/2,scale=s,lower.tail = TRUE)
     }
     delay_p
 }
@@ -159,31 +159,31 @@ logis_decay <- function(delay,start_stop) {
 #'
 calculate_current_cm <- function(cm,intervention,t,dist) {
     # interventions
-    cm_cur = cm
+    cm_cur <- cm
     if(!is.null(intervention)) {
         if (is.list(intervention) & !is.data.frame(intervention)) {
 
             for (nm in names(intervention)) {
-                int = intervention[names(intervention) == nm][[1]]
+                int <- intervention[names(intervention) == nm][[1]]
                 if (t >= int$time[1] && t <= int$time[nrow(int)]) {
-                    vals = int$reduce[t > int$time-1 & t < int$time+1]
-                    int_m = diag(mean(vals),length(dist))
+                    vals <- int$reduce[t > int$time-1 & t < int$time+1]
+                    int_m <- diag(mean(vals),length(dist))
                     cm_cur[names(cm_cur) == nm][[1]] = int_m %*% cm_cur[names(cm_cur) == nm][[1]]
                 }
                 # else leave as is
             }
         } else {
             if (t >= intervention$time[1] && t <= intervention$time[nrow(intervention)]) {
-                vals = intervention$reduce[t > intervention$time-1 & t < intervention$time+1]
-                int_m = diag(mean(vals),nrow = length(dist))
-                cm_cur = int_m %*% cm_cur
+                vals <- intervention$reduce[t > intervention$time-1 & t < intervention$time+1]
+                int_m <- diag(mean(vals),nrow = length(dist))
+                cm_cur <- int_m %*% cm_cur
             }
             # else leave as is
         }
     }
 
     if (is.list(cm_cur)) {
-        cm_cur = Reduce('+', cm_cur)
+        cm_cur <- Reduce('+', cm_cur)
     }
     cm_cur
 }
@@ -197,11 +197,11 @@ calculate_current_cm <- function(cm,intervention,t,dist) {
 #'
 calculate_current_pt <- function(pt,intervention,t) {
 
-    pt_cur = pt
+    pt_cur <- pt
         if(!is.null(intervention)) {
             if (t >= intervention$time[1] && t <= intervention$time[nrow(intervention)]) {
-                val = intervention$reduce[t > intervention$time-1 & t < intervention$time+1]
-                pt_cur = pt_cur * val
+                val <- intervention$reduce[t > intervention$time-1 & t < intervention$time+1]
+                pt_cur <- pt_cur * val
             }
             # else leave as is
         }

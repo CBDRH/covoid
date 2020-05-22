@@ -1,5 +1,8 @@
 #' Simulate a deterministic SEIR model with quarantine and hospitalisation ("Doherty" or "Moss") model
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' \itemize{
 #' \item S = Susceptible
 #' \item E1/Eq1 = Exposed (asymptomatic; not infectious)
@@ -76,6 +79,9 @@ simulate_seir2 <- function(t,state_t0,param) {
 
 #' Doherty model parameters
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' Setup function
 #'
 #' @param R0 Basic reproduction number (S -> E)
@@ -106,18 +112,21 @@ seir2_param <- function(R0,lambdaimp,sigma1,sigma2,gamma1,gamma2,gammaq1,gammaq2
     max_alpham <- 0.15+0.6*(eta-0.01)/0.99
     alpham <- min_alpham+(max_alpham-min_alpham)*alphamBeta
     alphas <- eta * probHospGivenInf
-    alpha = alphas + alpham*(1 - alphas)
+    alpha <- alphas + alpham*(1 - alphas)
     # output with class seir2_param
-    param = list(R0=R0,lambdaimp=lambdaimp,sigma1=sigma1,sigma2=sigma2,gamma1=gamma1,
+    param <- list(R0=R0,lambdaimp=lambdaimp,sigma1=sigma1,sigma2=sigma2,gamma1=gamma1,
                  gamma2=gamma2,gammaq1=gammaq1,gammaq2=gammaq2,Qeff=Qeff,Meff=Meff,rho=rho,eta=eta,alpha=alpha,
                  alphas=alphas,delta=delta,kappa=kappa,pm=pm)
-    class(param) = "seir2_param"
+    class(param) <- "seir2_param"
 
     # return
     param
 }
 
 #' Doherty model initial state
+#'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
 #'
 #' Setup function
 #'
@@ -146,9 +155,9 @@ seir2_state0 <- function(S,E1,E2=0,I1=0,I2=0,R=0,M=0,Rm=0,Eq1=0,Eq2=0,Iq1=0,Iq2=
     stopifnot(any(c(E1 >= 1,E2 >= 1,I1 >= 1,I2 >= 1,Eq1 >= 1,Eq2 >= 1,Iq1 >= 1,Iq2 >= 1)))
 
     # output with class seir2_state0
-    state0 = c(S=S,E1=E1,E2=E2,I1=I1,I2=I2,R=R,M=M,Rm=Rm,Eq1=Eq1,Eq2=Eq2,Iq1=Iq1,Iq2=Iq2,Rq=Rq,Mq=Mq,Rqm=Rqm,
+    state0 <- c(S=S,E1=E1,E2=E2,I1=I1,I2=I2,R=R,M=M,Rm=Rm,Eq1=Eq1,Eq2=Eq2,Iq1=Iq1,Iq2=Iq2,Rq=Rq,Mq=Mq,Rqm=Rqm,
                   CTm=CTm,CTnm=CTnm)
-    class(state0) = "seir2_state0"
+    class(state0) <- "seir2_state0"
 
     # return
     state0
@@ -169,35 +178,35 @@ seir2_model <- function(t,state_t0,param) {
         N <- S + E1 + E2 + I1 + I2 + R + M + Rm + Eq1 + Eq2 + Iq1 + Iq2 + Rq + Mq + Rqm
 
         # derived parameters
-        beta = R0*(1/((1/sigma2) + (1/gamma1) + (1/gamma2)))
-        betamq = beta*(1 - max(Meff,Qeff))
-        lambda = lambdaimp + beta*(E2 + I1 + I2) + beta*(1 - Qeff)*(Eq2 + Iq1 + Iq2) +
+        beta <- R0*(1/((1/sigma2) + (1/gamma1) + (1/gamma2)))
+        betamq <- beta*(1 - max(Meff,Qeff))
+        lambda <- lambdaimp + beta*(E2 + I1 + I2) + beta*(1 - Qeff)*(Eq2 + Iq1 + Iq2) +
             beta*(1 - Meff)*M + betamq*Mq
 
-        Thetam =  (S/N)*( CTm/(CTm + CTnm))
-        Thetanm = (S/N)*(CTnm/(CTm + CTnm))
+        Thetam <-  (S/N)*( CTm/(CTm + CTnm))
+        Thetanm <- (S/N)*(CTnm/(CTm + CTnm))
 
         # Differential equations
         # contacts of cases
-        dCTm =  kappa*(gamma1*I1 + gammaq1*Iq1)*(alpha*pm) - delta*CTm - lambda*Thetam
-        dCTnm = kappa*(gamma1*I1 + gammaq1*Iq1)*(1 - alpha*pm) - delta*CTnm - lambda*Thetanm
+        dCTm <- kappa*(gamma1*I1 + gammaq1*Iq1)*(alpha*pm) - delta*CTm - lambda*Thetam
+        dCTnm <- kappa*(gamma1*I1 + gammaq1*Iq1)*(1 - alpha*pm) - delta*CTnm - lambda*Thetanm
         # general population
-        dS = -(S/N)*lambda
-        dE1 = lambda*(S/N - rho*Thetam) - sigma1*E1
-        dE2 = sigma1*E1 - sigma2*E2
-        dI1 = sigma2*E2 - gamma1*I1
-        dI2 = gamma1*I1*(1 - alpha*pm) - gamma2*I2
-        dM = gamma1*I1*alpha*pm - gamma2*M
-        dR = gamma2*I2
-        dRm = gamma2*M
+        dS <- -(S/N)*lambda
+        dE1 <- lambda*(S/N - rho*Thetam) - sigma1*E1
+        dE2 <- sigma1*E1 - sigma2*E2
+        dI1 <- sigma2*E2 - gamma1*I1
+        dI2 <- gamma1*I1*(1 - alpha*pm) - gamma2*I2
+        dM <- gamma1*I1*alpha*pm - gamma2*M
+        dR <- gamma2*I2
+        dRm <- gamma2*M
         # quarantined population
-        dEq1 = lambda*rho*Thetam - sigma1*Eq1
-        dEq2 = sigma1*Eq1 - sigma2*Eq2
-        dIq1 = sigma2*Eq2 - gammaq1*Iq1
-        dIq2 = gammaq1*Iq1*(1 - alpha*pm) - gammaq2*Iq2
-        dMq = gammaq1*Iq1*alpha*pm - gammaq2*Mq
-        dRq = gammaq2*Iq2
-        dRqm = gammaq2*Mq
+        dEq1 <- lambda*rho*Thetam - sigma1*Eq1
+        dEq2 <- sigma1*Eq1 - sigma2*Eq2
+        dIq1 <- sigma2*Eq2 - gammaq1*Iq1
+        dIq2 <- gammaq1*Iq1*(1 - alpha*pm) - gammaq2*Iq2
+        dMq <- gammaq1*Iq1*alpha*pm - gammaq2*Mq
+        dRq <- gammaq2*Iq2
+        dRqm <- gammaq2*Mq
 
 # cat(sprintf("t = %f dM %f gamma1*alpha*pm %f gamma2 %f I1 %f M %f alpha %f Rtotal %f E2+I1+I2 %f Eq2+Iq1+Iq2 %f CTm %f CTnm %f lambda %f\n",t,dM,gamma1*alpha*pm,gamma2,I1,M,alpha,R+Rm+Rq+Rqm,E2+I1+I2,Eq2+Iq1+Iq2,CTm,CTnm,lambda))
 

@@ -10,15 +10,17 @@
 withMathJax()
 
 # Define the dashboard header
-header <- dashboardHeader(title = "COVID-19 Open-source Infection Dynamics", titleWidth = 420,
+# title = "COVID-19 Open-source Infection Dynamics"
+header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.edu.au/postgraduate-coursework',
+                                    tags$img(src='unsw_logo.png',height=40)), "COVID-19 Open-source Infection Dynamics"),
+                          titleWidth = 420,
                           tags$li(class="dropdown",
-                                  tags$a(href='https://github.com/CBDRH/covoid',
-                                         icon('github'), "Source Code", target="_blank")),
+                                  tags$a(href='https://github.com/CBDRH/covoid', icon('github'), "Source Code", target="_blank")),
                           tags$li(class="dropdown",
                                   tags$a(href='https://twitter.com/cbdrh1',
                                          icon('twitter'), "Twitter", target="_blank"))
-)
 
+)
 
 #######################################################
                     ### Sidebar ###
@@ -55,6 +57,10 @@ sidebar <- dashboardSidebar(
 
 ## Define the Body
 body <- dashboardBody(
+    # customise CSS
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    ),
 
     # Tailor box colour to UNSW branding
     tags$style(HTML("
@@ -763,6 +769,7 @@ body <- dashboardBody(
 dashboardPage(
     header,
     sidebar,
-    body
+    body,
+    skin="yellow"
 )
 

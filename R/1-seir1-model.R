@@ -1,5 +1,8 @@
 #' Simulate a deterministic SEIR model with quarantine and hospitalisation (SEIR-QH)
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' \itemize{
 #' \item S = Susceptible
 #' \item Eq1/Eq1 = First latent period (asymptomatic; uninfectious)
@@ -60,6 +63,9 @@ simulate_seir1 <- function(t,state_t0,param) {
 
 #' SEIR model with quarantine and hospitalisation (SEIR-QH) parameters
 #'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+#'
 #' Setup function
 #'
 #' @param R0 Basic/empirical reproduction number (S -> E1), can be a function of t.
@@ -109,6 +115,9 @@ seir1_param <- function(R0,beta,sigma1,sigma2,gamma1,gamma2,gamma3,Qeff,Heff,rho
 }
 
 #' SEIR model with quarantine and hospitalisation (SEIR-QH) inital state
+#'
+#' @description
+#' \Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
 #'
 #' Setup function
 #'

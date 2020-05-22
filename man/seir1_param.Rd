@@ -49,5 +49,7 @@ Pass either R0 or beta.}
 List of SEIHR-Q model parameters
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 Setup function
 }
