@@ -17,6 +17,8 @@ simulate_seir2(t, state_t0, param)
 Object of class covoid
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 \itemize{
 \item S = Susceptible
 \item E1/Eq1 = Exposed (asymptomatic; not infectious)
@@ -26,8 +28,7 @@ Object of class covoid
 \item M/Mq = Under medical management (hospitalised; GP)
 \item R/Rq/Rm/Rqm = Recovered
 }
-}
-\details{
+
 Partial implementation of the model outlined in Moss et al (2020).
 }
 \examples{

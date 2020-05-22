@@ -17,6 +17,8 @@ simulate_seir1(t, state_t0, param)
 Object of class covoid
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 \itemize{
 \item S = Susceptible
 \item Eq1/Eq1 = First latent period (asymptomatic; uninfectious)
@@ -27,8 +29,7 @@ Object of class covoid
 \item R/Rq/Rh/Rqh = Removed
 \item F = Case fatality (derived number, not a modelled compartment)
 }
-}
-\details{
+
 Adapted version of the stochastic individual contact seir1 model outlined in Churches & Jorm (2020).
 }
 \examples{

@@ -20,5 +20,7 @@ Pass either R0 or beta.}
 List of SEIR model parameters
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("experimental")}
+
 Setup function
 }

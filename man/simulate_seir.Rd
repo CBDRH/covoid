@@ -17,6 +17,8 @@ simulate_seir(t, state_t0, param)
 Object of class covoid and dcm (from the package EpiModels)
 }
 \description{
+\Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
+
 S = Susceptible
 E = Exposed (non-infectious)
 I = Infectious
