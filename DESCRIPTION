@@ -47,6 +47,7 @@ Imports:
     heatmaply,
     formattable,
     dplyr
+Remotes: nik01010/dashboardthemes
 Suggests: 
     testthat
 RoxygenNote: 7.1.0
