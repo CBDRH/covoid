@@ -12,7 +12,7 @@ withMathJax()
 # Define the dashboard header
 # title = "COVID-19 Open-source Infection Dynamics"
 header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.edu.au/postgraduate-coursework',
-                                    tags$img(src='unsw_logo.png',height=40)), "COVID-19 Open-source Infection Dynamics"),
+                                                  tags$img(src='unsw_logo_reverse.png',height=40)), "COVID-19 Open-source Infection Dynamics"),
                           titleWidth = 420,
                           tags$li(class="dropdown",
                                   tags$a(href='https://github.com/CBDRH/covoid', icon('github'), "Source Code", target="_blank")),
@@ -31,7 +31,7 @@ sidebar <- dashboardSidebar(
 
     div(style="text-align:center",
     br(),
-    img(src = 'unsw_logo_reverse.png', width="180px"),
+    img(src = 'covoid-hexsticker.png', width="120px"),
     hr(),
     h3("COVOID | SEIR Model"),
     hr(),
@@ -100,7 +100,7 @@ body <- dashboardBody(
                                         selectizeInput("countryChoice",
                                                        label = span(tagList(icon('globe-asia'), 'Location')),
                                                        choices = ctryList,
-                                                       selected = "Australia",
+                                                       selected = "Italy",
                                                        multiple = FALSE, options = NULL),
 
                                         numericInput("s_num",
@@ -119,7 +119,7 @@ body <- dashboardBody(
                                         hr(),
                                         dateRangeInput('dateRange',
                                                        label = span(tagList(icon('calendar-alt'), 'Date range for simulation')),
-                                                       start = '2020-02-01', end = '2020-12-31'
+                                                       start = '2020-01-01', end = '2020-12-31'
                                         )
                                     )
                                 ),
@@ -132,7 +132,7 @@ body <- dashboardBody(
                                           hr(),
                                           numericInput("e_num",
                                                        label = span(tagList(icon('user'), 'Initial number exposed')),
-                                                       min=0, value = 70),
+                                                       min=0, value = 1000),
                                           br(),
                                           radioButtons("e_num_dist",
                                                        label = span(tagList(icon('chart-bar'), "Age distribution of exposed cases")),
@@ -142,7 +142,7 @@ body <- dashboardBody(
 
                                           numericInput("i_num",
                                                        label = span(tagList(icon('user'), 'Initial number infectious')),
-                                                       min=0, value = 30),
+                                                       min=0, value = 200),
                                           br(),
                                           radioButtons("i_num_dist",
                                                        label = span(tagList(icon('chart-bar'), "Age distribution of infectious cases")),
@@ -170,8 +170,8 @@ body <- dashboardBody(
                                               fluidRow(
                                                   column(width=6,
                                                       sliderInput("r0",
-                                                                  label = HTML(paste(shiny::icon('sliders-h'), "The initial reproduction number (R0)")),
-                                                                  min=0, max=4, step = .1, value = 2.5),
+                                                                  label = HTML(paste(shiny::icon('sliders-h'), "The initial unmitigated reproduction number (R0)")),
+                                                                  min=0, max=4, step = .1, value = 3.0),
                                                       sliderInput("sigmainv",
                                                                   label = HTML(paste0(icon('sliders-h'), " Duration of the latent period in days (1/", "&sigma;", ")")),
                                                                   min=1, max=21, step=.5, value=10),
@@ -432,7 +432,7 @@ body <- dashboardBody(
                                             hr(),
                                             sliderInput("ndays",
                                                         "Number of days to plot:",
-                                                        min=0, step=1, max=365, value=100),
+                                                        min=0, step=1, max=365, value=365),
                                             selectizeInput("compCountries", "Compare to existing data:", choices = c("", ctryList), multiple = FALSE),
                                             selectizeInput("compProvince", "Specify province or state (where available):", choices = c("", unique(covid19_data$Province.State)), multiple = FALSE)
                                             )
@@ -445,7 +445,7 @@ body <- dashboardBody(
                                             ),
                                             hr(),
 
-                                            actionButton(inputId = "runMod", "Run Simulation",
+                                            actionButton(inputId = "runMod", "Click to run simulation",
                                                          icon = icon("paper-plane"),
                                                          width = '100%',
                                                          class = "btn-success"),
@@ -705,30 +705,61 @@ body <- dashboardBody(
                             ),
 
                             column(width = 5,
-                                   box(title = NULL, width = "100%", height = "600px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "630px", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('info'), 'About this app')))
                                        ),
                                        hr(),
 
-                                       HTML(paste0(
-                                           "The ", code("COVOID"), " R package"
-                                       ))
+                                       helpText(HTML(paste0(
+                                           "This Shiny app provides a dynamic user interface for the age-structured SEIR model from the ", code("COVOID"), " R package.
+                                           If you have download the ", code("covoid"), " package, you can launch the app by entering ", code("covid::covis('seir')"),
+                                           " at the console. Alternatively, you can access the package online at ",
+                                           tags$a(href=" https://cbdrh.shinyapps.io/covoidance/", target="_blank", "cbdrh.shinyapps.io/covoidance"), "."
+                                       ))),
+                                       hr(),
+
+                                    h4(HTML(paste(icon("tachometer"), "Parameterise model:"))),
+                                    tags$ul(
+                                        tags$li("Choose simulation setting and dates"),
+                                        tags$li(HTML(paste0("Specify model parameters (R", tags$sub("0"), ", ", "&sigma;", ", ", "&gamma;", ").")))
+                                    ),
+                                    h4(HTML(paste(icon("user-md"), "Define interventions"))),
+                                    tags$ul(
+                                        tags$li("Specify time-varying interventions on social contacts and transmission probability"),
+                                        tags$li("Optional target interventions to specific settings (School/Work/Home)")
+                                    ),
+                                    h4(HTML(paste(icon("paper-plane"), "Run simulation"))),
+                                    tags$ul(
+                                        tags$li("Simulate and visualise infection dynamics over time"),
+                                        tags$li("Optionally save results to the report canvas")
+                                    ),
+                                    h4(HTML(paste(icon("palette"), "Report canvas"))),
+                                    tags$ul(
+                                        tags$li("Review and comment on saved results"),
+                                        tags$li("Download a dynamic summary report of your simulations")
+                                    ),
+                                    h4(HTML(paste(icon("video"), "Animation"))),
+                                    tags$ul(
+                                        tags$li("Create and download a gif animation of your results")
+                                    ),
+                                    h4(HTML(paste(icon("file-excel"), "Data"))),
+                                    tags$ul(
+                                        tags$li("Download the raw simulation data")
+                                    )
+
                                    )
                             ),
 
                             column(width = 7,
-                                   box(title = NULL, width = "100%", height = "600px", solidHeader = FALSE,
-                                       div(style="text-align:center",
-                                           h4(HTML(paste(icon('play-circle'), 'Instructions')))
-                                       ),
+                                   box(title = "Select + to display the animated demonstration", width = "100%", height = "630px", solidHeader = FALSE, collapsible = TRUE, collapsed = TRUE,
                                        hr(),
-                                       img(src="test.gif", align = "centre", width='100%')
+                                       img(src="demo-cropped.gif", align = "left", width='100%')
                                    )
                             ),
 
                             column(width = 5,
-                                   box(title = NULL, width = "100%", height = "200px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "190px", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('envelope'), 'Contact us')))
                                        ),
@@ -741,7 +772,7 @@ body <- dashboardBody(
                                    )),
 
                             column(width = 7,
-                                   box(title = NULL, width = "100%", height = "200px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "190px", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('hands-helping'), 'Acknowledgements')))
                                        ),
@@ -769,7 +800,6 @@ body <- dashboardBody(
 dashboardPage(
     header,
     sidebar,
-    body,
-    skin="yellow"
+    body
 )
 

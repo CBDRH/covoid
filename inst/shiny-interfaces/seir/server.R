@@ -27,8 +27,8 @@ output$popcount = renderText({
 nsteps <- reactive({as.numeric( input$dateRange[2] - input$dateRange[1]) })
 
 # Update graph range sliders based on nsteps
-observe(updateSliderInput(session, "ndays", max = nsteps()))
-observe(updateSliderInput(session, "ndays_a", max = nsteps()))
+observe(updateSliderInput(session, "ndays", max = nsteps(), value = nsteps()))
+observe(updateSliderInput(session, "ndays_a", max = nsteps(), value = nsteps()))
 
 # Update choice of province, based on choice of country
 provinceChoice <- reactive({
@@ -866,7 +866,7 @@ output$downloadPlot <- downloadHandler(
 
 # Interactively update number of days in slider
 observe({
-    val = min(100, nsteps())
+    val = max(100, nsteps())
     updateSliderInput(session, "ndays", max=nsteps(), value=val)
     updateSliderInput(session, "ndays_a", max=nsteps(), value=val)
 })

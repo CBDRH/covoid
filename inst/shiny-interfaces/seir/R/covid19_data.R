@@ -1,6 +1,7 @@
 
 # devtools::install_github("RamiKrispin/coronavirus")
-# covid19_data <- coronavirus
+# library(coronavirus)
+# covid19_data <- coronavirus::coronavirus
 # save(covid19_data, file = "data/covid19_data.rda")
 
 # # Read United Nations population estimates from https://population.un.org/wpp/Download/Standard/Population/
