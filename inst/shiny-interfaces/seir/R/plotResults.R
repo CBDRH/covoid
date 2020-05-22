@@ -5,7 +5,7 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
         if (xtraC!="") {
                 x1 <- c('gray90')
                 names(x1) = xtraC
-                compcols <- c(c("S" = "lightblue", "E" = "orange", "I" = "red", "R" = "lightgreen"), x1)
+                compcols <- c(c("S" = "#2daae2", "E" = "#ff8200", "I" = "#ff635d", "R" = "#1ac987"), x1)
 
                 x2 <- if (xtraP=="") xtraC else xtraP
                 names(x2) = xtraC
@@ -14,7 +14,7 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                 compbreaks <- c(c("S", "E", "I", "R"), xtraC)
         }
         else {
-                compcols <- c("S" = "lightblue", "E" = "orange", "I" = "red", "R" = "lightgreen")
+                compcols <- c("S" = "#2daae2", "E" = "#ff8200", "I" = "#ff635d", "R" = "#1ac987")
                 complabels <- c("S" = "Susceptible", "E" = "Exposed", "I" = "Infectious", "R" = "Recovered")
                 compbreaks <- c("S", "E", "I", "R")
         }
