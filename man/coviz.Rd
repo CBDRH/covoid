@@ -14,6 +14,6 @@ Launch an interactive Shiny session
 }
 \examples{
 \dontrun{
-#coviz("dcm.models")
+#coviz("seir")
 }
 }

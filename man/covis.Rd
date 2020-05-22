@@ -15,6 +15,6 @@ Launch an interactive Shiny session
 \examples{
 \dontrun{
 # not run
-#covis("dcm.models")
+#covis("seir")
 }
 }

@@ -3,7 +3,7 @@
 #' @param example A Shiny app
 #' @examples
 #' \dontrun{
-#' #coviz("dcm.models")
+#' #coviz("seir")
 #' }
 #' @export
 coviz <- function(example) {

@@ -4,3 +4,6 @@
 ^data-raw$
 ^\.github$
 docs/*
+inst/shiny-interfaces/dcm.models/*
+inst/shiny-interfaces/doherty/*
+inst/shiny-interfaces/sir/*

@@ -4,7 +4,7 @@
 #' @examples
 #' \dontrun{
 #' # not run
-#' #covis("dcm.models")
+#' #covis("seir")
 #' }
 #' @export
 covis <- function(example) {

@@ -14,16 +14,41 @@ Imports:
     lifecycle,
     DiagrammeR,
     tidyr,
-    EpiModel,
     ggplot2,
     gridExtra,
     deSolve,
     shiny,
-    shinytest
-Suggests: 
-    testthat,
+    shinytest,
+    shinydashboard,
+    dashboardthemes,
+    shinyBS,
+    tippy,
+    shinyalert,
+    shinyWidgets,
+    shinycustomloader,
+    ggiraph,
+    patchwork,
+    markdown,
+    ggformula,
+    ggrepel,
+    scales,
+    magrittr,
+    DT,
+    imputeTS,
+    shinydashboardPlus,
+    sparkline,
+    visNetwork,
+    rmarkdown,
     knitr,
-    rmarkdown
+    kableExtra,
+    googleVis,
+    prettyunits,
+    gganimate,
+    heatmaply,
+    formattable,
+    dplyr
+Suggests: 
+    testthat
 RoxygenNote: 7.1.0
 VignetteBuilder: knitr
 RdMacros: 

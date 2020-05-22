@@ -175,7 +175,7 @@ $$
 \end{align}
 $$
 
-In COVOID these models are solved using the `deSolve::ode` function from the R package deSolve which uses numerical integration methods such as the [Runge-Kutta algorithms](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods) [soetaert2010solving].
+In COVOID these models are solved using the `deSolve::ode` function from the R package deSolve which uses numerical integration methods such as the [Runge-Kutta algorithms](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods) [@soetaert2010solving].
 
 ## An example: two age groups
 
