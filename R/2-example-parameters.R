@@ -2,7 +2,6 @@
 #'
 #' @param set the parameter set to use
 #'
-#' @export
 seihrq_param_set <- function(set) {
     stopifnot(set %in% c("A"))
     switch(set,

@@ -33,5 +33,10 @@ Object of class covoid
 Adapted version of the stochastic individual contact seir1 model outlined in Churches & Jorm (2020).
 }
 \examples{
+state0 <- seir1_state0(S = 1e5, E1 = 90, E2 = 40)
+param <- seir1_param(R0=2.5,sigma1=0.2,sigma2=0.2,gamma1=0.2,gamma2=0.2,gamma3=0.2,
+                     Qeff=0.5,Heff=0.9,rho=0.1,alpha=0.1,eta=0.02)
+res <- simulate_seir1(t = 250,state_t0 = state0,param = param)
+plot(res,y=c("S","E","I","Recov","Fatal"),main="Expanded SEIR model I")
 
 }
