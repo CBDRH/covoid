@@ -1,5 +1,11 @@
 .main-header .logo {
   font-weight: bold;
   font-size: 14px;
+  background:  #ffdc00;
+}
+
+.main-header .navbar .navbar-statis-top {
+  background:  #ffdc00;
   background-color:  #ffdc00;
 }
+
