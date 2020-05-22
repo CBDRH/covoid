@@ -15,8 +15,11 @@ header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.e
                                     tags$img(src='unsw_logo.png',height=40)), "COVID-19 Open-source Infection Dynamics"),
                           titleWidth = 420,
                           tags$li(class="dropdown",
-                                  tags$a(href='https://github.com/CBDRH/covoid',
-                                         icon('github'), "Source Code", target="_blank"))
+                                  tags$a(href='https://github.com/CBDRH/covoid', icon('github'), "Source Code", target="_blank")),
+                          tags$li(class="dropdown",
+                                  tags$a(href='https://twitter.com/cbdrh1',
+                                         icon('twitter'), "Twitter", target="_blank"))
+
 )
 
 #######################################################
@@ -25,19 +28,23 @@ header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.e
 
 # Sidebar (icons from https://fontawesome.com/icons)
 sidebar <- dashboardSidebar(
+
+    div(style="text-align:center",
+    br(),
+    img(src = 'unsw_logo_reverse.png', width="180px"),
+    hr(),
     h3("COVOID | SEIR Model"),
+    hr(),
+    ),
+
     sidebarMenu(
         menuItem("Introduction", tabName = "introduction", icon = shiny::icon("home")),
-        menuItem("Model Settings", icon = shiny::icon("tachometer"),
-            menuSubItem("Parameters", tabName = "model", icon = shiny::icon("project-diagram")),
-            menuSubItem("Interventions", tabName = "intervention", icon = shiny::icon("user-md"))
-        ),
-        menuItem("Results", icon = shiny::icon("poll"),
-            menuSubItem("Simulation", tabName = "results", icon = shiny::icon("chart-bar")),
-            menuSubItem("Report canvas", tabName = "canvas", icon = shiny::icon("palette")),
-            menuSubItem("Animation", tabName = "video", icon = shiny::icon("video")),
-            menuSubItem("Data", tabName = "data", icon = shiny::icon("file-excel"))
-        )
+        menuItem("Parameterise model", tabName = "model", icon = shiny::icon("tachometer")),
+        menuItem("Define interventions", tabName = "intervention", icon = shiny::icon("user-md")),
+        menuItem("Run simulation", tabName = "results", icon = shiny::icon("paper-plane")),
+        menuItem("Report canvas", tabName = "canvas", icon = shiny::icon("palette")),
+        menuItem("Animation", tabName = "video", icon = shiny::icon("video")),
+        menuItem("Data", tabName = "data", icon = shiny::icon("file-excel"))
 
     ) # Closes sidebarMenu
 
@@ -80,19 +87,15 @@ body <- dashboardBody(
                            fluidPage(
                                div(style="text-align:center",
                                    box(width = "100%", status = "primary", solidHeader = TRUE,
-                                       h4(HTML(paste(icon("project-diagram"), "Parameterise model"))))
+                                       h4(HTML(paste(icon("tachometer"), "Parameterise model"))))
                                ),
 
                                column(width = 3,
-                                    box(width="100%", height = "820px", solidHeader = FALSE,
+                                    box(width="100%", height = "850px", solidHeader = FALSE,
                                         div(style="text-align:center",
                                             h4(tagList(icon('tachometer'), 'Simulation settings'))
                                         ),
                                         hr(),
-                                        dateRangeInput('dateRange',
-                                                       label = span(tagList(icon('calendar-alt'), 'Date range for simulation')),
-                                                       start = '2020-02-01', end = '2020-12-31'
-                                        ),
 
                                         selectizeInput("countryChoice",
                                                        label = span(tagList(icon('globe-asia'), 'Location')),
@@ -105,17 +108,24 @@ body <- dashboardBody(
                                                      min=0, value = ""),
 
                                         span(tagList(icon('chart-bar'), 'Age distribution')),
-                                        ggiraphOutput("ageHist", width = "10%", height = "10%"),
+                                        div(style="text-align:center",
+                                            ggiraphOutput("ageHist")
+                                        ),
 
                                         span(tagList(icon('handshake'), 'Social contacts by age band')),
                                         div(style="text-align:center",
-                                        plotlyOutput("heatMap", width = "200px", height = "200px")
+                                            plotlyOutput("heatMap", width = "230px", height = "230px", inline = TRUE)
+                                        ),
+                                        hr(),
+                                        dateRangeInput('dateRange',
+                                                       label = span(tagList(icon('calendar-alt'), 'Date range for simulation')),
+                                                       start = '2020-02-01', end = '2020-12-31'
                                         )
                                     )
                                 ),
 
                                column(width = 3,
-                                      box(width="100%", height = "820px", solidHeader = FALSE,
+                                      box(width="100%", height = "850px", solidHeader = FALSE,
                                           div(style="text-align:center",
                                               h4(tagList(icon('user-friends'), 'Initial conditions'))
                                           ),
@@ -125,7 +135,7 @@ body <- dashboardBody(
                                                        min=0, value = 70),
                                           br(),
                                           radioButtons("e_num_dist",
-                                                       label = span(tagList(icon('chart-bar'), "Distribution of exposed cases by age")),
+                                                       label = span(tagList(icon('chart-bar'), "Age distribution of exposed cases")),
                                                        choices = c("Match national age distribution"="Uniform", "Custom"), selected = "Uniform", inline = FALSE),
                                           sparklineOutput("sparklineAge_e"),
                                           hr(),
@@ -135,7 +145,7 @@ body <- dashboardBody(
                                                        min=0, value = 30),
                                           br(),
                                           radioButtons("i_num_dist",
-                                                       label = span(tagList(icon('chart-bar'), "Distribution of infectious cases by age")),
+                                                       label = span(tagList(icon('chart-bar'), "Age distribution of infectious cases")),
                                                        choices = c("Match national age distribution"="Uniform", "Custom"), selected = "Uniform", inline = FALSE),
                                           sparklineOutput("sparklineAge_i"),
                                           hr(),
@@ -145,7 +155,7 @@ body <- dashboardBody(
                                                        min=0, value = 0),
                                           br(),
                                           radioButtons("r_num_dist",
-                                                       label = span(tagList(icon('chart-bar'), "Distribution of recovered cases by age")),
+                                                       label = span(tagList(icon('chart-bar'), "Age distribution of recovered cases")),
                                                        choices = c("Match national age distribution"="Uniform", "Custom"), selected = "Uniform", inline = FALSE),
                                           sparklineOutput("sparklineAge_r")
                                       )
@@ -180,9 +190,9 @@ body <- dashboardBody(
                                       ),
 
                                column(width = 6,
-                                      box(width="100%", height = "400px", solidHeader = FALSE,
+                                      box(width="100%", height = "430px", solidHeader = FALSE,
                                           div(style="text-align:center",
-                                              h4(tagList(icon('user-md'), 'Interventions')
+                                              h4(tagList(icon('user-md'), 'Interventions overview')
                                                  )
                                           ),
                                           hr(),
@@ -390,7 +400,7 @@ body <- dashboardBody(
                     tabItem(tabName = "results",
                             div(style="text-align:center",
                                 box(width = "100%", status = 'primary', solidHeader = TRUE,
-                                    h4(HTML(paste(icon("chart-bar"), "Run simulation"))))
+                                    h4(HTML(paste(icon("paper-plane"), "Run simulation"))))
                             ),
                              fluidRow(
                                  column(width=3,
@@ -435,7 +445,7 @@ body <- dashboardBody(
                                             ),
                                             hr(),
 
-                                            actionButton(inputId = "runMod", "Run Model",
+                                            actionButton(inputId = "runMod", "Run Simulation",
                                                          icon = icon("paper-plane"),
                                                          width = '100%',
                                                          class = "btn-success"),
@@ -470,8 +480,8 @@ body <- dashboardBody(
                     # Dynamic report
                     tabItem(tabName = "canvas",
                             div(style="text-align:center",
-                                box(width = "100%", solidHeader = TRUE,
-                                    h4(HTML(paste(icon("palette"), "Prepare report"))))
+                                box(width = "100%", status = 'primary', solidHeader = TRUE,
+                                    h4(HTML(paste(icon("palette"), "Report canvas"))))
                             ),
                                  fluidRow(
                                  box(width=NULL, solidHeader = FALSE,
@@ -693,7 +703,61 @@ body <- dashboardBody(
                                 box(width = "100%", status = "primary", solidHeader = TRUE,
                                     h4(HTML(paste(icon("home"), "Introduction"))))
                             ),
-                             h3("Welcome and instructions to be added here")
+
+                            column(width = 5,
+                                   box(title = NULL, width = "100%", height = "600px", solidHeader = FALSE,
+                                       div(style="text-align:center",
+                                           h4(HTML(paste(icon('info'), 'About this app')))
+                                       ),
+                                       hr(),
+
+                                       HTML(paste0(
+                                           "The ", code("COVOID"), " R package"
+                                       ))
+                                   )
+                            ),
+
+                            column(width = 7,
+                                   box(title = NULL, width = "100%", height = "600px", solidHeader = FALSE,
+                                       div(style="text-align:center",
+                                           h4(HTML(paste(icon('play-circle'), 'Instructions')))
+                                       ),
+                                       hr(),
+                                       img(src="test.gif", align = "centre", width='100%')
+                                   )
+                            ),
+
+                            column(width = 5,
+                                   box(title = NULL, width = "100%", height = "200px", solidHeader = FALSE,
+                                       div(style="text-align:center",
+                                           h4(HTML(paste(icon('envelope'), 'Contact us')))
+                                       ),
+                                       hr(),
+
+                                       p(tags$a(href="https://cbdrh.med.unsw.edu.au/", icon("chrome"), target="_blank", "Centre for Big Data Research in Health website")),
+                                       p(tags$a(href="https://github.com/CBDRH/", icon("github"), target="_blank", "Centre for Big Data Research in Health on GitHub")),
+                                       p(tags$a(href="https://twitter.com/cbdrh1", icon("twitter"), target="_blank", "Centre for Big Data Research in Health on Twitter")),
+
+                                   )),
+
+                            column(width = 7,
+                                   box(title = NULL, width = "100%", height = "200px", solidHeader = FALSE,
+                                       div(style="text-align:center",
+                                           h4(HTML(paste(icon('hands-helping'), 'Acknowledgements')))
+                                       ),
+                                       hr(),
+                                       p(HTML(paste0(
+                                           "Work on COVOID is facilitated by the generous assistance of ",
+                                           strong("Ian Sharp"), ", philanthropic supporter of UNSW research.",
+                                           " If you would like to support our work, please visit the ",
+                                           tags$a(href="https://www.alumni.giving.unsw.edu.au/", "UNSW Alumni & Giving web site"), ".", br(), br(),
+                                           "The Bedegal and Gadigal people of the Eora Nation are the traditional owners of the land on
+                                           which this work was undertaken. We acknowledge and pay our respects to their Elders, both past, present and emerging."
+                                       )))
+
+                                   )
+                            )
+
                     )
 
                 ) # Closes tabsetPanel
