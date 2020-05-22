@@ -883,7 +883,7 @@ updateNumericInput(session, "s_num", value = import_total_population(input$count
 # Preview
 output$animation_preview <- renderggiraph(plotResults(df=mod_df(), scale=input$scale_a, logScale=input$logScale_a,
                                                       plotvars=input$plotvars_a, ndays=input$ndays_a,
-                                                      xtraC = input$compCountries, xtraP = input$compProvince
+                                                      xtraC = "", xtraP = ""
                                                       )
                                           )
 
