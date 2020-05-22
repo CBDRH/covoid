@@ -18,7 +18,8 @@ Imports:
     ggplot2,
     gridExtra,
     deSolve,
-    shiny
+    shiny,
+    shinytest
 Suggests: 
     testthat,
     knitr,
