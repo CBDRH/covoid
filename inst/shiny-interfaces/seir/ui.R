@@ -27,7 +27,7 @@ header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.e
 sidebar <- dashboardSidebar(
     h3("COVOID | SEIR Model"),
     sidebarMenu(
-        menuItem("Welcome", tabName = "welcome", icon = shiny::icon("home")),
+        menuItem("Introduction", tabName = "introduction", icon = shiny::icon("home")),
         menuItem("Model Settings", icon = shiny::icon("tachometer"),
             menuSubItem("Parameters", tabName = "model", icon = shiny::icon("project-diagram")),
             menuSubItem("Interventions", tabName = "intervention", icon = shiny::icon("user-md"))
@@ -687,11 +687,11 @@ body <- dashboardBody(
                                 downloadLink("get_wide_data", label = HTML(paste("Download the data", icon("download"))))
                              )
                     ),
-                    # Welcome
-                    tabItem(tabName = "welcome",
+                    # Introduction
+                    tabItem(tabName = "introduction",
                             div(style="text-align:center",
                                 box(width = "100%", status = "primary", solidHeader = TRUE,
-                                    h4(HTML(paste(icon("home"), "Welcome"))))
+                                    h4(HTML(paste(icon("home"), "Introduction"))))
                             ),
                              h3("Welcome and instructions to be added here")
                     )
