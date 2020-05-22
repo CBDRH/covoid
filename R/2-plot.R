@@ -22,8 +22,8 @@ dcm2df <- function(mod) {
 #' @export
 plot.covoid <- function(x,y,popfrac=FALSE,cumulative=FALSE,main="",...) {
 #   yn = unique(c("N",y))
-    df = dcm2df(x)
-    df = df[df$compartment %in% y,]
+    df <- dcm2df(x)
+    df <- df[df$compartment %in% y,]
     if(cumulative){
      df$number <- cumsum(df$number)
     }
@@ -65,10 +65,10 @@ plot.contact_matrix <- function(x,...) {
     df$age_individual <- as.numeric(df$age_individual) - 2.5
     ggplot2::ggplot(df, ggplot2::aes(y=age_contact, x=age_individual, fill=contact_rate)) +
         ggplot2::geom_tile() +
-        scale_x_continuous(breaks = seq(0,80,5)) +
-        scale_y_continuous(breaks = seq(0,80,5)) +
-        coord_cartesian(expand = FALSE) +
-        scale_fill_continuous(type ="viridis")
+        ggplot2::scale_x_continuous(breaks = seq(0,80,5)) +
+        ggplot2::scale_y_continuous(breaks = seq(0,80,5)) +
+        ggplot2::coord_cartesian(expand = FALSE) +
+        ggplot2::scale_fill_continuous(type ="viridis")
 }
 
 #' Plot a contact matrix

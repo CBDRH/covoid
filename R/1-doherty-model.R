@@ -22,13 +22,11 @@
 #' @return Object of class covoid
 #'
 #' @section References
-#'
 #' Moss R., Wood J., Brown D., Shearer F., Black, A.J., Cheng A.C., McCaw J.M., McVernon J. (2020). Modelling the impact of COVID-19 in Australia to inform transmission reducing
 #' measures and health system preparedness. The Peter Doherty Institute for Infection and Immunity, VIC, Australia.
 #' https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf
 #'
 #' @examples
-#' # Non-Indigenous,  aged 50-59, no self-quarantine
 #' param <- seir2_param(R0=2.53,lambdaimp=0,sigma1=1/1.6,sigma2=1/1.6,gamma1=1/4.0,gamma2=1/5.68,gammaq1=1/4.0,gammaq2=1/5.68,Qeff=0.5,Meff=0,rho=0,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
 #' state0 <- seir2_state0(S=100,E1=1)
 #' res <- simulate_seir2(t = 100,state_t0 = state0,param = param)
