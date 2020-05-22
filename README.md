@@ -14,7 +14,7 @@ If you would like to support our work, please click on the **Sponsor** button at
 
 ## Modelling COVID-19
 
-For information on installing COVOID and a basic illustrating of the programming API keep reading, or visit the [COVOID website](https://cbdrh.github.io/covoidance/) for more information. Click [here](https://cbdrh.github.io/covoidance/app.html) to use the interactive Shiny platform.
+For information on installing COVOID and a basic illustrating of the programming API keep reading, or visit the [COVOID website](https://cbdrh.github.io/covoidance/) for more information. Click [here](https://cbdrh.shinyapps.io/covoidance/) to use the interactive Shiny platform.
 
 ## Installation
 
