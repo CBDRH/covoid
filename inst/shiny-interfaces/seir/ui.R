@@ -704,8 +704,9 @@ body <- dashboardBody(
                                     h4(HTML(paste(icon("home"), "Introduction"))))
                             ),
 
+                            fluidRow(
                             column(width = 5,
-                                   box(title = NULL, width = "100%", height = "630px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "60%", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('info'), 'About this app')))
                                        ),
@@ -752,14 +753,15 @@ body <- dashboardBody(
                             ),
 
                             column(width = 7,
-                                   box(title = "Select + to display the animated demonstration", width = "100%", height = "630px", solidHeader = FALSE, collapsible = TRUE, collapsed = TRUE,
+                                   box(title = "Select + to display the animated demonstration", width = "100%", height = "60%", solidHeader = FALSE, collapsible = TRUE, collapsed = TRUE,
                                        hr(),
                                        img(src="demo-cropped.gif", align = "left", width='100%')
                                    )
-                            ),
+                            )),
 
+                            fluidRow(
                             column(width = 5,
-                                   box(title = NULL, width = "100%", height = "190px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "40%", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('envelope'), 'Contact us')))
                                        ),
@@ -772,7 +774,7 @@ body <- dashboardBody(
                                    )),
 
                             column(width = 7,
-                                   box(title = NULL, width = "100%", height = "190px", solidHeader = FALSE,
+                                   box(title = NULL, width = "100%", height = "40%", solidHeader = FALSE,
                                        div(style="text-align:center",
                                            h4(HTML(paste(icon('hands-helping'), 'Acknowledgements')))
                                        ),
@@ -787,7 +789,7 @@ body <- dashboardBody(
                                        )))
 
                                    )
-                            )
+                            ))
 
                     )
 
