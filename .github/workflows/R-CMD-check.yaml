@@ -19,7 +19,7 @@ jobs:
         run: |
           install.packages(c("remotes", "rcmdcheck","shinytest"))
           remotes::install_deps(dependencies = TRUE)
-          shinytest::::installDependencies()
+          shinytest::installDependencies()
         shell: Rscript {0}
       - name: Check
         run: rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
