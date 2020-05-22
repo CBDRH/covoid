@@ -95,9 +95,15 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                     filter(compartment %in% 'incidence') %>%
                     filter(t <= ndays)
 
-                max_y <- i_df %>%
+                max_y_model <- i_df %>%
                                 summarise(max_y = max(!!as.name(yvar), na.rm = TRUE)) %>%
                                 pull(max_y)
+
+                max_y_observed <- dx %>%
+                                summarise(max_y = max(cases, na.rm = TRUE)) %>%
+                                pull(max_y)
+
+                max_y <- max(max_y_model, max_y_observed)
 
                 i <- i_df %>%
                     ggplot(aes(x=date, y=!!as.name(yvar), colour=compartment)) +
