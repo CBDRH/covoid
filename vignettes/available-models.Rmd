@@ -7,6 +7,7 @@ vignette: >
   %\VignetteIndexEntry{Models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+bibliography: bibliography.bib
 ---
 
 <style>
@@ -150,7 +151,7 @@ plot(res,y=c("S","E","I","R"),main="SEIR model")
 
 ### Expanded SEIR model I
 
-This model is recommended for modelling COVID-19, it is based on Churches and Jorm (2020) and Moss et al (2020).
+This model is recommended for modelling COVID-19, it is based on @churches2020covoid and @moss2020modelling.
 
 The key functions for this model are `seir1_state0` `seir1_param` and `simulate_seir1`.
 
@@ -251,7 +252,7 @@ plot(res,y=c("S","E","I","Recov","Fatal"),main="Expanded SEIR model I")
 
 ### Expanded SEIR model II
 
-This model is recommended for modelling COVID-19, it is a (partial) reproduction Moss et al (2020).
+This model is recommended for modelling COVID-19, it is a (partial) reproduction of @moss2020modelling.
 
 The key functions for this model are `seir2_state0` `seir2_param` and `simulate_seir2`.
 
@@ -527,7 +528,4 @@ plot(res1,y=c("S","E","I","R"),main="Age structured SEIR model")
 
 All graphs created using [**DiagrammR**](https://rich-iannone.github.io/DiagrammeR/)
 
-Churches, T. & Jorm, L. (2020). COVOID: A flexible, freely available stochastic individual contact model for exploring COVID-19 intervention and control strategies (Preprint). 10.2196/preprints.18965.
-
-Moss R., Wood J., Brown D., Shearer F., Black, A.J., Cheng A.C., McCaw J.M., McVernon J. (2020). Modelling the impact of COVID-19 in Australia to inform transmission reducing measures and health system preparedness. The Peter Doherty Institute for Infection and Immunity, VIC, Australia. https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf
 
