@@ -46,7 +46,6 @@ ageMat <- reactive({
   import_contact_matrix(input$countryChoice, setting="general")
   })
 
-
 output$heatMap <- renderPlotly({
   heatmaply(round(ageMat(), digits=1), dendrogram = FALSE, hide_colorbar = TRUE, margins = c(2,2,2,2), fontsize_row=6, fontsize_col=6,
             titleX = FALSE, titleY = FALSE, label_names = c('Age group Y', 'Age group X', 'Value'))
@@ -97,11 +96,11 @@ output$ageHist <- renderggiraph({
 p1 <- ggplot(dfAgeDist(), aes(x,y, fill=y)) +
   geom_col_interactive(aes(tooltip = tt)) +
   scale_y_continuous(labels = scales::percent) +
-  labs(x="Age group", y = "Percentage") +
+  labs(x="Age group", y = NULL) +
   scale_fill_viridis() +
   theme(legend.position = "none")
 
-z <- girafe(code = print(p1))
+z <- girafe(code = print(p1), width_svg=3.6, height_svg = 3.3)
 girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
 
 
@@ -155,8 +154,8 @@ output$network_d <- renderVisNetwork({
         # Label text
         label = c(
             round(param()$pt, digits=3),
-            round(default$sigma(), digits=3),
-            round(default$gamma(), digits=3)
+            round(1/input$sigmainv, digits=3),
+            round(1/input$gammainv, digits=3)
             ),
 
         # Label colour
@@ -192,8 +191,12 @@ output$network_d <- renderVisNetwork({
 # Exposed
 observe({
   if(input$e_num_dist == "Custom") {isolate(
-  showModal(modalDialog(easyClose = TRUE,
-    title = "Age distribution of exposed individuals",
+  showModal(modalDialog(size = "l", easyClose = TRUE,
+                        title = NULL,
+                        div(style="text-align:center",
+                            h4(HTML(paste(icon('chart-bar'), "Custom age distribution of exposed cases")))
+                        ),
+                        hr(),
     fluidRow(
       column(width=5,
              renderggiraph({
@@ -234,8 +237,12 @@ observe({
 # Infectious
 observe({
   if(input$i_num_dist == "Custom") {isolate(
-    showModal(modalDialog(easyClose = TRUE,
-      title = "Age distribution of infectious individuals",
+    showModal(modalDialog(size = "l", easyClose = TRUE,
+                          title = NULL,
+                          div(style="text-align:center",
+                              h4(HTML(paste(icon('chart-bar'), "Custom age distribution of infectious cases")))
+                          ),
+                          hr(),
       fluidRow(
         column(width=5,
                renderggiraph({
@@ -276,8 +283,12 @@ observe({
 # Recovered
 observe({
   if(input$r_num_dist == "Custom") {isolate(
-    showModal(modalDialog(easyClose = TRUE,
-      title = "Age distribution of exposed individuals",
+    showModal(modalDialog(size = "l", easyClose = TRUE,
+                          title = NULL,
+                          div(style="text-align:center",
+                              h4(HTML(paste(icon('chart-bar'), "Custom age distribution of recovered cases")))
+                          ),
+                          hr(),
       fluidRow(
         column(width=5,
                renderggiraph({
@@ -343,32 +354,6 @@ output$sparklineAge_r <- sparkline::renderSparkline({
 ############################################################################
 
 default <- reactiveValues()
-
-# Initial conditions
-default$s_num <- reactive(ifelse(is.null(input$s_num), import_total_population(input$countryChoice) - default$e_num() - default$i_num() - default$r_num(), input$s_num))
-default$e_num <- reactive(ifelse(is.null(input$e_num), 70, input$e_num))
-default$i_num <- reactive(ifelse(is.null(input$i_num), 30, input$i_num))
-default$r_num <- reactive(ifelse(is.null(input$r_num), 0, input$r_num))
-
-default$i_num_dist <- reactive(ifelse(is.null(input$i_num_dist), "Uniform", input$i_num_dist))
-default$e_num_dist <- reactive(ifelse(is.null(input$e_num_dist), "Uniform", input$e_num_dist))
-default$r_num_dist <- reactive(ifelse(is.null(input$r_num_dist), "Uniform", input$r_num_dist))
-
-# Model parameters
-default$r0 <- reactive(ifelse(is.null(input$r0), 2.5, input$r0))
-default$sigma <- reactive(ifelse(is.null(input$sigmainv), 1/10, 1/input$sigmainv))
-default$gamma <- reactive(ifelse(is.null(input$gammainv), 1/10, 1/input$gammainv))
-
-# Country choices
-default$countryAgeMat <- reactive(ifelse(is.null(input$countryAgeMat), "Australia", input$countryAgeMat))
-default$settingAgeMat <- reactive(ifelse(is.null(input$settingAgeMat), "general", input$settingAgeMat))
-default$countryAgeDist <- reactive(ifelse(is.null(input$countryAgeDist), "Australia", input$countryAgeDist))
-
-
-# Calculated parameters (Defaults to older adults)
-default$opts_exp <- reactive(ifelse(is.null(input$opts_exp), 3, input$opts_exp))
-default$opts_inf <- reactive(ifelse(is.null(input$opts_inf), 3, input$opts_inf))
-default$opts_rec <- reactive(ifelse(is.null(input$opts_rec), 3, input$opts_rec))
 
 # Shape of custom age distribution when distributing E, I and R numbers across age groups
 default$shape_exp <- reactive(ifelse(is.null(input$shape_exp), 1, input$shape_exp))
@@ -455,7 +440,7 @@ output$intSummary <- renderggiraph({
       ),
 
       target = c(
-        rep("Transmission probability (General)", ln),
+        rep("Transmission probability", ln),
         rep("Social contacts (General)", ln),
         rep("Social contacts (School)", ln),
         rep("Social contacts (Work)", ln),
@@ -479,16 +464,17 @@ output$intSummary <- renderggiraph({
       )
 
     ) %>%
-    mutate(tt = sprintf("%s<br/><strong>%s</strong>", date, int) %>% lapply(htmltools::HTML)) %>%
+    mutate(tt = sprintf("<strong>%s</strong>%s<br/><strong>%s</strong>%s%s<br/><em>%s</em>", "Date ", format(date, "%a %d %b %y"), "Intervention level ", int*100, "%", target) %>%
+             lapply(htmltools::HTML)) %>%
     filter(include)
 
-intCols <- c("Transmission probability (General)" = "#3f61c4",
+intCols <- c("Transmission probability" = "#3f61c4",
              "Social contacts (General)" = "#ff635d",
              "Social contacts (School)" = "#2daae2",
              "Social contacts (Work)" = "#fa91b6",
              "Social contacts (Home)" = "#1ac987")
 
-intBreaks <- c("Transmission probability (General)",
+intBreaks <- c("Transmission probability",
              "Social contacts (General)",
              "Social contacts (School)",
              "Social contacts (Work)",
@@ -670,36 +656,36 @@ output$tooltipGeneral_t <- renderText(paste(int$hvGeneral_t$fulllab))
 ### Store contact matrices
 
 cmSchool <- reactive({
-  req(default$countryAgeMat())
+  req(input$countryChoice)
 
   if("school" %in% input$intSetting_c){
-  import_contact_matrix(default$countryAgeMat(), setting="school")
+  import_contact_matrix(input$countryChoice, setting="school")
   }
   else NULL
 })
 
 cmWork <- reactive({
-  req(default$countryAgeMat())
+  req(input$countryChoice)
 
   if("work" %in% input$intSetting_c){
-  import_contact_matrix(default$countryAgeMat(), setting="work")
+  import_contact_matrix(input$countryChoice, setting="work")
   }
   else NULL
 })
 
 cmHome <- reactive({
-  req(default$countryAgeMat())
+  req(input$countryChoice)
 
   if("home" %in% input$intSetting_c){
-  import_contact_matrix(default$countryAgeMat(), setting="home")
+  import_contact_matrix(input$countryChoice, setting="home")
   }
   else NULL
 })
 
 cmGeneral <- reactive({
-  req(default$countryAgeMat())
+  req(input$countryChoice)
 
-  import_contact_matrix(default$countryAgeMat(), setting="general")
+  import_contact_matrix(input$countryChoice, setting="general")
 
 })
 
@@ -798,9 +784,9 @@ state0 <- reactive({
 
 ### Model parameters
 param <- reactive({
-   seir_c_param(R0 = default$r0(),
-                 sigma = default$sigma(),
-                 gamma = default$gamma(),
+   seir_c_param(R0 = input$r0,
+                 sigma = 1/input$sigmainv,
+                 gamma = 1/input$gammainv,
                  cm = cmList(),
                  dist = ageDist(),
                  contact_intervention = intList_c(),
@@ -889,7 +875,7 @@ observe({
 # Interactively update number susceptibles based on choice of country
 observe({
 req(input$countryChoice)
-updateNumericInput(session, "s_num", value = import_total_population(input$countryChoice))
+updateNumericInput(session, "s_num", value = import_total_population(input$countryChoice) - input$e_num - input$i_num - input$r_num)
 })
 
 ## Prepare animation
