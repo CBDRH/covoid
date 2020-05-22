@@ -73,8 +73,8 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
             geom_line(size=2, alpha=0.7) +
             scale_x_date(date_labels="%d%b") +
             theme_dark() +
-            theme(legend.position = "bottom", legend.title = element_blank()) +
-            guides(col = guide_legend(nrow = 1)) +
+            theme(legend.position = "right", legend.title = element_blank()) +
+            guides(col = guide_legend(ncol = 1)) +
             labs(x="Date", y=ytitle) +
             scale_colour_manual(values = compcols, labels = complabels, breaks = compbreaks) +
             scale_y_continuous(labels = scales::comma) +
@@ -104,11 +104,11 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                     geom_line(size=2, alpha=0.7) +
                     scale_x_date(date_labels="%d%b") +
                     theme_dark() +
-                    theme(legend.position = "bottom", legend.title = element_blank()) +
-                    guides(col = guide_legend(nrow = 1)) +
+                    theme(legend.position = "right", legend.title = element_blank()) +
+                    guides(col = guide_legend(ncol = 1)) +
                     labs(x="Date", y=yititle) +
-                    scale_colour_manual(values = compcols, labels = complabels, breaks = compbreaks) +
-                    scale_y_continuous(labels = scales::comma) # +
+                    scale_colour_manual(values = compcols, labels = complabels, breaks = compbreaks) # +
+                    # scale_y_continuous(labels = scales::comma) # +
                     # geom_point_interactive(aes_string(tooltip = tt))
 
                 i <- i + geom_line(data=dx,
@@ -119,13 +119,13 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                         geom_point_interactive(data=dx,
                                                  aes(x=date, y=cases,
                                                      colour = Country.Region,
-                                                     tooltip = paste("Cases =", formatC(cases, format="d", big.mark=',')))
+                                                     tooltip = paste(date, ", Cases = ", formatC(cases, format="d", big.mark=',')))
                                                  ) +
                             ylim(NA, max_y)
 
-                ggiraph::girafe(code = print(p/i))
+                ggiraph::girafe(code = print(p/i), width_svg=8, height_svg = 7)
 
         } else {
-                ggiraph::girafe(code = print(p))
+                ggiraph::girafe(code = print(p), width_svg=8, height_svg = 7)
         }
 }
