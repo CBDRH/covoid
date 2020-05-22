@@ -1,4 +1,4 @@
-#' Simulate a deterministic SEIMR-QC ("Doherty" or "Moss") model
+#' Simulate a deterministic SEIR model with quarantine and hospitalisation ("Doherty" or "Moss") model
 #'
 #' \itemize{
 #' \item S = Susceptible
@@ -10,13 +10,13 @@
 #' \item R/Rq/Rm/Rqm = Recovered
 #' }
 #'
-#' (In progress) Implementation of the model outlined in Moss et al (2020).
+#' Partial implementation of the model outlined in Moss et al (2020).
 #'
 #' @param t Number of time steps over which to sample from the model
-#' @param state_t0 Initial state of the model (see seimrqc_state0)
-#' @param param Model parameters (see seimrqc_param)
+#' @param state_t0 Initial state of the model (see seir2_state0)
+#' @param param Model parameters (see seir2_param)
 #'
-#' @return Object of class covoid and dcm (from the package EpiModels)
+#' @return Object of class covoid
 #'
 #' @section References
 #'
@@ -25,79 +25,56 @@
 #' https://www.doherty.edu.au/uploads/content_doc/McVernon_Modelling_COVID-19_07Apr1_with_appendix.pdf
 #'
 #' @examples
-#' # (In progress)
 #' # Non-Indigenous,  aged 50-59, no self-quarantine
-#' param <- seimrqc_param(R0=2.53,lambdaimp=0,sigma1=1/1.6,sigma2=1/1.6,gamma1=1/4.0,gamma2=1/5.68,gammaq1=1/4.0,gammaq2=1/5.68,Qeff=0.5,Meff=0,rho=0,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
-#' state0 <- seimrqc_state0(S0=100,E10=1)
-#' res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
+#' param <- seir2_param(R0=2.53,lambdaimp=0,sigma1=1/1.6,sigma2=1/1.6,gamma1=1/4.0,gamma2=1/5.68,gammaq1=1/4.0,gammaq2=1/5.68,Qeff=0.5,Meff=0,rho=0,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
+#' state0 <- seir2_state0(S=100,E1=1)
+#' res <- simulate_seir2(t = 100,state_t0 = state0,param = param)
 #'
 #' # with self-quarantine
-#' param <- seimrqc_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,gammaq1=0.3,gammaq2=0.3,Qeff=0.5,Meff=0.99,rho=0.8,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
-#' state0 <- seimrqc_state0(S0=100,E10=1)
-#' res <- simulate_seimrqc(t = 100,state_t0 = state0,param = param)
+#' param <- seir2_param(R0=2.5,lambdaimp=0,sigma1=0.3,sigma2=0.3,gamma1=0.3,gamma2=0.3,gammaq1=0.3,gammaq2=0.3,Qeff=0.5,Meff=0.99,rho=0.8,eta=1/sqrt(2),alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
+#' state0 <- seir2_state0(S=100,E1=1)
+#' res <- simulate_seir2(t = 100,state_t0 = state0,param = param)
 #'
 #' @export
-simulate_seimrqc <- function(t,state_t0,param) {
+simulate_seir2 <- function(t,state_t0,param) {
     # assertions
-    stopifnot(class(state_t0) == "seimrqc_state0")
-    stopifnot(class(param) == "seimrqc_param")
+    stopifnot(class(state_t0) == "seir2_state0")
+    stopifnot(class(param) == "seir2_param")
 
     # simulation
-    alphas <- param$alphas
-    param = EpiModel::param.dcm(R0=param$R0,
-                                lambdaimp=param$lambdaimp,
-                                sigma1=param$sigma1,
-                                sigma2=param$sigma2,
-                                gamma1=param$gamma1,
-                                gamma2=param$gamma2,
-                                gammaq2=param$gammaq2,
-                                gammaq1=param$gammaq1,
-                                Qeff=param$Qeff,
-                                Meff=param$Meff,
-                                rho=param$rho,
-                                eta=param$eta,
-                                alpha=param$alpha,
-                                delta=param$delta,
-                                kappa=param$kappa,
-                                pm=param$pm)
-    param$alphas <- alphas
-    init = EpiModel::init.dcm(S=state_t0$S,
-                              E1=state_t0$E1,
-                              E2=state_t0$E2,
-                              I1=state_t0$I1,
-                              I2=state_t0$I2,
-                              R=state_t0$R,
-                              M=state_t0$M,
-                              Rm=state_t0$Rm,
-                              Eq1=state_t0$Eq1,
-                              Eq2=state_t0$Eq2,
-                              Iq1=state_t0$Iq1,
-                              Iq2=state_t0$Iq2,
-                              Rq=state_t0$Rq,
-                              Mq=state_t0$Mq,
-                              Rqm=state_t0$Rqm,
-                              CTm=state_t0$CTm,
-                              CTnm=state_t0$CTnm)
-    control = EpiModel::control.dcm(nsteps=t,
-                                    dt=0.1,
-                                    new.mod=seimrqc_model)
-    mod = EpiModel::dcm(param,init,control)
+    mod <- deSolve::ode(y=state_t0,
+                        times=1:t,
+                        func=seir2_model,
+                        parms=list(R0=param$R0,
+                                   lambdaimp=param$lambdaimp,
+                                   sigma1=param$sigma1,
+                                   sigma2=param$sigma2,
+                                   gamma1=param$gamma1,
+                                   gamma2=param$gamma2,
+                                   gammaq2=param$gammaq2,
+                                   gammaq1=param$gammaq1,
+                                   Qeff=param$Qeff,
+                                   Meff=param$Meff,
+                                   rho=param$rho,
+                                   eta=param$eta,
+                                   alpha=param$alpha,
+                                   alphas=param$alphas,
+                                   delta=param$delta,
+                                   kappa=param$kappa,
+                                   pm=param$pm))
 
     # make the output a dataframe
-    epi_tmp = lapply(mod$epi, function(x) x$run1)
-    mod$epi = data.frame(epi_tmp)
-    mod$epi$t = mod$control$timesteps
-    # keep the integer time steps
-    mod$epi = mod$epi[mod$epi$t == round(mod$epi$t),]
-    rownames(mod$epi) <- NULL
+    out <- list(param = param,
+                epi = data.frame(mod))
+    names(out$epi)[1] <- "t"
 
     # return
-    class(mod) = c("covoid",class(mod))
-    mod
+    class(out) <- c("covoid",class(out))
+    out
 }
 
 
-#' SEIMR-QC model parameters
+#' Doherty model parameters
 #'
 #' Setup function
 #'
@@ -114,79 +91,78 @@ simulate_seimrqc <- function(t,state_t0,param) {
 #' @param rho the proportion of contacts (of ascertained cases) that will self-quarantine (0,1)
 #' @param eta Scaling factor for hospitalization ("severe").
 #' @param alphamBeta Scaling factor for proportion of non-severe requesting medical assistance.
-#' It should be in (0,1) and in Beta draw in McVernon et al 2020).
+#' It should be in (0,1) and in Beta draw in Moss et al 2020).
 #' @param probHospGivenInf Probability of hospitalization given infection (typically from Table 3 in McVernon et al 2020)
 #' @param delta Inverse of the duration of quarantine for contacts of ascertained cases (14 days)
 #' @param kappa The per-person contact rate (20 people per day)
 #' @param pm The probability of presenting cases being effectively managed
 #'
-#' @return List of seimrqc model parameters
+#' @return List of seir2 model parameters
 #'
 #' @export
-seimrqc_param <- function(R0,lambdaimp,sigma1,sigma2,gamma1,gamma2,gammaq1,gammaq2,Qeff,Meff,rho,eta,alphamBeta,probHospGivenInf,delta,kappa,pm) {
+seir2_param <- function(R0,lambdaimp,sigma1,sigma2,gamma1,gamma2,gammaq1,gammaq2,Qeff,Meff,rho,eta,alphamBeta,probHospGivenInf,delta,kappa,pm) {
 
     min_alpham <- 0.05+0.2*(eta-0.01)/0.99
     max_alpham <- 0.15+0.6*(eta-0.01)/0.99
     alpham <- min_alpham+(max_alpham-min_alpham)*alphamBeta
     alphas <- eta * probHospGivenInf
     alpha = alphas + alpham*(1 - alphas)
-    # output with class seimrqc_param
+    # output with class seir2_param
     param = list(R0=R0,lambdaimp=lambdaimp,sigma1=sigma1,sigma2=sigma2,gamma1=gamma1,
                  gamma2=gamma2,gammaq1=gammaq1,gammaq2=gammaq2,Qeff=Qeff,Meff=Meff,rho=rho,eta=eta,alpha=alpha,
                  alphas=alphas,delta=delta,kappa=kappa,pm=pm)
-    class(param) = "seimrqc_param"
+    class(param) = "seir2_param"
 
     # return
     param
 }
 
-#' SEIMR-QC model initial state
+#' Doherty model initial state
 #'
 #' Setup function
 #'
-#' @param S0 Initial number of susceptibles
-#' @param E10 Initial number of exposed (latent period 1)
-#' @param E20 Initial number of exposed (latent period 2)
-#' @param I10 Initial number of infected (period 1)
-#' @param I20 Initial number of infected (period 2)
-#' @param R0 Initial number of removed
-#' @param M0 Initial number of under medical management
-#' @param Rm0 Initial number of recovered who sought medical treatment
-#' @param Eq10 Initial number of exposed (latent period 1) who self quarantined after contact
-#' @param Eq20 Initial number of exposed (latent period 2) who self quarantined after contact
-#' @param Iq10 Initial number of infected (period 1) who self quarantined after contact
-#' @param Iq20 Initial number of infected (period 2) who self quarantined after contact
-#' @param Rq0 Initial number of removed who self quarantined after contact
-#' @param Mq0 Initial number of under medical management who self quarantined after contact
-#' @param Rqm0 Initial number of recovered who sought medical treatment and self quarantined after contact
+#' @param S Initial number of susceptibles
+#' @param E1 Initial number of exposed (latent period 1)
+#' @param E2 Initial number of exposed (latent period 2)
+#' @param I1 Initial number of infected (period 1)
+#' @param I2 Initial number of infected (period 2)
+#' @param R Initial number of removed
+#' @param M Initial number of under medical management
+#' @param Rm Initial number of recovered who sought medical treatment
+#' @param Eq1 Initial number of exposed (latent period 1) who self quarantined after contact
+#' @param Eq2 Initial number of exposed (latent period 2) who self quarantined after contact
+#' @param Iq1 Initial number of infected (period 1) who self quarantined after contact
+#' @param Iq2 Initial number of infected (period 2) who self quarantined after contact
+#' @param Rq Initial number of removed who self quarantined after contact
+#' @param Mq Initial number of under medical management who self quarantined after contact
+#' @param Rqm Initial number of recovered who sought medical treatment and self quarantined after contact
 #'
-#' @return List of seimrqc model initial states
+#' @return List of seir2 model initial states
 #'
 #' @export
-seimrqc_state0 <- function(S0,E10,E20=0,I10=0,I20=0,R0=0,M0=0,Rm0=0,Eq10=0,Eq20=0,Iq10=0,Iq20=0,Rq0=0,Mq0=0,Rqm0=0,
-                           CTm0=2,CTnm0=20){
+seir2_state0 <- function(S,E1,E2=0,I1=0,I2=0,R=0,M=0,Rm=0,Eq1=0,Eq2=0,Iq1=0,Iq2=0,Rq=0,Mq=0,Rqm=0,
+                           CTm=2,CTnm=20){
     # assertions
-    stopifnot(E10 >= 1)
+    stopifnot(any(c(E1 >= 1,E2 >= 1,I1 >= 1,I2 >= 1,Eq1 >= 1,Eq2 >= 1,Iq1 >= 1,Iq2 >= 1)))
 
-    # output with class seimrqc_state0
-    state0 = list(S=S0,E1=E10,E2=E20,I1=I10,I2=I20,R=R0,M=M0,Rm=Rm0,Eq1=Eq10,Eq2=Eq20,Iq1=Iq10,Iq2=Iq20,Rq=Rq0,Mq=Mq0,Rqm=Rqm0,
-                  CTm=CTm0,CTnm=CTnm0,
-                  N=S0 + E10 + E20 + I10 + I20 + R0 + M0 + Rm0 + Eq10 + Eq20 + Iq10 + Iq20 + Rq0 + Mq0 + Rqm0)
-    class(state0) = "seimrqc_state0"
+    # output with class seir2_state0
+    state0 = c(S=S,E1=E1,E2=E2,I1=I1,I2=I2,R=R,M=M,Rm=Rm,Eq1=Eq1,Eq2=Eq2,Iq1=Iq1,Iq2=Iq2,Rq=Rq,Mq=Mq,Rqm=Rqm,
+                  CTm=CTm,CTnm=CTnm)
+    class(state0) = "seir2_state0"
 
     # return
     state0
 }
 
-#' SEIMR-QC differential equations
+#' Doherty differential equations
 #'
 #' @param t Number of time steps over which to sample from the model
 #' @param state_t0 Initial state (S,E1,E2,I1,I2,R,M,Rm,Eq1,Eq2,Iq1,Iq2,Rq,Mq,Rqm)
 #' @param param The model parameters (R0,sigma1,sigma2,gamma1,gamma2,gammaq1,gammaq2,Qeff,Heff,rho,alpha)
 #'
-#' @return derivatives of SEIMR-QC model states with respect to time
+#' @return derivatives of Doherty model states with respect to time
 #'
-seimrqc_model <- function(t,state_t0,param) {
+seir2_model <- function(t,state_t0,param) {
     with(as.list(c(state_t0, param)), {
 
         # Population size
@@ -227,13 +203,12 @@ seimrqc_model <- function(t,state_t0,param) {
 
         # return
         list(c(dS,dE1,dE2,dI1,dI2,dR,dM,dRm,dEq1,dEq2,dIq1,dIq2,dRq,dMq,dRqm,dCTm,dCTnm),
-             Itotal=E1+Eq1+E2+Eq2+I1+Iq1+I2+Iq2,
-             I=E1+E2+I1+I2,
-             Ictotal=E1+E2+I1+I2,
+             E=E1+Eq1+E2+Eq2,
+             I=I1+I2+Iq1+Iq2,
              Mtotal=M+Mq,
-             Rtotal=R+Rm+Rq+Rqm,
+             Recov=R+Rm+Rq+Rqm,
              H=alphas*(E1+E2)+Eq1+Eq2,
-             D=(alphas*(E1+E2)+Eq1+Eq2)*0.29335*0.5, # hospitalized that require ICU and 50% die in ICU
+             Fatal=(alphas*(E1+E2)+Eq1+Eq2)*0.29335*0.5, # hospitalized that require ICU and 50% die in ICU
              Q=Eq1+Eq2+Iq1+Iq2+Mq, # Number in quanteen
              N=S + E1 + E2 + I1 + I2 + R + M + Rm + Eq1 + Eq2 + Iq1 + Iq2 + Rq + Mq + Rqm)
     })

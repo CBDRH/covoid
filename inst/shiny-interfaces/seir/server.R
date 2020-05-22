@@ -13,7 +13,7 @@ shinyServer(function(session, input, output) {
 
 # Add up the different populations and display the population count
 popcounter <- reactive({
-    sum(default$s_num(), default$e_num(), default$i_num(), default$r_num())
+    sum(input$s_num, input$e_num, input$i_num, input$r_num)
 })
 
 
@@ -36,25 +36,26 @@ provinceChoice <- reactive({
 })
 observe(updateSelectizeInput(session, "compProvince", choices = provinceChoice()))
 
+# Update comparison country based on initial country choice. (Uncomment to apply)
+# observe(updateSelectizeInput(session, "compCountries", selected = input$countryChoice))
+
+
 # Visualise the contact matrix as a heatmap
 ageMat <- reactive({
-  req(default$countryAgeMat())
-  import_contact_matrix(default$countryAgeMat(), setting=default$settingAgeMat())
+  req(input$countryChoice)
+  import_contact_matrix(input$countryChoice, setting="general")
   })
 
 
 output$heatMap <- renderPlotly({
-  heatmaply(ageMat(), dendrogram = FALSE, hide_colorbar = TRUE, margins = c(2,2,2,2), fontsize_row=6, fontsize_col=6,
+  heatmaply(round(ageMat(), digits=1), dendrogram = FALSE, hide_colorbar = TRUE, margins = c(2,2,2,2), fontsize_row=6, fontsize_col=6,
             titleX = FALSE, titleY = FALSE, label_names = c('Age group Y', 'Age group X', 'Value'))
 })
 
 # Age distribution based on selected country
 ageDist <- reactive({
-  req(default$countryAgeDist())
-  if(default$countryAgeDist() == "Not found, please choose manually")
-    return("Not found, please choose manually")
-
-  import_age_distribution(default$countryAgeDist())
+  req(input$countryChoice)
+  import_age_distribution(input$countryChoice)
 
 })
 
@@ -62,28 +63,24 @@ ageDist <- reactive({
 
 # E
 expDist <- reactive({
+  req(input$scale_exp, input$shape_exp)
   dgamma(seq(1:16), shape = input$shape_exp, scale = input$scale_exp)/sum(dgamma(seq(1:16), shape = input$shape_exp, scale = input$scale_exp))
 })
 
 # I
 infDist <- reactive({
+  req(input$scale_inf, input$shape_inf)
   dgamma(seq(1:16), shape = input$shape_inf, scale = input$scale_inf)/sum(dgamma(seq(1:16), shape = input$shape_inf, scale = input$scale_inf))
 })
 
 # R
 recDist <- reactive({
+  req(input$scale_rec, input$shape_rec)
   dgamma(seq(1:16), shape = input$shape_rec, scale = input$scale_rec)/sum(dgamma(seq(1:16), shape = input$shape_rec, scale = input$scale_rec))
 })
 
-# Update second country choice based on first country choice
-choiceCountry <- eventReactive(input$countryAgeMat ,{
-  ifelse(input$countryAgeMat %in% covoid::age_distributions_un(), input$countryAgeMat, "Not found, please choose manually")
-})
-
-observe(updateSelectizeInput(session, "countryAgeDist", selected = choiceCountry()))
-
 dfAgeDist <- reactive({
-                req(default$countryAgeDist())
+                req(input$countryChoice)
 
                 data.frame(
                   x = seq(from=5, to=80, by=5),
@@ -96,10 +93,6 @@ dfAgeDist <- reactive({
             })
 
 output$ageHist <- renderggiraph({
-
-if(input$countryAgeDist == "Not found, please choose manually"){
-  return()
-}
 
 p1 <- ggplot(dfAgeDist(), aes(x,y, fill=y)) +
   geom_col_interactive(aes(tooltip = tt)) +
@@ -127,7 +120,7 @@ output$network_d <- renderVisNetwork({
         label = c('S', 'E', 'I', 'R'),
 
         # size adding value
-        size = c(rep(10, 4)),
+        size = c(rep(20, 4)),
 
         # Hierarchical level
         level = rep(0,4),
@@ -143,13 +136,11 @@ output$network_d <- renderVisNetwork({
         # Don't need physics
         physics = rep(FALSE, 4),
 
-        shadow = c(rep(FALSE,4)),
-
         # tooltip (html or character), when the mouse is above
-        title = c(HTML(paste0("S", br(), 'Susceptible')),
-                  HTML(paste0("E", br(), "Exposed")),
-                  HTML(paste0("I", br(), "Infectious")),
-                  HTML(paste0("R", br(), "Recovered"))
+        title = c(HTML(paste0("S", br(), 'Susceptible', br(), "N =", formatC(input$s_num, format='d', big.mark=","))),
+                  HTML(paste0("E", br(), "Exposed", br(), "N =", formatC(input$e_num, format='d', big.mark=","))),
+                  HTML(paste0("I", br(), "Infectious", br(), "N =", formatC(input$i_num, format='d', big.mark=","))),
+                  HTML(paste0("R", br(), "Recovered", br(), "N =", formatC(input$r_num, format='d', big.mark=",")))
         )
 
     )
@@ -169,352 +160,177 @@ output$network_d <- renderVisNetwork({
             ),
 
         # Label colour
-        font.color = c(rep("darkgrey", 3)),
+        font.color = c(rep("grey", 3)),
 
-        # Hover titles
-        title = c(HTML('&beta;I/N'),
-                  HTML('&sigma;'),
-                  HTML('&gamma;')
-                  )
-    )
+        # Hover titles\
+        title = c(
+          HTML('&beta;I/N'),
+          HTML('&sigma;'),
+          HTML('&gamma;')
+        )
+  )
 
-
-    visNetwork(nodes, edges) %>%
-        visHierarchicalLayout(direction = "UD", levelSeparation = 80) %>%
+    visNetwork(nodes, edges, main = "SEIR Model", submain = 'Compartmental diagram') %>%
+        visHierarchicalLayout(direction = "UD", levelSeparation = 40) %>%
         visEdges(arrows = "to") %>%
-        visGroups(groupname = "Susceptible", color = "lightblue") %>%
-        visGroups(groupname = "Exposed", color = "orange") %>%
-        visGroups(groupname = "Infectious", color = "red") %>%
-        visGroups(groupname = "Recovered", color = "lightgreen") %>%
-        visLegend(width = 0.2, position = "left", main = "Compartment", stepX = 50, stepY = 50) %>%
+        visGroups(groupname = "Susceptible", color = "#2daae2") %>%
+        visGroups(groupname = "Exposed", color = "#ff8200") %>%
+        visGroups(groupname = "Infectious", color = "#ff635d") %>%
+        visGroups(groupname = "Recovered", color = "#1ac987") %>%
+        visLegend(enabled = FALSE) %>%
         visInteraction(hover = TRUE) %>%
         visPhysics(stabilization = FALSE) %>%
         visEvents(startStabilizing = "function() {
-            this.moveTo({scale:1.4})}") %>%
-        visEvents(selectNode = "function(data) {
-                Shiny.onInputChange('node_id', data.nodes);
-                ;}",
-                  selectEdge = "function(data) {
-                Shiny.onInputChange('edge_id', data.edges);
-                ;}"
-                  )
+            this.moveTo({scale:0.8})}")
 })
 
-################################################################################################
-                    ### Set parameters by clicking on a network node ###
-################################################################################################
 
-## Set current node on click
+###################################################################
+### Modal dialogues to distribute compartments across age bands ###
+###################################################################
 
-# values$setNode and values$setEdge are placeholders for the clicked node and edge
-values <- reactiveValues(setNode = 0, setEdge = 'Z')
+# Exposed
+observe({
+  if(input$e_num_dist == "Custom") {isolate(
+  showModal(modalDialog(easyClose = TRUE,
+    title = "Age distribution of exposed individuals",
+    fluidRow(
+      column(width=5,
+             renderggiraph({
 
-# They start out as NULL so need to replace that with zero
-observe(values$setNode <- ifelse(is.null(input$node_id), 0, input$node_id))
-observe(values$setEdge <- ifelse(is.null(input$edge_id), 0, input$edge_id))
+               p1 <- dfAgeDist() %>%
+                 mutate(exp = input$e_num*expDist()) %>%
+                 ggplot(aes(x=x, y=exp, fill=exp)) +
+                 geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(exp, digits=0)))) +
 
-# They are reverted to 0 and z respectively every time a dialogue box is closed
-observeEvent(input$modal_done,{
-    values$setNode <- 0
-    values$setEdge <- 'Z'
-    removeModal()
-})
+                 labs(x="Age group", y = "Count") +
+                 scale_fill_viridis() +
+                 theme(legend.position = "none")
 
-observe(
-## Nodes
+               z <- girafe(code = print(p1))
+               girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
 
-    # S.
-    if (values$setNode==1) { isolate(
-            showModal(modalDialog(
-                title = "Susceptible individuals",
-                size = 'm',
-                code("S"),
-                helpText("The initial number of susceptible individuals"),
-                numericInput("s_num", label=NULL, min=0, value=default$s_num()),
-                easyClose = FALSE,
-                footer = actionButton("modal_done", label = "Done") ))
-        )}
+             })
+      ),
 
-    # E.
-    else if (values$setNode==2) { isolate(
-      showModal(modalDialog(
-        title = "Exposed individuals",
-        size = 'm',
-        code(HTML(paste0("E"))),
-        helpText("Individuals who are exposed but not infectious (latent)"),
-        numericInput("e_num", NULL, min=0, value=default$e_num()),
-        radioButtons("e_num_dist", "Distribution of exposed individuals across age groups",
-                     choices = c("Uniform", "Custom"), selected = default$e_num_dist(), inline = TRUE),
-        conditionalPanel(condition = "input.e_num_dist == 'Uniform'",
+      column(width = 3,
+             radioButtons("opts_exp", "Presets:",
+                          selected = 3,
+                          choices = list("Younger children" = 1,
+                                         "Young adults" = 2,
+                                         "Middle aged" = 3,
+                                         "Older adults" = 4))
+      ),
 
-                         renderggiraph({
+      column(width=4,
+             sliderInput("shape_exp", "Custom shape:", min=0.1, max=10, step=.1, value = default$shape_exp(), animate = TRUE),
+             sliderInput("scale_exp", "Custom scale:", min=0.1, max=3, step=.1, value = default$scale_exp(), animate = TRUE)
+      )
+    ) # Closes fluidRow
+  ))
+)}})
 
-                           p1 <- dfAgeDist() %>%
-                             mutate(exp = y*default$e_num()) %>%
-                             ggplot(aes(x=x, y=exp, fill=exp)) +
-                             geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(exp, digits=0)))) +
-                             labs(x="Age group", y = "Count") +
-                             scale_fill_viridis() +
-                             theme(legend.position = "none")
 
-                           z <- girafe(code = print(p1))
-                           girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
+# Infectious
+observe({
+  if(input$i_num_dist == "Custom") {isolate(
+    showModal(modalDialog(easyClose = TRUE,
+      title = "Age distribution of infectious individuals",
+      fluidRow(
+        column(width=5,
+               renderggiraph({
 
-                         })
+                 p1 <- dfAgeDist() %>%
+                   mutate(inf = input$i_num*infDist()) %>%
+                   ggplot(aes(x=x, y=inf, fill=inf)) +
+                   geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(inf, digits=0)))) +
+
+                   labs(x="Age group", y = "Count") +
+                   scale_fill_viridis() +
+                   theme(legend.position = "none")
+
+                 z <- girafe(code = print(p1))
+                 girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
+
+               })
         ),
 
-        conditionalPanel(condition = "input.e_num_dist == 'Custom'",
-                         fluidRow(
-                           column(width=5,
-                                  renderggiraph({
+        column(width = 3,
+               radioButtons("opts_inf", "Presets:",
+                            selected = 3,
+                            choices = list("Younger children" = 1,
+                                           "Young adults" = 2,
+                                           "Middle aged" = 3,
+                                           "Older adults" = 4))
+        ),
 
-                                    p1 <- dfAgeDist() %>%
-                                      mutate(exp = default$e_num()*expDist()) %>%
-                                      ggplot(aes(x=x, y=exp, fill=exp)) +
-                                      geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(exp, digits=0)))) +
-
-                                      labs(x="Age group", y = "Count") +
-                                      scale_fill_viridis() +
-                                      theme(legend.position = "none")
-
-                                    z <- girafe(code = print(p1))
-                                    girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
-
-                                  })
-                           ),
-
-                           column(width = 3,
-                                  radioButtons("opts_exp", "Presets:",
-                                               selected = default$opts_exp(),
-                                               choices = list("Younger children" = 1,
-                                                              "Young adults" = 2,
-                                                              "Middle aged" = 3,
-                                                              "Older adults" = 4))
-                           ),
-
-                           column(width=4,
-                                  sliderInput("shape_exp", "Custom shape:", min=0.1, max=10, step=.1, value = default$shape_exp(), animate = TRUE),
-                                  sliderInput("scale_exp", "Custom scale:", min=0.1, max=3, step=.1, value = default$scale_exp(), animate = TRUE)
-                           )
-                         ) # Closes fluidRow
-        ), # Closes Conditional Panel
-
-        easyClose = FALSE,
-        footer = actionButton("modal_done", label = "Done") ))
-    )}
-
-    # I.
-    else if (values$setNode==3) { isolate(
-        showModal(modalDialog(
-            title = "Infectious individuals",
-            size = 'm',
-            code(HTML(paste0("I"))),
-            helpText("Individuals who are infectious"),
-            numericInput("i_num", NULL, min=0, value=default$i_num()),
-            radioButtons("i_num_dist", "Distribution of infectious individuals across age groups",
-                         choices = c("Uniform", "Custom"), selected = default$i_num_dist(), inline = TRUE),
-            conditionalPanel(condition = "input.i_num_dist == 'Uniform'",
-
-                             renderggiraph({
-
-                                   p1 <- dfAgeDist() %>%
-                                     mutate(inf = y*default$i_num()) %>%
-                                     ggplot(aes(x=x, y=inf, fill=inf)) +
-                                       geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(inf, digits=0)))) +
-                                       labs(x="Age group", y = "Count") +
-                                       scale_fill_viridis() +
-                                       theme(legend.position = "none")
-
-                                   z <- girafe(code = print(p1))
-                                   girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
-
-                                 })
-                             ),
-
-            conditionalPanel(condition = "input.i_num_dist == 'Custom'",
-                        fluidRow(
-                          column(width=5,
-                               renderggiraph({
-
-                                 p1 <- dfAgeDist() %>%
-                                   mutate(inf = default$i_num()*infDist()) %>%
-                                   ggplot(aes(x=x, y=inf, fill=inf)) +
-                                   geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(inf, digits=0)))) +
-
-                                   labs(x="Age group", y = "Count") +
-                                   scale_fill_viridis() +
-                                   theme(legend.position = "none")
-
-                                 z <- girafe(code = print(p1))
-                                 girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
-
-                               })
-                          ),
-
-                              column(width = 3,
-                                     radioButtons("opts_inf", "Presets:",
-                                                  selected = default$opts_inf(),
-                                                  choices = list("Younger children" = 1,
-                                                                   "Young adults" = 2,
-                                                                   "Middle aged" = 3,
-                                                                   "Older adults" = 4))
-                                     ),
-
-                              column(width=4,
-                                   sliderInput("shape_inf", "Custom shape:", min=0.1, max=10, step=.1, value = default$shape_inf(), animate = TRUE),
-                                   sliderInput("scale_inf", "Custom scale:", min=0.1, max=3, step=.1, value = default$scale_inf(), animate = TRUE)
-                              )
-                  ) # Closes fluidRow
-            ), # Closes Conditional Panel
-
-            easyClose = FALSE,
-            footer = actionButton("modal_done", label = "Done") ))
-    )}
-
-    # R.
-    else if (values$setNode==4) { isolate(
-        showModal(modalDialog(
-            title = "Recovered",
-            size = 'm',
-            code(HTML(paste0("R"))),
-            helpText("Individuals who are recovered and no longer infectious"),
-            numericInput("r_num", NULL, min=0, value=default$r_num()),
-            radioButtons("r_num_dist", "Distribution of recovered individuals across age groups",
-                         choices = c("Uniform", "Custom"), selected = default$r_num_dist(), inline = TRUE),
-            conditionalPanel(condition = "input.r_num_dist == 'Uniform'",
-
-                             renderggiraph({
-
-                               p1 <- dfAgeDist() %>%
-                                 mutate(rec = y*default$r_num()) %>%
-                                 ggplot(aes(x=x, y=rec, fill=rec)) +
-                                 geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(rec, digits=0)))) +
-                                 labs(x="Age group", y = "Count") +
-                                 scale_fill_viridis() +
-                                 theme(legend.position = "none")
-
-                               z <- girafe(code = print(p1))
-                               girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
-
-                             })
-            ),
-
-            conditionalPanel(condition = "input.r_num_dist == 'Custom'",
-                             fluidRow(
-                               column(width=5,
-                                      renderggiraph({
-
-                                        p1 <- dfAgeDist() %>%
-                                          mutate(rec = recDist()*default$r_num()) %>%
-                                          ggplot(aes(x=x, y=rec, fill=rec)) +
-                                          geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(rec, digits=0)))) +
-                                          labs(x="Age group", y = "Count") +
-                                          scale_fill_viridis() +
-                                          theme(legend.position = "none")
-
-                                        z <- girafe(code = print(p1))
-                                        girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
-
-                                      })
-                               ),
-
-                               column(width = 3,
-                                      radioButtons("opts_rec", "Presets:",
-                                                   selected = default$opts_rec(),
-                                                   choices = list("Younger children" = 1,
-                                                                  "Young adults" = 2,
-                                                                  "Middle aged" = 3,
-                                                                  "Older adults" = 4))
-                               ),
-
-                               column(width=4,
-                                      sliderInput("shape_rec", "Custom shape", min=0.1, max=10, step=.1, value = default$shape_rec(), animate = TRUE),
-                                      sliderInput("scale_rec", "Custom scale", min=0.1, max=3, step=.1, value = default$scale_rec(), animate = TRUE)
-                               )
-                             ) # Closes fluidRow
-            ), # Closes Conditional Panel
-            easyClose = FALSE,
-            footer = actionButton("modal_done", label = "Done")))
-    )}
+        column(width=4,
+               sliderInput("shape_inf", "Custom shape:", min=0.1, max=10, step=.1, value = default$shape_inf(), animate = TRUE),
+               sliderInput("scale_inf", "Custom scale:", min=0.1, max=3, step=.1, value = default$scale_inf(), animate = TRUE)
+        )
+      ) # Closes fluidRow
+    ))
+  )}})
 
 
-) # Closes Observe
+# Recovered
+observe({
+  if(input$r_num_dist == "Custom") {isolate(
+    showModal(modalDialog(easyClose = TRUE,
+      title = "Age distribution of exposed individuals",
+      fluidRow(
+        column(width=5,
+               renderggiraph({
+
+                 p1 <- dfAgeDist() %>%
+                   mutate(rec = input$r_num*recDist()) %>%
+                   ggplot(aes(x=x, y=rec, fill=rec)) +
+                   geom_col_interactive(aes(tooltip = paste0(x, "-", x+4, " years, N = ", round(rec, digits=0)))) +
+
+                   labs(x="Age group", y = "Count") +
+                   scale_fill_viridis() +
+                   theme(legend.position = "none")
+
+                 z <- girafe(code = print(p1))
+                 girafe_options(z, opts_tooltip(zindex = 9999)) # Because of this issue: https://github.com/davidgohel/ggiraph/issues/150
+
+               })
+        ),
+
+        column(width = 3,
+               radioButtons("opts_rec", "Presets:",
+                            selected = 3,
+                            choices = list("Younger children" = 1,
+                                           "Young adults" = 2,
+                                           "Middle aged" = 3,
+                                           "Older adults" = 4))
+        ),
+
+        column(width=4,
+               sliderInput("shape_rec", "Custom shape:", min=0.1, max=10, step=.1, value = default$shape_rec(), animate = TRUE),
+               sliderInput("scale_rec", "Custom scale:", min=0.1, max=3, step=.1, value = default$scale_rec(), animate = TRUE)
+        )
+      ) # Closes fluidRow
+    ))
+  )}})
+
+
+## Sparklines for age distributions
+output$sparklineAge_e <- sparkline::renderSparkline({
+  sparkline(round(e_num_vec(), digits=0), chartRangeMin = 0)
+})
+
+output$sparklineAge_i <- sparkline::renderSparkline({
+  sparkline(round(i_num_vec(), digits=0), chartRangeMin = 0)
+})
+
+output$sparklineAge_r <- sparkline::renderSparkline({
+  sparkline(round(r_num_vec(), digits=0), chartRangeMin = 0)
+})
 
 
 
 
-##############
-### Edges ###
-##############
-
-observe(
-    # S -> I
-    if (values$setEdge=='A' & values$setNode==0) { isolate(
-        showModal(modalDialog(
-            title = HTML(paste0("Susceptible to Infectious (S", "&rarr;", "I)")),
-            size = 'm',
-            helpText(HTML(paste0("The transition rate between the ", strong("Susceptible"), " and ", strong("Infectious"), " compartments
-                                 is given by the formula ", "&beta; &times; I &frasl; N."))),
-            helpText(HTML(paste0("&beta; is the average number of daily contacts per person (C) multiplied by the probability of disease transmission at each contact (P", tags$sub("inf"), ")" ))),
-            helpText(HTML(paste0("I &frasl; N is the fraction of contacts that involve an infectious individual."))),
-            hr(),
-             # R0
-             code(HTML(paste0("R", tags$sub("0")))),
-             helpText("The basic reproduction number."),
-             sliderInput("r0", NULL, min=0, max=4, step = .1, value = default$r0()),
-             hr(),
-            h4("Number of daily contacts:"),
-
-              fluidRow(
-                column(width = 6,
-                       selectizeInput("countryAgeMat", "Contact matrix", choices = available_contact_matrices(), selected = default$countryAgeMat(), multiple = FALSE, options = NULL),
-                       plotlyOutput("heatMap", height = "220px", width = "220px")
-                ),
-
-                column(width = 6,
-                       selectizeInput("countryAgeDist", "Age distribution", choices = c(covoid::age_distributions_un(), "Not found, please choose manually"), selected = default$countryAgeDist(), multiple = FALSE, options = NULL),
-                       ggiraphOutput("ageHist", height = "400px", width = "200px")
-                )
-                ),
-            footer = actionButton("modal_done", label = "Done")))
-    )}
-
-    # E -> I
-    else if (values$setEdge=='B' & values$setNode==0) { isolate(
-      showModal(modalDialog(
-        title = HTML(paste0("Exposed to infectious (E &rarr; I)")),
-        size = 'm',
-        code(HTML(paste0("&gamma;"))),
-        helpText(HTML(paste0("Inverse of the duration of the latent period"))),
-        hr(),
-        sliderInput("sigmainv", label="Duration of the latent period in days:", min=1, max=21, step=.5, value=1/default$sigma()),
-        htmlOutput("sigmainv"),
-        easyClose = FALSE,
-        footer = actionButton("modal_done", label = "Done")))
-    )}
-
-    # I -> R
-    else if (values$setEdge=='C' & values$setNode==0) { isolate(
-        showModal(modalDialog(
-            title = HTML(paste0("Infectious to recovered (I &rarr; R)")),
-            size = 'm',
-            code(HTML(paste0("&gamma;"))),
-            helpText(HTML(paste0("Inverse of the duration of infection."))),
-            hr(),
-            sliderInput("gammainv", label="Duration of infection in days:", min=1, max=21, step=.5, value=1/default$gamma()),
-            htmlOutput("gammainv"),
-            easyClose = FALSE,
-            footer = actionButton("modal_done", label = "Done")))
-    )}
-
-
-
-) # Closes observe
-
-
-### Text updates for user when moving 'inverse' plots
-output$sigmainv <- renderText(HTML(paste0("&sigma;", " = 1/" , input$sigmainv, " = ", round(default$sigma(), digits=3))))
-output$gammainv <- renderText(HTML(paste0("&gamma;", " = 1/" , input$gammainv, " = ", round(default$gamma(), digits=3))))
 
 
 ############################################################################
@@ -529,7 +345,7 @@ output$gammainv <- renderText(HTML(paste0("&gamma;", " = 1/" , input$gammainv, "
 default <- reactiveValues()
 
 # Initial conditions
-default$s_num <- reactive(ifelse(is.null(input$s_num), import_total_population(default$countryAgeMat()) - default$e_num() - default$i_num() - default$r_num(), input$s_num))
+default$s_num <- reactive(ifelse(is.null(input$s_num), import_total_population(input$countryChoice) - default$e_num() - default$i_num() - default$r_num(), input$s_num))
 default$e_num <- reactive(ifelse(is.null(input$e_num), 70, input$e_num))
 default$i_num <- reactive(ifelse(is.null(input$i_num), 30, input$i_num))
 default$r_num <- reactive(ifelse(is.null(input$r_num), 0, input$r_num))
@@ -625,51 +441,70 @@ observeEvent(input$opts_rec, {
 })
 
 
+###########################################################################
+              ### Summary plot of interventions
+###########################################################################
 
-############################################################################
-                    ### Summary text output ###
-############################################################################
+output$intSummary <- renderggiraph({
 
-# Population
-output$summary1 <- renderText({
-  shiny::req(default$countryAgeMat())
-    HTML(paste(icon("globe-asia"), em("Population"), hr(),
-        "Total:", code(formatC(popcounter(), format='d', big.mark=',')), br(),
-        "Susceptible:", code(formatC(default$s_num(), format='d', big.mark=',')), br(),
-        "Exposed:", code(default$e_num()), br(),
-        "Infectious:", code(default$i_num()), br(),
-        "Recovered", code(default$r_num())
-        ))
-})
+  ln <- length(fxGeneral_t()[[2]])
+  df <- data.frame(
 
-# Model parameters (quarantined population)
-output$summary2 <- renderText({
-    HTML(paste0(
-         icon("sliders-h"), em(" Transition params"), hr(),
-         "R", tags$sub("0 "), code(round(default$r0(), digits = 3)), br(),
-         "&sigma; ", code(round(default$sigma(), digits = 3)), br(),
-         "&gamma; ", code(round(default$gamma(), digits = 3))
-         ))
-})
+      date = c(
+        as.Date(seq(1,ln) + input$dateRange[1], origin = "1970-01-01")
+      ),
 
+      target = c(
+        rep("Transmission probability (General)", ln),
+        rep("Social contacts (General)", ln),
+        rep("Social contacts (School)", ln),
+        rep("Social contacts (Work)", ln),
+        rep("Social contacts (Home)", ln)
+      ),
 
-output$summary3 <- renderText({
-  HTML(
-    paste(icon("handshake"), em("Transmission probability"), hr(),
-          "General", br(), sparkline::spk_chr(fxGeneral_t()[[2]], chartRangeMin = 0, chartRangeMin = 1), br()
+      int = c(
+        fxGeneral_t()[[2]],
+        fxGeneral_c()[[2]],
+        fxSchool_c()[[2]],
+        fxWork_c()[[2]],
+        fxHome_c()[[2]]
+      ),
+
+      include = c(
+        rep(TRUE, ln),
+        rep(TRUE, ln),
+        rep("school" %in% input$intSetting_c, ln),
+        rep("work" %in% input$intSetting_c, ln),
+        rep("home" %in% input$intSetting_c, ln)
       )
-    )
-})
 
-output$summary4 <- renderText({
-  HTML(
-    paste(icon("users"), em("Social contacts"), hr(),
-          "General", br(), sparkline::spk_chr(fxGeneral_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), br(),
-          "School", br(), sparkline::spk_chr(fxSchool_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), br(),
-          "Work", br(), sparkline::spk_chr(fxWork_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), br(),
-          "Home", br(), sparkline::spk_chr(fxHome_c()[[2]], chartRangeMin = 0, chartRangeMin = 1), br()
-    )
-  )
+    ) %>%
+    mutate(tt = sprintf("%s<br/><strong>%s</strong>", date, int) %>% lapply(htmltools::HTML)) %>%
+    filter(include)
+
+intCols <- c("Transmission probability (General)" = "#3f61c4",
+             "Social contacts (General)" = "#ff635d",
+             "Social contacts (School)" = "#2daae2",
+             "Social contacts (Work)" = "#fa91b6",
+             "Social contacts (Home)" = "#1ac987")
+
+intBreaks <- c("Transmission probability (General)",
+             "Social contacts (General)",
+             "Social contacts (School)",
+             "Social contacts (Work)",
+             "Social contacts (Home)")
+
+p <- ggplot(data=df, aes(x=date, y=int, group=target)) +
+  geom_line(aes(color=target), size=2, alpha=.2) +
+  geom_point_interactive(aes(color=target, tooltip = tt)) +
+  scale_x_date(date_labels="%d%b") +
+  coord_cartesian(xlim = c(input$dateRange[1], input$dateRange[2]), ylim = c(0, 1)) +
+  scale_colour_manual(values = intCols, breaks = intBreaks) +
+  labs(x="Date", y="Value relative to pre-pandemic levels") +
+  guides(colour = guide_legend(nrow = 2)) +
+  theme(legend.position = "bottom", legend.title = element_blank())
+
+ggiraph::girafe(code = print(p))
 })
 
 
@@ -679,22 +514,22 @@ output$summary4 <- renderText({
 ############################################################################
 
 s_num_vec <- reactive({
-  ageDist()*default$s_num() - (e_num_vec() + i_num_vec() + r_num_vec())
+  ageDist()*input$s_num - (e_num_vec() + i_num_vec() + r_num_vec())
 })
 
 e_num_vec <- reactive({
-  if(default$e_num_dist() == "Uniform") {ageDist()*default$e_num()}
-  else if(default$e_num_dist() == "Custom") {expDist()*default$e_num()}
+  if(input$e_num_dist == "Uniform") {ageDist()*input$e_num}
+  else if(input$e_num_dist == "Custom") {expDist()*input$e_num}
 })
 
 i_num_vec <- reactive({
-  if(default$i_num_dist() == "Uniform") {ageDist()*default$i_num()}
-  else if(default$i_num_dist() == "Custom") {infDist()*default$i_num()}
+  if(input$i_num_dist == "Uniform") {ageDist()*input$i_num}
+  else if(input$i_num_dist == "Custom") {infDist()*input$i_num}
 })
 
 r_num_vec <- reactive({
-  if(default$r_num_dist() == "Uniform") {ageDist()*default$r_num()}
-  else if(default$r_num_dist() == "Custom") {recDist()*default$r_num()}
+  if(input$r_num_dist == "Uniform") {ageDist()*input$r_num}
+  else if(input$r_num_dist == "Custom") {recDist()*input$r_num}
 })
 
 
@@ -702,8 +537,6 @@ r_num_vec <- reactive({
 ############################################################################
                 ### Define interventions ###
 ############################################################################
-
-
 
 
 ### Intervention in school setting
@@ -1052,6 +885,12 @@ observe({
     updateSliderInput(session, "ndays_a", max=nsteps(), value=val)
 })
 
+
+# Interactively update number susceptibles based on choice of country
+observe({
+req(input$countryChoice)
+updateNumericInput(session, "s_num", value = import_total_population(input$countryChoice))
+})
 
 ## Prepare animation
 

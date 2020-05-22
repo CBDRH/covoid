@@ -5,8 +5,7 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
         if (xtraC!="") {
                 x1 <- c('gray90')
                 names(x1) = xtraC
-                compcols <- c(c("S" = "lightblue", "E" = "orange", "I" = "red",
-                                "R" = "lightgreen", "incidence" = "cyan"), x1)
+                compcols <- c(c("S" = "#2daae2", "E" = "#ff8200", "I" = "#ff635d", "R" = "#1ac987", "incidence" = "cyan"), x1)
 
                 x2 <- if (xtraP=="") xtraC else xtraP
                 names(x2) = xtraC
@@ -17,7 +16,7 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                 compbreaks <- c(c("S", "E", "I", "R","incidence"), xtraC)
         }
         else {
-                compcols <- c("S" = "lightblue", "E" = "orange", "I" = "red", "R" = "lightgreen")
+                compcols <- c("S" = "#2daae2", "E" = "#ff8200", "I" = "#ff635d", "R" = "#1ac987")
                 complabels <- c("S" = "Susceptible", "E" = "Exposed", "I" = "Infectious", "R" = "Recovered")
                 compbreaks <- c("S", "E", "I", "R")
         }
@@ -112,7 +111,12 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                     scale_y_continuous(labels = scales::comma) # +
                     # geom_point_interactive(aes_string(tooltip = tt))
 
-                i <- i + geom_point_interactive(data=dx,
+                i <- i + geom_line(data=dx,
+                                   aes(x=date,
+                                       y=cases,
+                                       colour = Country.Region),
+                                   size=2, alpha=0.7) +
+                        geom_point_interactive(data=dx,
                                                  aes(x=date, y=cases,
                                                      colour = Country.Region,
                                                      tooltip = paste("Cases =", formatC(cases, format="d", big.mark=',')))

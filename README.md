@@ -4,17 +4,23 @@
   [![R build status](https://github.com/CBDRH/covoid/workflows/R-CMD-check/badge.svg)](https://github.com/CBDRH/covoid/actions)
   <!-- badges: end -->
 
-COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular covoid allows the simulataneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
+COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular COVOID allows the simultaneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
+
+## Acknowledgements
+
+Work on COVOID is facilitated by the generous assistance of **Ian Sharp**, philanthropic supporter of UNSW research. 
+
+If you would like to support our work, please click on the **Sponsor** button at the top of this page for details of how to donate.
 
 ## Modelling COVID-19
 
 * Shiny app, screenshot, links.
 
-For information on installing COVOID and a basic illustrating of the programming API keep reading, or visit the [COVOID website](www.cbdrh.github.io/covoid) for more information. Click [here](www.cbdrh.github.io/covoid) to use the interactive Shiny platform.
+For information on installing COVOID and a basic illustrating of the programming API keep reading, or visit the [COVOID website](https://cbdrh.github.io/covoidance/) for more information. Click [here](https://cbdrh.github.io/covoidance/app.html) to use the interactive Shiny platform.
 
 ## Installation
 
-You can install the development version of covoid from
+You can install the development version of COVOID from
 [GitHub](https://github.com/) with:
 
 ```r
@@ -23,7 +29,7 @@ devtools::install_github("cbdrh/covoid",build_vignettes = TRUE)
 ```
 ## Example
 
-This is a basic introduction to covoid package syntax. We demonstrate how to simulate an epidemic along with the impact of disease prevention policies using an age structured SIR model. The populations demographics are matched to that of Australia, with a population of 4 million and 10 initial cases. The functions `import_contact_matrix` and `import_age_distribution` import data from Prem et al (2017) and the United Nations Population Division (2019) on age specific contact rates and distributions, both grouped by 5 years. There are ~150 countries with both contact and age demogrpahic information available in covoid.
+This is a basic introduction to COVOID package syntax. We demonstrate how to simulate an epidemic along with the impact of disease prevention policies using an age structured SIR model. The populations demographics are matched to that of Australia, with a population of 4 million and 10 initial cases. The functions `import_contact_matrix` and `import_age_distribution` import data from Prem et al (2017) and the United Nations Population Division (2019) on age specific contact rates and distributions, both grouped by 5 years. There are ~150 countries with both contact and age demographic information available in COVOID.
 
 ```r
 library(covoid)
@@ -56,7 +62,7 @@ plot(res,y=c("S","I","R"),main="Physical distancing")
 
 <img src="man/figures/README-example-2.png" width="100%" height="50%">
 
-The covoid package also allows you to separate the contact rates into different settings - e.g. school, work and home. 
+The COVOID package also allows you to separate the contact rates into different settings - e.g. school, work and home. 
 
 ```r
 cm_oz_all <- import_contact_matrix("Australia","general")
@@ -88,7 +94,20 @@ plot(res,y=c("S","I","R"),main="Physical distancing + school closures")
 
 <img src="man/figures/README-example-4.png" width="100%" height="50%">
 
-For more information see `vignette(package = "covoid")` or visit the [COVOID website](www.cbdrh.github.io/covoid)
+For more information check out the package vignettes (below) or visit the [COVOID website](https://cbdrh.github.io/covoidance/app.html)
+
+```r
+# A description of the models available in COVOID:
+vignette("available-models")
+
+# An instroduction to modelling epidemics and the impact of their 
+# interventions using age structured DCMs:
+vignette("age-structured-mixing")
+
+# An overview of the mathematical background of age structured DCMs, 
+# with links to more further reading: 
+vignette("age-structured-mixing-background")
+```
 
 ## References
 
