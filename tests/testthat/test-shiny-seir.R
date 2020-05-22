@@ -8,5 +8,5 @@ test_that("seir shiny app works", {
     # on a Mac, and they will differ from screenshots taken on the CI platform,
     # which runs on Linux.
     appdir <- system.file(package = "covoid", "shiny-interfaces/seir")
-    expect_pass(shinytest::testApp(appdir, compareImages = FALSE))
+    shinytest::expect_pass(shinytest::testApp(appdir, compareImages = FALSE))
 })
