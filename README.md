@@ -2,6 +2,8 @@
 
   <!-- badges: start -->
   [![R build status](https://github.com/CBDRH/covoid/workflows/R-CMD-check/badge.svg)](https://github.com/CBDRH/covoid/actions)
+  
+[![eRum2020::CovidR](https://badgen.net/https/runkit.io/erum2020-covidr/badge/branches/master/fitzgerald-hanly-churches-covoid-simulation-modelling?cache=300)](https://milano-r.github.io/erum2020-covidr-contest/fitzgerald-hanly-churches-covoid-simulation-modelling.html)
   <!-- badges: end -->
 
 COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular COVOID allows the simultaneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
