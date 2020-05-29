@@ -2,6 +2,8 @@
 
   <!-- badges: start -->
   [![R build status](https://github.com/CBDRH/covoid/workflows/R-CMD-check/badge.svg)](https://github.com/CBDRH/covoid/actions)
+  
+[![eRum2020::CovidR](https://badgen.net/https/runkit.io/erum2020-covidr/badge/branches/master/fitzgerald-hanly-churches-covoid-simulation-modelling?cache=300)](https://milano-r.github.io/erum2020-covidr-contest/fitzgerald-hanly-churches-covoid-simulation-modelling.html)
   <!-- badges: end -->
 
 COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. In particular COVOID allows the simultaneous simulation of age specific (e.g. school closures) and general interventions over varying time intervals.
@@ -51,7 +53,7 @@ plot(res,y=c("S","I","R"),main="No intervention")
 We can add in time varying interventions that reduce contact rates across the population using `create_contact_intervention`. The below example reduces all physical contact by 20% in order to simulate physical distancing.
 
 ```r
-phys_dist = contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5)
+phys_dist <- contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5)
 param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm_oz,dist=p_age_oz,contact_intervention = phys_dist)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
 res <- simulate_sir_c(t = 200,state_t0 = state0,param = param)
@@ -66,7 +68,7 @@ The COVOID package also allows you to separate the contact rates into different 
 cm_oz_all <- import_contact_matrix("Australia","general")
 cm_oz_sch <- import_contact_matrix("Australia","school")
 # separate out school and general population contact rates
-cm_oz_all = cm_oz_all - cm_oz_sch
+cm_oz_all <- cm_oz_all - cm_oz_sch
 p_all <- plot(cm_oz_all) + labs(title = "General") +
   theme(axis.text.x = element_text(size=6, angle=0),
           axis.text.y = element_text(size=6))
@@ -80,9 +82,9 @@ gridExtra::grid.arrange(p_all,p_sch,ncol=2)
 
 We can then add in time varying interventions using `create_intervention` to each setting. The below example reduces general contact by 20% to simulate physical distancing combined with a reduction in school age contact by 80% to simulate school closures.
 
-```{r}
-cm = list(all = cm_oz_all, sch = cm_oz_sch)
-int = list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),
+```r
+cm <- list(all = cm_oz_all, sch = cm_oz_sch)
+int <- list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),
            all=contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5))
 param <- sir_c_param(R0 = 2.5,gamma = 0.1,cm=cm,dist=p_age_oz,contact_intervention = int)
 state0 <- sir_c_state0(S0 = S0,I0 = I0,R0 = R0)
