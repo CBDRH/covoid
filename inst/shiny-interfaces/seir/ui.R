@@ -97,11 +97,11 @@ body <- dashboardBody(
                                         ),
                                         hr(),
 
-                                        selectizeInput("countryChoice",
+                                        selectInput("countryChoice",
                                                        label = span(tagList(icon('globe-asia'), 'Location')),
                                                        choices = ctryList,
                                                        selected = "Italy",
-                                                       multiple = FALSE, options = NULL),
+                                                       multiple = FALSE),
 
                                         numericInput("s_num",
                                                      label = span(tagList(icon('user'), 'Initial number susceptible')),
@@ -171,7 +171,7 @@ body <- dashboardBody(
                                                   column(width=6,
                                                       sliderInput("r0",
                                                                   label = HTML(paste(shiny::icon('sliders-h'), "The initial unmitigated reproduction number (R0)")),
-                                                                  min=0, max=4, step = .1, value = 3.0),
+                                                                  min=0, max=4, step = .1, value = 2.5),
                                                       sliderInput("sigmainv",
                                                                   label = HTML(paste0(icon('sliders-h'), " Duration of the latent period in days (1/", "&sigma;", ")")),
                                                                   min=1, max=21, step=.5, value=10),
