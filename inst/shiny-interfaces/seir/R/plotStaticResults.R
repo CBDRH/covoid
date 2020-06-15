@@ -65,13 +65,13 @@ plotStaticResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL
     # Comparison country if requested
     if(xtraC != "") {
         dx <- covid19_data %>%
-            filter(Province.State==xtraP & Country.Region==xtraC & type=="confirmed")
+            filter(province==xtraP & country==xtraC & type=="confirmed")
         p <- p + geom_point(data=dx,
                                         aes(x=date, y=cases,
-                                            colour = Country.Region,
+                                            colour = country,
                                             tooltip = paste("Cases =", formatC(cases, format="d", big.mark=',')))
         ) +
-            geom_line(data=dx, aes(x=date, y=cases, color=Country.Region))
+            geom_line(data=dx, aes(x=date, y=cases, color=country))
     }
 
     p <- p +

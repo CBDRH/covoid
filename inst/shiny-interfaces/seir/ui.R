@@ -434,7 +434,7 @@ body <- dashboardBody(
                                                         "Number of days to plot:",
                                                         min=0, step=1, max=365, value=365),
                                             selectizeInput("compCountries", "Compare to existing data:", choices = c("", ctryList), multiple = FALSE),
-                                            selectizeInput("compProvince", "Specify province or state (where available):", choices = c("", unique(covid19_data$Province.State)), multiple = FALSE)
+                                            selectizeInput("compProvince", "Specify province or state (where available):", choices = c("", unique(covid19_data$province)), multiple = FALSE)
                                             )
                                  ),
 

@@ -32,7 +32,7 @@ observe(updateSliderInput(session, "ndays_a", max = nsteps(), value = nsteps()))
 
 # Update choice of province, based on choice of country
 provinceChoice <- reactive({
-  covid19_data %>% filter(Country.Region==input$compCountries) %>% select(Province.State) %>% distinct()
+  covid19_data %>% filter(country==input$compCountries) %>% select(province) %>% distinct()
 })
 observe(updateSelectizeInput(session, "compProvince", choices = provinceChoice()))
 

@@ -49,6 +49,6 @@ data("covid19_data")
 # Define list of countries
 ctry1 <- data.frame(country = covoid::available_contact_matrices())
 ctry2 <- data.frame(country = covoid::age_distributions_un())
-ctry3 <- data.frame(country = unique(covid19_data$Country.Region))
+ctry3 <- data.frame(country = unique(covid19_data$country))
 ctry4 <- merge(ctry1, ctry2, by="country")
 ctryList <- as.vector(merge(ctry3, ctry4, by="country"))
