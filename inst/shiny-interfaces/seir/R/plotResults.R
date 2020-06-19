@@ -89,7 +89,7 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
        # Comparison country if requested
         if(xtraC != "") {
                 dx <- covid19_data %>%
-                        filter(Province.State==xtraP & Country.Region==xtraC & type=="confirmed")
+                        filter(province==xtraP & country==xtraC & type=="confirmed")
 
                 i_df <- df %>%
                     filter(compartment %in% 'incidence') %>%
@@ -120,11 +120,11 @@ plotResults <- function(df, scale, logScale, plotvars, ndays, xtraC = NULL, xtra
                 i <- i + geom_line(data=dx,
                                    aes(x=date,
                                        y=cases,
-                                       colour = Country.Region),
+                                       colour = country),
                                    size=2, alpha=0.7) +
                         geom_point_interactive(data=dx,
                                                  aes(x=date, y=cases,
-                                                     colour = Country.Region,
+                                                     colour = country,
                                                      tooltip = paste(date, ", Cases = ", formatC(cases, format="d", big.mark=',')))
                                                  ) +
                             ylim(NA, max_y)
