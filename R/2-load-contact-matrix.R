@@ -31,7 +31,7 @@ available_contact_matrices <- function() {
 import_contact_matrix <- function(country,setting) {
     stopifnot(setting %in% c("general","work","school","home","other"))
     stopifnot(country %in% available_contact_matrices())
-    tmp_env = new.env()
+    tmp_env <- new.env()
     data(list = paste0(country,"_",setting),envir = tmp_env)
     cm_name <- gsub(" ","_",paste0(country,"_",setting))
     cm_name <- gsub("[(),'-]","",cm_name)
