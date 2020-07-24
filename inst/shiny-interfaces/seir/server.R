@@ -43,7 +43,8 @@ observe(updateSelectizeInput(session, "compProvince", choices = provinceChoice()
 # Visualise the contact matrix as a heatmap
 ageMat <- reactive({
   req(input$countryChoice)
-  import_contact_matrix(input$countryChoice, setting="general")
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & cm == 1) %>% select(country) %>% as.character()
+  import_contact_matrix(x, setting="general")
   })
 
 output$heatMap <- renderPlotly({
@@ -54,7 +55,8 @@ output$heatMap <- renderPlotly({
 # Age distribution based on selected country
 ageDist <- reactive({
   req(input$countryChoice)
-  import_age_distribution(input$countryChoice)
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & ad == 1) %>% select(country) %>% as.character()
+  import_age_distribution(x)
 
 })
 
@@ -659,7 +661,8 @@ cmSchool <- reactive({
   req(input$countryChoice)
 
   if("school" %in% input$intSetting_c){
-  import_contact_matrix(input$countryChoice, setting="school")
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & cm == 1) %>% select(country) %>% as.character()
+  import_contact_matrix(x, setting="school")
   }
   else NULL
 })
@@ -668,7 +671,8 @@ cmWork <- reactive({
   req(input$countryChoice)
 
   if("work" %in% input$intSetting_c){
-  import_contact_matrix(input$countryChoice, setting="work")
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & cm == 1) %>% select(country) %>% as.character()
+  import_contact_matrix(x, setting="work")
   }
   else NULL
 })
@@ -677,15 +681,16 @@ cmHome <- reactive({
   req(input$countryChoice)
 
   if("home" %in% input$intSetting_c){
-  import_contact_matrix(input$countryChoice, setting="home")
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & cm == 1) %>% select(country) %>% as.character()
+  import_contact_matrix(x, setting="home")
   }
   else NULL
 })
 
 cmGeneral <- reactive({
   req(input$countryChoice)
-
-  import_contact_matrix(input$countryChoice, setting="general")
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & cm == 1) %>% select(country) %>% as.character()
+  import_contact_matrix(x, setting="general")
 
 })
 
@@ -875,7 +880,8 @@ observe({
 # Interactively update number susceptibles based on choice of country
 observe({
 req(input$countryChoice)
-updateNumericInput(session, "s_num", value = import_total_population(input$countryChoice) - input$e_num - input$i_num - input$r_num)
+  x <- ctry5 %>% filter(simpleName == input$countryChoice & ad == 1) %>% select(country) %>% as.character()
+updateNumericInput(session, "s_num", value = import_total_population(x) - input$e_num - input$i_num - input$r_num)
 })
 
 ## Prepare animation

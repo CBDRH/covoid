@@ -11,16 +11,16 @@ withMathJax()
 
 # Define the dashboard header
 # title = "COVID-19 Open-source Infection Dynamics"
-header <- dashboardHeader(title = tags$div(tags$a(href='https://cbdrh.med.unsw.edu.au/postgraduate-coursework',
-                                                  tags$img(src='unsw_logo_reverse.png',height=40)), "COVID-19 Open-source Infection Dynamics"),
-                          titleWidth = 420,
+# title = tags$div(tags$a(href='https://cbdrh.med.unsw.edu.au/postgraduate-coursework', tags$img(src='unsw_logo_reverse.png',height=40)), "COVID-19 Open-source Infection Dynamics"
+header <- dashboardHeader(title = paste("COVID-19 Open-source Infection Dynamics"),
+                          titleWidth = 400,
                           tags$li(class="dropdown",
                                   tags$a(href='https://github.com/CBDRH/covoid', icon('github'), "Source Code", target="_blank")),
                           tags$li(class="dropdown",
                                   tags$a(href='https://twitter.com/cbdrh1',
                                          icon('twitter'), "Twitter", target="_blank"))
+                          )
 
-)
 
 #######################################################
                     ### Sidebar ###
@@ -174,7 +174,7 @@ body <- dashboardBody(
                                                                   min=0, max=4, step = .1, value = 2.5),
                                                       sliderInput("sigmainv",
                                                                   label = HTML(paste0(icon('sliders-h'), " Duration of the latent period in days (1/", "&sigma;", ")")),
-                                                                  min=1, max=21, step=.5, value=10),
+                                                                  min=1, max=14, step=.5, value=5.5),
 
                                                       sliderInput("gammainv",
                                                                   label = HTML(paste0(icon('sliders-h'), " Duration of infectious period in days (1/", "&gamma;", ")")),
@@ -367,8 +367,7 @@ body <- dashboardBody(
 
                                                condition = "input.intSetting_c.includes('home')",
                                                box(width="100%", collapsible = TRUE, solidHeader = TRUE, collapsed = TRUE,
-                                                   title = HTML(paste(icon("home"), "Contacts at home")),
-                                                   sparklineOutput("sparklineHome_c"),
+                                                   title = HTML(paste(icon("home"), "Contacts at home", sparklineOutput("sparklineHome_c"))),
                                                    helpText("Apply a distinct intervention for work-based contacts"),
                                                    column(width = 7,
                                                           plotOutput("intHome_c", height = 270,
@@ -433,7 +432,7 @@ body <- dashboardBody(
                                             sliderInput("ndays",
                                                         "Number of days to plot:",
                                                         min=0, step=1, max=365, value=365),
-                                            selectizeInput("compCountries", "Compare to existing data:", choices = c("", ctryList), multiple = FALSE),
+                                            selectizeInput("compCountries", "Compare to existing data:", choices = c("", ctry3), multiple = FALSE),
                                             selectizeInput("compProvince", "Specify province or state (where available):", choices = c("", unique(covid19_data$province)), multiple = FALSE)
                                             )
                                  ),
