@@ -47,8 +47,32 @@ data("covid19_data")
 
 
 # Define list of countries
-ctry1 <- data.frame(country = covoid::available_contact_matrices())
-ctry2 <- data.frame(country = covoid::age_distributions_un())
-ctry3 <- data.frame(country = unique(covid19_data$country))
-ctry4 <- merge(ctry1, ctry2, by="country")
-ctryList <- as.vector(merge(ctry3, ctry4, by="country"))
+ctry1 <- data.frame(country = covoid::available_contact_matrices(), stringsAsFactors = FALSE) %>% mutate(cm=1)
+ctry2 <- data.frame(country = covoid::age_distributions_un(), stringsAsFactors = FALSE) %>% mutate(ad=1)
+ctry3 <- data.frame(country = unique(covid19_data$country), stringsAsFactors = FALSE) %>% mutate(cov=1)
+
+# Merge country list
+ctry4 <- dplyr::full_join(ctry1, ctry2, by = 'country')
+ctry5 <- dplyr::full_join(ctry4, ctry3, by = 'country') %>%
+    mutate(sum = cm + ad + cov) %>%
+    mutate(simpleName =
+               case_when(
+                   sum == 3 ~ country,
+                   grepl("United Kingdom", country) ~ "United Kingdom",
+                   grepl("Iran", country) ~ "Iran",
+                   grepl("Russia", country) ~ "Russia",
+                   grepl("Taiwan", country) ~ "Taiwan",
+                   grepl("Bolivia", country) ~ "Bolivia",
+                   grepl("Czech", country) ~ "Czech Republic",
+                   grepl("Lao", country) ~ "Laos",
+                   country == "Republic of Korea" ~ "South Korea",
+                   country == "Korea, South" ~ "South Korea",
+                   country == "United States of America" ~ "United States of America",
+                   country == "US" ~ "United States of America",
+                   grepl("Viet", country) ~ "Vietnam",
+                   grepl("Venezuela", country) ~ "Venezuela"
+               ))
+
+# List of simplified country names for dropdown menu
+ctryList <- ctry5 %>% filter(!is.na(simpleName)) %>% distinct(simpleName) %>% arrange(simpleName)
+
