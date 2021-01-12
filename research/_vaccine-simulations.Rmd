@@ -1,0 +1,292 @@
+---
+title: "COVID-19 vaccine simulations"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+```
+
+```{r}
+devtools::load_all()
+library(ggplot2)
+```
+
+## to add
+
+* example with vaccine rates different per group  
+* example with antivaxxers  
+* example with n arrivals per day with P(covid) (per age)
+
+## Model Description
+
+some equations...
+
+## Vaccine effectiveness in Australia
+
+Model key parameters:  
+
+* contact matrix
+* age distribution  
+* imported cases (e.g. open border)  
+* vaccincation rate
+
+### Demographics
+
+```{r}
+cm_oz <- import_contact_matrix("Australia","general")
+nJ <- ncol(cm_oz)
+dist_oz <- import_age_distribution("Australia")
+SSv <- dist_oz*5e6
+```
+
+The 
+
+```{r}
+plot(cm_oz)
+```
+
+### Import and vaccine
+
+text...
+
+If we want to vaccinate say 90% of older people before moving down a group then we
+might do something like the below graph.  The exponential function is used as it is quite linear at the beginning, e.g. we do things like: vaccinate ~100 people over 80 per day initially, assuming it gets harder after a while with excess capacity then moving down an age group.
+
+```{r}
+
+priority <- c(rep(2,14),1,1)
+
+allocate_vaccines <- function(priority,available,N,nstep) {
+    
+    unvaccinated <- matrix(nrow=16,ncol=nstep)
+    unvaccinated[,1] <- N
+    for (t in 2:nstep) {
+        available_t <- available
+        for (i in 1:max(priority)) {
+            n_groups <- sum(priority == i)
+            vaccine_group <- pmin(available_t/n_groups,unvaccinated[priority == i,(t-1)])
+            unvaccinated[priority == i,t] <- unvaccinated[priority == i,(t-1)] - vaccine_group
+            available_t <- available_t - sum(vaccine_group)
+        }
+    }
+    unvaccinated
+}
+
+
+tmp <- allocate_vaccines(priority,5000,SSv,1000)
+plot(tmp[16,],xlim=c(0,365),ylim=c(0,max(SSv)))
+for (j in 1:15) {
+    points(tmp[j,],col=j)
+}
+
+```
+
+
+```{r}
+n_vac <- 5000
+t <- 1:1000
+
+lambdas <- matrix(nrow=16,ncol=length(t))
+lambdas[nJ,] <- n_vac/SSv[16]
+tmp <- numeric(length=length(t))
+
+for (j in 15:1) {
+    tmp <- tmp + SSv[j+1]*exp(-lambdas[j+1,]*t)*lambdas[j+1,]
+    lambdas[j,] <- (n_vac - tmp) / (SSv[j])
+}
+
+
+time0 <- matrix(nrow=16,ncol=length(t))
+
+for (j in 1:16) {
+    time0[j,] <- cumsum(lambdas[j,] != 0.0)
+}
+
+
+vaccinated <- matrix(nrow=16,ncol=length(t))
+
+for (j in 1:nJ) {
+    vaccinated[j,] <- SSv[j]*(1-exp(-lambdas[j,]*time0[j,]))
+}
+plot(diff(colSums(vaccinated)))
+
+
+plot(SSv[16] - SSv[16]*(1-exp(-lambdas[16,]*time0[16,])),xlim=c(0,365),ylim=c(0,max(SSv)))
+for (j in 1:15) {
+    points(SSv[j] - SSv[j]*(1-exp(-lambdas[j,]*time0[j,])),col=j)
+}
+
+```
+
+(this appears to be the hardest part of the problem - as you can imagine there are a lot of potential shapes here).  
+
+
+```{r}
+
+
+```
+
+## An example
+
+A population of ~5 million 
+
+We vaccinate 1000*16 people per day. I
+
+On day 120 we no longer do quarantine, as a result there are imported cases. These follow
+this distribution
+
+Assume COVID has been extinguished in local populations, i.e. no local transmission in Australia or low and controlled enough to be thought of in terms of "small probabilities".  
+
+We'll look at whether there is a takeoff if we vaccinate and then open the border with no more control on quarantine.  
+
+```{r}
+baseline <- 0.0
+vaceff1 <- 0.99
+vaceff2 <- 0.90
+nvac <- 1000
+S <- SSv*(1-baseline)
+Sv <- SSv*baseline
+E <- rep(0,nJ)
+Ev <- rep(0,nJ)
+I <- Iv <- rep(0,nJ)
+R <- Rv <- rep(0,nJ)
+state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+n_imp <- function(t) {
+    0*(t < 120) + c(rep(10,8),rep(5,8))*(t >= 120)
+}
+nvac <- function(t) {
+    1000*(t < 30) + 1500*(t >= 30)
+}
+
+param1 <- seir_cv_param(R0 = 2.5,
+                        sigma=0.1,
+                        gamma = 0.1,
+                        cm=cm_oz,
+                        dist=dist_oz,
+                        vaceff1=vaceff1,
+                        vaceff2=vaceff2,
+                        nvac=nvac,
+                        n_imp=n_imp)
+res1 <- simulate_seir_cv(t = 1500,state_t0 = state0,param = param1)
+plot(res1,y = c("E","Ev"))
+plot(res1,y = c("Sv","S"))
+plot(res1,y="incidence")
+```
+
+## No imported cases
+
+0 imported cases.
+
+```{r echo=FALSE}
+# parameters
+baseline <- seq(0,1,0.2)
+TT <- 1460
+vaceff <- seq(0.8,1.0,0.1)
+
+# results
+df <- data.frame(t = numeric(length=0L),
+                 E = numeric(length=0L),
+                 base_group=character(length=0L),
+                 vef_group=character(length=0L))
+
+for (j in 1:length(vaceff)) {
+    cat(j," of ",length(vaceff),"\n")
+    for (i in 1:length(baseline)) {
+        S <- SSv*(1-baseline[i])
+        Sv <- SSv*baseline[i]
+        E <- rep(10,nJ)
+        Ev <- rep(0,nJ)
+        I <- Iv <- rep(0,nJ)
+        R <- Rv <- rep(0,nJ)
+        state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+        param1 <- seir_cv_param(R0 = 2.5,
+                                sigma=0.1,
+                                gamma = 0.1,
+                                cm=cm_oz,
+                                dist=dist_oz,
+                                vaceff=vaceff[j],
+                                n_imp=0.0)
+        res1 <- simulate_seir_cv(t = TT,state_t0 = state0,param = param1)
+        df <- rbind(df,data.frame(t = 1:TT, 
+                                  E = res1$epi["E"] + res1$epi["Ev"],
+                                  base_group=paste0(100*baseline[i],"%"),
+                                  vef_group=paste0(100*vaceff[j],"%")))
+    }
+}
+```
+
+```{r}
+df$base_group <- factor(df$base_group,levels=paste0(100*baseline,"%"),ordered=TRUE)
+df$vef_group <- factor(df$vef_group,levels=paste0(100*vaceff,"%"),ordered=TRUE)
+
+p <- ggplot(df) +
+    geom_line(aes(x = t, y = E, col = base_group)) +
+    labs(x="Time (days)",y="Infections",size=1.0) +
+    scale_color_discrete(name="Percentage\nvaccinated") +
+    facet_wrap(~vef_group,ncol=1) +
+    coord_cartesian(xlim=c(0,365*1.5)) +
+    scale_y_continuous(breaks=seq(0,4e05,by=1e05),
+        labels=format(seq(0,4e05,by=1e05),scientific =FALSE,big.mark = ",")) +
+    theme_bw(base_size=14) +
+    theme()
+p
+```
+
+## Imported cases
+
+10 imported cases per day.
+
+```{r echo=TRUE}
+# parameters
+# as above
+# results
+df1 <- data.frame(t = numeric(length=0L),
+                 E = numeric(length=0L),
+                 base_group=character(length=0L),
+                 vef_group=character(length=0L))
+
+for (j in 1:length(vaceff)) {
+    cat(j," of ",length(vaceff),"\n")
+    for (i in 1:length(baseline)) {
+        S <- SSv*(1-baseline[i])
+        Sv <- SSv*baseline[i]
+        E <- rep(10,nJ)
+        Ev <- rep(0,nJ)
+        I <- Iv <- rep(0,nJ)
+        R <- Rv <- rep(0,nJ)
+        state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+        param1 <- seir_cv_param(R0 = 2.5,sigma=0.1,
+                                gamma = 0.1,
+                                cm=cm_oz,dist=dist_oz,
+                                vaceff=vaceff[j],
+                                n_imp=10)
+        res1 <- simulate_seir_cv(t = T,state_t0 = state0,param = param1)
+        df1 <- rbind(df1,data.frame(t = 1:T, 
+                                  E = res1$epi["E"] + res1$epi["Ev"],
+                                  base_group=paste0(100*baseline[i],"%"),
+                                  vef_group=paste0(100*vaceff[j],"%")))
+    }
+}
+```
+
+```{r}
+df1$base_group <- factor(df1$base_group,levels=paste0(100*baseline,"%"),ordered=TRUE)
+df1$vef_group <- factor(df1$vef_group,levels=paste0(100*vaceff,"%"),ordered=TRUE)
+
+p <- ggplot(df1) +
+    geom_line(aes(x = t, y = E, col = base_group)) +
+    labs(x="Time (days)",y="Infections",size=1.0) +
+    scale_color_discrete(name="Percentage\nvaccinated") +
+    facet_wrap(~vef_group,ncol=1) +
+    coord_cartesian(xlim=c(0,365*1.5)) +
+    scale_y_continuous(breaks=seq(0,4e05,by=1e05),
+       labels=format(seq(0,4e05,by=1e05),scientific =FALSE,big.mark = ",")) +
+    theme_bw(base_size=14) +
+    theme()
+p
+```

@@ -3,7 +3,7 @@
 ^LICENSE\.md$
 ^data-raw$
 ^\.github$
-docs/*
+research/*
 inst/shiny-interfaces/dcm.models/*
 inst/shiny-interfaces/doherty/*
 inst/shiny-interfaces/sir/*
