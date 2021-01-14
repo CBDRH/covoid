@@ -236,6 +236,7 @@ seir_cv_model <- function(t,y,parms) {
         # account for interventions
         cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
         pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
+        nvac(t) <- vac_alloc(nvac(t),dist_oz,y[1:J],vac_params)
 
         # population size
         J <- ncol(cm_cur)
@@ -270,7 +271,7 @@ seir_cv_model <- function(t,y,parms) {
             lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + Iv)/N)) # force infect
 
             # vaccination process
-            nvac_i <- vaceff2*min(nvac(t),0.9*S[i])
+            nvac_i <- vaceff2*min(nva,0.9*S[i])
 
             # un-vaccinated flow
             dS[i] <- -(S[i])*(lambda_i + lambda_imp) - nvac_i
