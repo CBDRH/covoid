@@ -42,9 +42,14 @@ for (source_file in source_files) {
 }
 
 
-# Internation Covid19 Data from COVID19 package
-data("covid19_data")
-
+# Internation Covid19 Data from coronavirus package
+covid19_data <- read.csv("https://raw.githubusercontent.com/RamiKrispin/coronavirus/master/csv/coronavirus.csv", stringsAsFactors = FALSE) %>%
+    dplyr::mutate(country = ifelse(country == "United Arab Emirates", "UAE", country),
+                  country = ifelse(country == "Mainland China", "China", country),
+                  country = ifelse(country == "North Macedonia", "N.Macedonia", country),
+                  country = trimws(country),
+                  country = factor(country, levels = unique(country)),
+                  date = as.Date(date))
 
 # Define list of countries
 ctry1 <- data.frame(country = covoid::available_contact_matrices(), stringsAsFactors = FALSE) %>% mutate(cm=1)

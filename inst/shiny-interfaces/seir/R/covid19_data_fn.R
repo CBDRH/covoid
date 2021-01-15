@@ -17,7 +17,7 @@
 # save(total_population_un, file = "data/total_population_un.rda")
 
 
-covid19_data <- function() {
+covid19_data_fn <- function() {
     tmp_env = new.env()
     data(covid19_data,envir = tmp_env)
     covid19_data = tmp_env$covid19_data
