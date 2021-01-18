@@ -48,7 +48,7 @@ ageMat <- reactive({
   })
 
 output$heatMap <- renderPlotly({
-  heatmaply(round(ageMat(), digits=1), dendrogram = FALSE, hide_colorbar = TRUE, margins = c(2,2,2,2), fontsize_row=6, fontsize_col=6,
+  heatmaply(round(ageMat(), digits=1), dendrogram = FALSE, hide_colorbar = TRUE, margins = c(0,0,0,0), fontsize_row=6, fontsize_col=6,
             titleX = FALSE, titleY = FALSE, label_names = c('Age group Y', 'Age group X', 'Value'))
 })
 

@@ -109,7 +109,7 @@ body <- dashboardBody(
 
                                         span(tagList(icon('chart-bar'), 'Age distribution')),
                                         div(style="text-align:center",
-                                            ggiraphOutput("ageHist")
+                                            ggiraphOutput("ageHist", width = "250px", height = "250px")
                                         ),
 
                                         span(tagList(icon('handshake'), 'Social contacts by age band')),
