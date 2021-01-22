@@ -1,5 +1,5 @@
 ---
-title: "COVID-19 vaccine strategy simulations"
+title: "COVID-19 dynamic vaccination strategy simulations"
 output: html_document
 ---
 
@@ -12,9 +12,13 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
+#library(covoid)
 devtools::load_all()
 library(ggplot2)
 ```
+
+This vignette details how to program and simulate dynamic vaccine strategies. These are situations where at time 0 some (small) percentage of the population is vaccinated, and 
+as time progresses this percentage is increased according to a user defined strategy. There may be infectious cases present in the population at time zero or imported as time progresses. There is an additional vignette detailing the "static" case where X% of the population are vaccinated at time 0 and no additional vaccinations are performed.
 
 ## to add
 
@@ -24,23 +28,30 @@ library(ggplot2)
 
 ## Model Description
 
-some equations...
+The compartmental model used for simulating the effect of vaccinations has the following form 
 
-## Vaccine effectiveness in Australia
+$$
+\begin{align}
+\Delta S &= ... \\
+\Delta E E= ... \\
+\end{align}
+$$
 
-Some key modelling parameters:  
+In order to simplify some aspects of programming it is a discrete time step model, $\Delta t = 1$ with each time step interpretable as 1 hour/day/week as required. The models are age structured. For background information on age structured compartmental models see `vignette(age-structured-mixing-background)` and for programming information see `vignette(age-structured-mixing)`. 
 
-* Contact matrix
-* Age distribution  
-* Imported cases (e.g. open border)  
-* Vaccination strategy
-* Vaccine effectiveness
+## Vaccine effectiveness
+
+Simulating an age structured compartmental model requires a contact matrix and age distribution. Some additional modeling for the dynamic vaccine model include:  
+
+* Imported cases  
+* Vaccination strategy  
+* Vaccine effectiveness  
 
 ### Demographics
 
-For more details on the contact matrices, age distributions and their use see ....
+As mentioned for more details on the contact matrices, age distributions and their use see `vignette(age-structured-mixing)`. Basic contact matrix syntax  
 
-```{r}
+```{r,fig.width=5,fig.height=3,fig.retina=3,fig.align='center'}
 cm_oz <- import_contact_matrix("Australia","general")
 nJ <- ncol(cm_oz)
 dist_oz <- import_age_distribution("Australia")
@@ -48,58 +59,54 @@ SSv <- dist_oz*5e6
 plot(dist_oz)
 ```
 
-The 
+and age distribution 
 
-```{r}
+```{r,fig.width=6,fig.height=3,fig.retina=3,fig.align='center'}
 plot(cm_oz)
 ```
 
 ### Vaccination strategies
 
-Even within the simplified population our model considers there are many possible vaccine allocation strategies. We explore a few below before considering how to incorporate them into the SEIR models. 
+Even with a simple compartmental model there many (infinitely many!) possible dynamic vaccine allocation strategies. We explore a few below before considering how to incorporate them into the SEIR models. The vaccine strategy function must have the form `function(n,p,s,vac_params)` where `n` is the number of available vaccines at time $t$ - so it is a function and s is the number of susceptibles in each group at time $t$. Finally `vac_params` is a list of additional parameters, in this case it'll use a vector `p`  the same length as the number of age groups with `p[j]` indicating the probability of vaccinating age group $j$ at in a fully unvaccinated population
 
 #### Random vaccination
 
-One possible strategy would be to randomly vaccinate members of the population until. We might assume that this will lead to a vaccination rate per age group that is proportional to their percentage of the population. 
+One possible strategy would be to randomly vaccinate members of the population until everyone has been vaccinated. We might assume that this will lead to a vaccination rate per age group that is proportional to their percentage of the population. The function `vaccination_allocation` can be used to achieve this.
 
 ```{r}
-random_vaccination <- function(n,p,s) {
+vaccination_allocation <- function(n,s,vac_params) {
     # n: number of available vaccines
-    # p: probability of group j getting vaccinates
     # s: number of people in group j
-    
-    # number vaccinated
-    nvac0 <- n*p
-    
-    # check if the population is fully vaccinated
-    if (all(abs(ceiling(p)*s) < 0.01)) {
-        nvac1 <- rep(0,length(p))
-        return(nvac1)
-    } else if (any((nvac0 - s) > 0.01)) {
-    # check if any groups are (nearly) fully vaccinated
-    # of so proportionally redistribute their vaccines
-        overassigned <- nvac0 > s
-        remaining_vac <- sum(nvac0 - s)
+    # in vac_params:
+    # p: probability of group j getting vaccinates
+
+    with(vac_params,{
+        # number vaccinated
         nvac0 <- pmin(p*n,s*ceiling(p))
-        p1 <- (p*overassigned)/sum(p*overassigned)
-        nvac1 <- nvac0 + p1*remaining_vac
-        return(nvac1)
-    } else {
+        remaining_vac <- n - sum(nvac0)
+        
+        # allocate remaining vaccines
+        while(remaining_vac > 1 & any((nvac0 != s)[as.logical(ceiling(p))])) {
+            fully_allocated <- nvac0 == s
+            p1 <- (p*!fully_allocated)/sum(p*!fully_allocated)
+            nvac0 <- pmin(nvac0 + p1*remaining_vac,s*ceiling(p))
+            remaining_vac <- n - sum(nvac0)
+        }
         return(nvac0)
-    }
+    })
 }
 ```
 
-The graph below shows the pattern if we vaccinate 10,000 per day for population similar to Sydney.
+The graph below shows the pattern if we randomly vaccinate 10,000 people per day for population similar to Sydney.
 
-```{r}
-# simulate random vaccinate 
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
+# simulate vaccination 
 TT <- floor(365*2)
 SSvt <- matrix(nrow = TT+1,ncol=length(SSv))
 SSvt[1,] <- SSv
 nvac_per_day <- 10000
 for (t in 2:(TT+1)) {
-    nvac_t <- random_vaccination(nvac_per_day,dist_oz,SSvt[(t-1),])
+    nvac_t <- vaccination_allocation(nvac_per_day,SSvt[(t-1),],list(p=dist_oz))
     SSvt[t,] <- SSvt[(t-1),] - nvac_t
 }
 
@@ -109,20 +116,52 @@ names(SSvt) <- seq(5,80,5)
 SSvt$day <- 0:TT
 SSvt <- tidyr::pivot_longer(SSvt,cols=-17,names_to="age_group",values_to="n")
 SSvt$age_group <- as.numeric(SSvt$age_group)
-ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n/SSvt)) +
+ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
     geom_line(size=1) + 
     theme_bw(base_size = 16) +
     labs(x = "Time (days)", y= "Unvaccinated (n)") +
     scale_color_continuous(name="Age")
 ```
 
+#### Random vaccination with no vaccination of those under 15
+
+As the title says! We set the probability of being vaccinated to zero for three age groups.
+
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
+# simulate vaccination
+TT <- floor(365*2)
+SSvt <- matrix(nrow = TT+1,ncol=length(SSv))
+SSvt[1,] <- SSv
+nvac_per_day <- 10000
+prob_vaccine <- dist_oz
+prob_vaccine[1:3] <- 0.0
+prob_vaccine <- prob_vaccine/sum(prob_vaccine)
+for (t in 2:(TT+1)) {
+    nvac_t <- vaccination_allocation(nvac_per_day,SSvt[(t-1),],list(p=prob_vaccine))
+    SSvt[t,] <- SSvt[(t-1),] - nvac_t
+}
+
+# plot the resulting vaccination rate graph
+SSvt <- data.frame(SSvt)
+names(SSvt) <- seq(5,80,5)
+SSvt$day <- 0:TT
+SSvt <- tidyr::pivot_longer(SSvt,cols=-17,names_to="age_group",values_to="n")
+SSvt$age_group <- as.numeric(SSvt$age_group)
+ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
+    geom_line(size=1) + 
+    theme_bw(base_size = 16) +
+    labs(x = "Time (days)", y= "Unvaccinated (n)") +
+    scale_color_continuous(name="Age")
+```
+
+
 #### Random vaccination with decreasing efficacy
 
-The random vaccination graph seems too linear. We might expect that the rate of vaccinations varies. For instance it might start off a little slow, then reach a peach before again slowing down as those too busy or hesitant to get the vaccine remain. For the more pessimistic case we may have somoething like the graph below.
+The random vaccination graph above seems too linear. We might expect that the rate of vaccinations varies. For instance it might start off a little slow, then reach a peach before again slowing down as those too busy or hesitant to get the vaccine remain. For the more pessimistic case we may have something like the graph below describing how many of our allocated vaccines are actually used.
 
-```{r}
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
 mm <- function(p,half) {
-    # function that
+    # Michaelis–Menten like dynamics
     # p: proportion vaccinated
     # half: point at which vaccination rate halfs
     (p/(p+half))*(1.0+half)
@@ -133,51 +172,51 @@ ggplot(df,aes(x=p,y=vac_rate)) +
     geom_line() +
     geom_point() +
     coord_cartesian(ylim=c(0,1)) + 
-    theme_bw()
+    theme_bw(base_size = 16) +
+    labs(x = "Group j remaining (%)",
+         y="Use of allocated vaccines (%)")
 ```
 
 How does this alter the linear curves above? First alter the allocation function.
 
 ```{r}
-random_vaccination_mm <- function(n,p,s,s0,half) {
+vaccination_allocation_mm <- function(n,s,vac_params) {
     # n: number of available vaccines
-    # p: probability of group j getting vaccinates
     # s: number of people in group j
+    # in vac_params:
+    # p: probability of group j getting vaccinates
+    # s0: group size at time 0
+    # half: percentage of population at which slow down begins
     
-    # number vaccinated
-    nvac0 <- n*p*mm(s/s0,half)
-    
-    # check if the population is fully vaccinated
-    if (all(abs(ceiling(p)*s) < 0.01)) {
-        nvac1 <- rep(0,length(p))
-        return(nvac1)
-    } else if (any((nvac0 - s) > 0.01)) {
-    # check if any groups are (nearly) fully vaccinated
-    # of so proportionally redistribute their vaccines
-        overassigned <- nvac0 > s
-        remaining_vac <- sum(nvac0 - s)
+    with (vac_params, {
+        # number vaccinated
         nvac0 <- pmin(p*n,s*ceiling(p))
-        p1 <- (p*overassigned)/sum(p*overassigned)
-        nvac1 <- nvac0 + p1*remaining_vac
-        return(nvac1)
-    } else {
-        return(nvac0)
-    }
+        remaining_vac <- n - sum(nvac0)
+        
+        # allocate remaining vaccines
+        while(remaining_vac > 1 & any((nvac0 != s)[as.logical(ceiling(p))])) {
+            fully_allocated <- nvac0 == s
+            p1 <- (p*!fully_allocated)/sum(p*!fully_allocated)
+            nvac0 <- pmin(nvac0 + p1*remaining_vac,s*ceiling(p))
+            remaining_vac <- n - sum(nvac0)
+        }
+        return(nvac0*mm(s/s0,half))
+    })
 }
 ```
 
-Then the results.
+As expected vaccinating everyone now takes a little longer. 
 
-```{r}
-# simulate random vaccinate 
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
+# simulate vaccination
 TT <- floor(365*2)
 SSvt <- matrix(nrow = TT+1,ncol=length(SSv))
 SSvt[1,] <- SSv
 nvac_per_day <- 10000
 half <- 0.05
 for (t in 2:(TT+1)) {
-    nvac_t <- random_vaccination_mm(nvac_per_day,dist_oz,
-                                    SSvt[(t-1),],SSv,half)
+    nvac_t <- vaccination_allocation_mm(nvac_per_day,
+                                    SSvt[(t-1),],list(p=dist_oz,s0=SSv,half=half))
     SSvt[t,] <- SSvt[(t-1),] - nvac_t
 }
 
@@ -196,24 +235,84 @@ ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
 
 #### COVID-19 case fatalility rate prioritised vaccination
 
-We could vaccinate with a priority (probability) determined by the inverse of the case fatality rate (CFR) - which appears to be the Australia government plan. 
+Random vaccination doesn't appear to be the plan of any government. We could vaccinate with a priority (probability) determined by the inverse of the case fatality rate (CFR) - which appears to be the Australia government plan.
 
-```{r}
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
+dist_mortality <- c(0.01,0.01,0.01,0.01,
+                    0.01,0.01,0.02,0.02,
+                    0.04,0.04,0.07,0.07,
+                    0.15,0.15,0.2,0.25)
+prob_vaccine <- dist_mortality/sum(dist_mortality)
+
+# simulate vaccinate 
+TT <- floor(365*2)
+SSvt <- matrix(nrow = TT+1,ncol=length(SSv))
+SSvt[1,] <- SSv
+nvac_per_day <- 10000
+half <- 0.05
+for (t in 2:(TT+1)) {
+    nvac_t <- vaccination_allocation(nvac_per_day,
+                                    SSvt[(t-1),],list(p=prob_vaccine,s0=SSv,half=half))
+    SSvt[t,] <- SSvt[(t-1),] - nvac_t
+}
+
+# plot the resulting vaccination rate graph
+SSvt <- data.frame(SSvt)
+names(SSvt) <- seq(5,80,5)
+SSvt$day <- 0:TT
+SSvt <- tidyr::pivot_longer(SSvt,cols=-17,names_to="age_group",values_to="n")
+SSvt$age_group <- as.numeric(SSvt$age_group)
+ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
+    geom_line(size=1) + 
+    theme_bw(base_size = 16) +
+    labs(x = "Time (days)", y= "Unvaccinated (n)") +
+    scale_color_continuous(name="Age")
 
 ```
 
 #### Interaction with healthcare system prioritiesed vaccinations
 
-An similar strategy to CFR strategy would be to vaccinate everyone who has an encounter with the healthcare system. Given issues with vaccine transport this would need to be hospitalisations or outpatient appointments (rather than GPs). We can get this data from ... 
+An similar strategy to CFR strategy would be to vaccinate everyone who has an encounter with the healthcare system.
 
 #### Workplace and school prioritised vaccination 
 
-An alternative strategy focused on limiting spread be the vaccination of people while at work, school or university. 
+An alternative strategy focused on limiting spread could be the vaccination of people while at work, school or university. Let's focus on while at work, using the Australian workplace age specific contact matrix to construct allocation probabilities. 
 
-```{r}
-
-
+```{r,fig.width=5,fig.height=3,fig.retina=3,fig.align='center'}
+plot(work_contact <- import_contact_matrix("Australia","work"))
 ```
+
+I add 0.5 to the contact rates below as the 0 or near zero results for the young may results in numerical instability. 
+
+```{r,fig.width=6,fig.height=4,fig.retina=3,fig.align='center'}
+total_work_contact <- colSums(work_contact)
+prob_vaccine <- (total_work_contact + 0.5)/sum(total_work_contact +  0.5)
+
+# simulate random vaccinate 
+TT <- floor(365*2)
+SSvt <- matrix(nrow = TT+1,ncol=length(SSv))
+SSvt[1,] <- SSv
+nvac_per_day <- 10000
+half <- 0.05
+for (t in 2:(TT+1)) {
+    nvac_t <- vaccination_allocation(nvac_per_day,
+                                    SSvt[(t-1),],list(p=prob_vaccine,s0=SSv,half=half))
+    SSvt[t,] <- SSvt[(t-1),] - nvac_t
+}
+
+# plot the resulting vaccination rate graph
+SSvt <- data.frame(SSvt)
+names(SSvt) <- seq(5,80,5)
+SSvt$day <- 0:TT
+SSvt <- tidyr::pivot_longer(SSvt,cols=-17,names_to="age_group",values_to="n")
+SSvt$age_group <- as.numeric(SSvt$age_group)
+ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
+    geom_line(size=1) + 
+    theme_bw(base_size = 16) +
+    labs(x = "Time (days)", y= "Unvaccinated (n)") +
+    scale_color_continuous(name="Age")
+```
+
 
 ### Vaccine effectiveness  
 
@@ -259,17 +358,16 @@ digraph vac_eff1 {
 We'll use the following setup:  
 
 * A population of 5 million  
-* Vaccinate 20,000 people per day **randomly**. Nobody vaccinated at baseline. 
+* **Randomly** accinate 1,000 people per day until day 30 and 20,000 thereafter. Nobody vaccinated at baseline. 
 * Once we reach 60% vaccination the borders open. As a result there are imported cases. The number of arrivals in follows a $\text{Poisson}(\lambda)$ distribution where $\lambda = 200.0$ with a probability of COVID-19 of $p_{covid} = 0.05$ for all groups. The number of arrivals in each age group is assumed proportional to the age distribution of Australia. 
 * Assume COVID has been extinguished in local populations, i.e. no local transmission in Australia or low and controlled enough to be ignorable in these average based models.
 * Vaccine effectiveness of $VE_1 = 0.6$ and $VE_2 = 0.99$.
 
-```{r}
-# initial states
+```{r ,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
+## initial states
 baseline <- 0.0
 vaceff1 <- 0.99
 vaceff2 <- 0.90
-nvac <- 1000
 S <- SSv*(1-baseline)
 Sv <- SSv*baseline
 E <- rep(0,nJ)
@@ -278,13 +376,19 @@ I <- Iv <- rep(0,nJ)
 R <- Rv <- rep(0,nJ)
 state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
 
-# functions
-n_imp_cases <- function(t,vac_p,p) {
-    rpois(100)*p[j]
+## parameters
+# imported case
+n_imp_cases <- function(t,pvac) {
+    0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
 }
+# number of available vaccines
 nvac <- function(t) {
     # number of available vaccinations (total)
-    1000*(t < 30) + 10000*(t >= 30)
+    1000*(t < 30) + 20000*(t >= 30)
+}
+# vaccine allocation function
+random_vac_alloc <- function(n,s) {
+    vaccination_allocation_mm(n,s,list(p=dist_oz,s0=S,half=0.05))
 }
 param1 <- seir_cv_param(R0 = 2.5,
                         sigma=0.1,
@@ -294,131 +398,85 @@ param1 <- seir_cv_param(R0 = 2.5,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
                         nvac=nvac,
-                        vac_alloc=,
-                        n_imp=n_imp)
+                        vac_alloc=random_vac_alloc,
+                        n_imp=n_imp_cases)
 
-# simulation
-res1 <- simulate_seir_cv(t = 1500,state_t0 = state0,param = param1)
+## simulation
+res1 <- simulate_seir_cv(t = 365*2,state_t0 = state0,param = param1)
 
-# plot the results
-plot(res1,y = c("E","Ev"))
-plot(res1,y = c("Sv","S"))
-plot(res1,y="incidence")
+## plot the results
+p1 <- plot(res1,y = c("Sv","S")) + 
+    theme_bw(base_size = 16) + 
+    labs(title="Susceptible\nvaccinated vs. unvaccinated")
+p2 <- plot(res1,y="incidence") + 
+    theme_bw(base_size = 16) + 
+    labs(title="Incidence")
+gridExtra::grid.arrange(p1,p2,ncol=1)
 ```
 
-## Example simulation I - vaccine hesistancy
+## Example simulation II - random vaccination with vaccine hesitancy
 
 Consider the case where a certain section of the population will refuse to be vaccinated regardless of the consequences (e.g. no international travel). We can model this by increasing the heterogeneity of the population to account for the presence of a certain percentage of vaccine refusers in each age group.  
 
-## ghg
+We'll use the same setup as above, but now assume that 10% of every age group will never get
+vaccinated. 
 
-0 imported cases.
+```{r}
+## initial states
+baseline <- 0.0
+vaceff1 <- 0.99
+vaceff2 <- 0.90
+S <- rep(SSv*(1-baseline),each=2)*c(0.9,0.1)
+Sv <- rep(SSv*baseline,each=2)*c(0.9,0.1)
+E <- rep(0,nJ*2)
+Ev <- rep(0,nJ*2)
+I <- Iv <- rep(0,nJ*2)
+R <- Rv <- rep(0,nJ*2)
+state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
 
-```{r eval=FALSE, include=FALSE}
-# parameters
-baseline <- seq(0,1,0.2)
-TT <- 1460
-vaceff <- seq(0.8,1.0,0.1)
-
-# results
-df <- data.frame(t = numeric(length=0L),
-                 E = numeric(length=0L),
-                 base_group=character(length=0L),
-                 vef_group=character(length=0L))
-
-for (j in 1:length(vaceff)) {
-    cat(j," of ",length(vaceff),"\n")
-    for (i in 1:length(baseline)) {
-        S <- SSv*(1-baseline[i])
-        Sv <- SSv*baseline[i]
-        E <- rep(10,nJ)
-        Ev <- rep(0,nJ)
-        I <- Iv <- rep(0,nJ)
-        R <- Rv <- rep(0,nJ)
-        state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
-        param1 <- seir_cv_param(R0 = 2.5,
-                                sigma=0.1,
-                                gamma = 0.1,
-                                cm=cm_oz,
-                                dist=dist_oz,
-                                vaceff=vaceff[j],
-                                n_imp=0.0)
-        res1 <- simulate_seir_cv(t = TT,state_t0 = state0,param = param1)
-        df <- rbind(df,data.frame(t = 1:TT, 
-                                  E = res1$epi["E"] + res1$epi["Ev"],
-                                  base_group=paste0(100*baseline[i],"%"),
-                                  vef_group=paste0(100*vaceff[j],"%")))
-    }
+## parameters
+# imported case
+n_imp_cases <- function(t,pvac) {
+    0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
 }
-```
-
-```{r eval=FALSE, include=FALSE}
-df$base_group <- factor(df$base_group,levels=paste0(100*baseline,"%"),ordered=TRUE)
-df$vef_group <- factor(df$vef_group,levels=paste0(100*vaceff,"%"),ordered=TRUE)
-
-p <- ggplot(df) +
-    geom_line(aes(x = t, y = E, col = base_group)) +
-    labs(x="Time (days)",y="Infections",size=1.0) +
-    scale_color_discrete(name="Percentage\nvaccinated") +
-    facet_wrap(~vef_group,ncol=1) +
-    coord_cartesian(xlim=c(0,365*1.5)) +
-    scale_y_continuous(breaks=seq(0,4e05,by=1e05),
-        labels=format(seq(0,4e05,by=1e05),scientific =FALSE,big.mark = ",")) +
-    theme_bw(base_size=14) +
-    theme()
-p
-```
-
-## Imported cases
-
-10 imported cases per day.
-
-```{r eval=FALSE, include=FALSE}
-# parameters
-# as above
-# results
-df1 <- data.frame(t = numeric(length=0L),
-                 E = numeric(length=0L),
-                 base_group=character(length=0L),
-                 vef_group=character(length=0L))
-
-for (j in 1:length(vaceff)) {
-    cat(j," of ",length(vaceff),"\n")
-    for (i in 1:length(baseline)) {
-        S <- SSv*(1-baseline[i])
-        Sv <- SSv*baseline[i]
-        E <- rep(10,nJ)
-        Ev <- rep(0,nJ)
-        I <- Iv <- rep(0,nJ)
-        R <- Rv <- rep(0,nJ)
-        state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
-        param1 <- seir_cv_param(R0 = 2.5,sigma=0.1,
-                                gamma = 0.1,
-                                cm=cm_oz,dist=dist_oz,
-                                vaceff=vaceff[j],
-                                n_imp=10)
-        res1 <- simulate_seir_cv(t = T,state_t0 = state0,param = param1)
-        df1 <- rbind(df1,data.frame(t = 1:T, 
-                                  E = res1$epi["E"] + res1$epi["Ev"],
-                                  base_group=paste0(100*baseline[i],"%"),
-                                  vef_group=paste0(100*vaceff[j],"%")))
-    }
+# number of available vaccines
+nvac <- function(t) {
+    # number of available vaccinations (total)
+    1000*(t < 30) + 20000*(t >= 30)
 }
-```
+# vaccine allocation function
+dist_oz2 <- rep(dist_oz,each=2)/2
+prob_vaccine <- rep(dist_oz,each=2)
+prob_vaccine[seq(2,length(dist_oz2),by=2)] <- 0.0
+random_vac_alloc <- function(n,s) {
+    vaccination_allocation_mm(n,s,list(p=prob_vaccine,s0=S,half=0.05))
+}
+# contact matrix
+cm_oz2 = matrix(ncol=ncol(cm_oz)*2,nrow=nrow(cm_oz)*2)
+for (i in 1:(ncol(cm_oz)*2)) {
+    cm_oz2[i,] <- rep(cm_oz[ceiling(i/2),],each=2)
+}
+param1 <- seir_cv_param(R0 = 2.5,
+                        sigma=0.1,
+                        gamma = 0.1,
+                        cm=cm_oz2,
+                        dist=dist_oz2,
+                        vaceff1=vaceff1,
+                        vaceff2=vaceff2,
+                        nvac=nvac,
+                        vac_alloc=random_vac_alloc,
+                        n_imp=n_imp_cases)
 
-```{r eval=FALSE, include=FALSE}
-df1$base_group <- factor(df1$base_group,levels=paste0(100*baseline,"%"),ordered=TRUE)
-df1$vef_group <- factor(df1$vef_group,levels=paste0(100*vaceff,"%"),ordered=TRUE)
+## simulation
+res1 <- simulate_seir_cv(t = 365*2,state_t0 = state0,param = param1)
 
-p <- ggplot(df1) +
-    geom_line(aes(x = t, y = E, col = base_group)) +
-    labs(x="Time (days)",y="Infections",size=1.0) +
-    scale_color_discrete(name="Percentage\nvaccinated") +
-    facet_wrap(~vef_group,ncol=1) +
-    coord_cartesian(xlim=c(0,365*1.5)) +
-    scale_y_continuous(breaks=seq(0,4e05,by=1e05),
-       labels=format(seq(0,4e05,by=1e05),scientific =FALSE,big.mark = ",")) +
-    theme_bw(base_size=14) +
-    theme()
-p
+## plot the results
+p1 <- plot(res1,y = c("Sv","S")) + 
+    theme_bw(base_size = 16) + 
+    labs(title="Susceptible\nvaccinated vs. unvaccinated")
+p2 <- plot(res1,y="incidence") + 
+    theme_bw(base_size = 16) + 
+    labs(title="Incidence")
+gridExtra::grid.arrange(p1,p2,ncol=1)
+
 ```
