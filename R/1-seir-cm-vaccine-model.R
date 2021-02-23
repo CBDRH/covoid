@@ -92,6 +92,8 @@ simulate_seir_cv <- function(t,state_t0,param) {
     nJ <- length(param$dist)
     out$epi <- cbind(out$epi)
     out$epi$incidence <- rowSums(out$epi[paste0("incidence",1:nJ)])
+    out$epi$incidencev <- rowSums(out$epi[paste0("incidencev",1:nJ)])
+
 
     # return
     class(out) <- c("covoid",class(out))
@@ -307,6 +309,7 @@ seir_cv_model <- function(t,y,parms) {
              Rv=sum(Rv),
              Ntotal=sum(S) + sum(E) + sum(I) + sum(R) +
                  sum(Sv) + sum(Ev) + sum(Iv) + sum(Rv),
-             incidence=dE+dI+dR+dEv+dIv+dRv)
+             incidence=dE+dI+dR,
+             incidencev=dEv+dIv+dRv)
     })
 }

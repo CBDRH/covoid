@@ -1,0 +1,299 @@
+---
+title: "static-vaccination-models"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{static-vaccination-models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(covoid)
+library(ggplot2)
+```
+
+This vignette details how to program and simulate situations in which a certain percentage of a (heterogeneous) population has been vaccinated at time 0 and some number of infections are introduced to the population. 
+
+## Model Description
+
+The compartmental model used for simulating the effect of vaccinations has the following form: 
+
+$$
+\begin{align}
+&\text{unvaccinated} \\
+\Delta S &= -(\lambda + \lambda_{imp})S \\
+\Delta E &= (\lambda + \lambda_{imp})S - \sigma E \\
+\Delta I &= \sigma E - \gamma I \\
+\Delta R &= \gamma I \\
+&\text{vaccinated} \\
+\Delta S_v &= -(1- V_{e1})(\lambda + \lambda_{imp})S_v \\
+\Delta E_v &= (1- V_{e1})(\lambda + \lambda_{imp})S_v - \sigma E_v \\
+\Delta I_v &= \sigma E_v - \gamma I_v \\
+\Delta R_v &= \gamma I_v \\
+\end{align}
+$$
+
+In order to simplify some aspects of programming it is a discrete time model, $\Delta t = 1$ with each time step interpretable as 1 hour/day/week as required. The models are age structured. For background information on age structured compartmental models see `vignette(age-structured-mixing-background)` and for programming information see `vignette(age-structured-mixing)`. 
+
+## Vaccine effectiveness
+
+Simulating an age structured compartmental model requires a contact matrix and age distribution. Some additional modeling requirements for the model include:  
+
+* Vaccine effectiveness  
+
+### What is vaccine efficacy?
+
+Efficacy vs. effectiveness.
+
+The calculation of vaccine efficacy in an RCT is rather simple, even if understanding how it relates to real world requires some thought. In a vaccine RCT there are two trial arms, those vaccinated and those not vaccinated. They wil be blinded. Assuming the disease in somewhat prevalent in the population - as is the case with COVID 19 in most countries - individuals in both trial arms should get exposed to the disease and risk infection. Since we randomly assign blind the trial participants there would be no reason to expect different rates of exposure in either trial arm. We now simply count how many get the disease in each trial arm. The vaccine efficacy is the percentage decrease in the disease in the active arm. Imagine an RCT with 1000 in the control and active arms. If 10 people get the disease in the control arm and 1 in the active we have an efficacy of 90%, we've reduced the incidence of the disease by (10-1)/10 = 90%. 
+
+It is the percentage less disease we would have had given the circumstances under which the trial took place. 
+
+This is a relative figure. It is important to realize this figure is not the chance of not getting the disease if vaccinated. In the previous example the attack rates (or incidence proportion) were 10/1000=1% and 1/1000=0.1% in the vaccinated and unvaccinated groups. The vaccinated group reduced the attack rate by 90% from 1% to 0.1%. As a relative number we need to be careful, as we can get the same result if there were to have have 40 infections in the and 4 in the vaccinated. So the base attack rate (incidence) can vary dramatically for the same efficacy. 
+
+
+
+### What is vaccine effectiveness?
+
+Effectiveness relates to outcomes in real work
+
+### Relation to compartmental models
+
+How does this relate to compartmental models? It's a bit weird to talk of people in differential/different equation models that can deal in 0.1 infections. Compartmental models let us 
+
+We can reduce the P(infection) by the efficacy numbers reported by the trial. Or we can reduce the movement into the vaccinated compartment. The first seems more natural 
+
+```{r}
+sirv_model <- function(t,state_t0,param) {
+  with(as.list(c(state_t0, param)), {
+
+    # population size
+    N <- S + I + R + Sv + Iv + Rv
+
+    # derived parameters
+    lambda <- beta*(I + Iv + Ip)
+
+    # differential equations
+    dS <- -(S/N)*lambda
+    dI <- (S/N)*lambda - gamma*I
+    dR <- gamma*I
+    dSv <- -(1-VE)*(Sv/N)*lambda
+    dIv <- (1-VE)*(Sv/N)*lambda - gamma*Iv
+    dRv <- gamma*Iv
+    dSp <- -(Sp/N)*lambda
+    dIp <- (Sp/N)*lambda - gamma*Ip
+    dRp <- gamma*Ip
+
+    # return
+    list(c(dS,dI,dR,dSv,dIv,dRv,dSp,dIp,dRp),
+           N=N,
+         incidence=dI+dR,
+         incidencev=dIv+dRv,
+         incidencep=dIp+dRp)
+  })
+}
+
+state_t0 <- c(S=9000,I=10,R=0,Sv=100,Iv=0,Rv=0,Sp=100,Ip=0,Rp=0)
+mod <- deSolve::ode(y=state_t0,
+                    times=1:300,
+                    func=sirv_model,
+                    parms=list(gamma=0.1,
+                               beta=0.2,
+                               VE=0.9))
+
+plot((mod[,"incidencep"]-mod[,"incidencev"])/mod[,"incidencep"])
+
+(sum(mod[,"incidencep"])-sum(mod[,"incidencev"]))/sum(mod[,"incidencep"])
+
+plot(mod[,"Sv"],type="l",ylim=c(0,100))
+lines(mod[,"Sp"])
+plot(mod[,"Sv"])
+```
+
+### Demographics
+
+As mentioned for more details on the contact matrices, age distributions and their use see `vignette(age-structured-mixing)`. Basic contact matrix syntax and age distribution syntax are shown below.
+
+```{r,fig.width=5,fig.height=3,fig.retina=3,fig.align='center'}
+cm_oz <- import_contact_matrix("Australia","general")
+nJ <- ncol(cm_oz)
+dist_oz <- import_age_distribution("Australia")
+SSv <- dist_oz*5e6
+plot(dist_oz)
+```
+There are `plot` methods for the age distributions and contact matrices that use ggplot2.
+
+```{r,fig.width=6,fig.height=3,fig.retina=3,fig.align='center'}
+plot(cm_oz)
+```
+
+### Vaccination strategies
+
+At time 0 some percentage of the population are vaccinated. However, in a heterogeneous population, for a fixed overall percentage the numbers vaccinated in each group can vary. This allows us to consider the impact of particular vaccination strategies on infection and mortality rates. While for `vignette(dynamic-vaccination-strategies)` implementing a vaccination strategy is somewhat complex in the current case we consider these vaccination numbers fixed at the beginning of the simulations, and investigate the impact of introducing a small number of infections into the population. 
+
+In addition we can vary a number of factors: 
+
+* $R_0$
+
+#### Random vaccination (age) with fixed vaccine effectiveness
+
+We'll set B% of the population as vaccinated as time 0, with B varying from 0 to 1.
+
+```{r,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
+cm_oz <- import_contact_matrix("Australia","general")
+dist_oz <- import_age_distribution("Australia")
+SSv <- dist_oz*5e6
+nJ <- ncol(cm_oz)
+TT <- 365*2
+vac_baseline <- seq(0.1,0.9,0.1)
+infections <- matrix(nrow=TT,ncol=length(vac_baseline))
+
+for (b in 1:length(vac_baseline)) {
+  baseline <- vac_baseline[b]
+  ## initial states
+  vaceff1 <- 0.99
+  vaceff2 <- 0.90
+  S <- SSv*(1-baseline)
+  Sv <- SSv*baseline
+  E <- rep(100,nJ)  # 100 infectious present
+  Ev <- rep(0,nJ)
+  I <- Iv <- rep(0,nJ)
+  R <- Rv <- rep(0,nJ)
+  state0 <- seir_cv_state0(S=S,E=E,I=I,R=R,Sv=Sv,Ev=Ev,Iv=Iv,Rv=Rv)
+  
+  ## parameters
+  n_imp_cases <- function(t,pvac) 0
+  nvac <- function(t) 0
+  random_vac_alloc <- function(n,s) rep(0,nJ)
+    
+  param1 <- seir_cv_param(R0 = 2.5,
+                          sigma=0.1,
+                          gamma = 0.1,
+                          cm=cm_oz,
+                          dist=dist_oz,
+                          vaceff1=vaceff1,
+                          vaceff2=vaceff2,
+                          nvac=nvac,
+                          vac_alloc=random_vac_alloc,
+                          n_imp=n_imp_cases)
+  res1 <- simulate_seir_cv(t = TT,state_t0 = state0,param = param1)
+  infections[,b] <- res1$epi$E + res1$epi$Ev
+}
+
+# reshape data
+infections <- data.frame(infections)
+names(infections) <- make.names(paste0("base_",100*vac_baseline))
+infections <- tidyr::pivot_longer(infections,everything(),names_to="baseline",values_to="infections")
+infections$t <- rep(1:TT,each=length(vac_baseline))
+
+# plot results
+p1 <- ggplot(infections) +
+  geom_line(aes(x=t,y=infections,col=baseline)) +
+  scale_color_discrete(labels=paste0(vac_baseline*100,"%"),name="Vaccinated") +
+  labs(x="Time",y="Infections",title="Vaccine effectiveness=90%") +
+  theme_bw() +
+  theme(legend.position = "none") 
+p2 <- ggplot(infections) +
+  geom_line(aes(x=t,y=log(1+infections),col=baseline)) +
+  scale_color_discrete(labels=paste0(vac_baseline*100,"%"),name="Vaccinated") +
+  labs(x="Time",y="log(1+infections)") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+gridExtra::grid.arrange(p1,p2,ncol=1)
+```
+
+#### Random vaccination (age) with varying vaccine effectiveness
+
+
+```{r,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
+cm_oz <- import_contact_matrix("Australia","general")
+dist_oz <- import_age_distribution("Australia")
+SSv <- dist_oz*5e6
+nJ <- ncol(cm_oz)
+TT <- 365*2
+vac_baseline <- seq(0.1,0.9,0.1)
+vac_effective <- seq(0.1,0.9,0.1)
+
+infections_res <- data.frame(baseline = character(),
+                             infections = numeric(),
+                             t = numeric(),
+                             vac_eff = numeric())
+
+for (e in 1:length(vac_effective)) {
+  
+  infections <- matrix(nrow=TT,ncol=length(vac_baseline))
+
+  for (b in 1:length(vac_baseline)) {
+    baseline <- vac_baseline[b]
+    ## initial states
+    vaceff1 <- 0.99
+    vaceff2 <- 0.90
+    S <- SSv*(1-baseline)
+    Sv <- SSv*baseline
+    E <- rep(100,nJ)  # 100 infectious present
+    Ev <- rep(0,nJ)
+    I <- Iv <- rep(0,nJ)
+    R <- Rv <- rep(0,nJ)
+    state0 <- seir_cv_state0(S=S,E=E,I=I,R=R,Sv=Sv,Ev=Ev,Iv=Iv,Rv=Rv)
+    
+    ## parameters
+    n_imp_cases <- function(t,pvac) 0
+    nvac <- function(t) 0
+    random_vac_alloc <- function(n,s) rep(0,nJ)
+      
+    param1 <- seir_cv_param(R0 = 2.5,
+                            sigma=0.1,
+                            gamma = 0.1,
+                            cm=cm_oz,
+                            dist=dist_oz,
+                            vaceff1=vac_effective[e],
+                            vaceff2=vaceff2,
+                            nvac=nvac,
+                            vac_alloc=random_vac_alloc,
+                            n_imp=n_imp_cases)
+    res1 <- simulate_seir_cv(t = TT,state_t0 = state0,param = param1)
+    infections[,b] <- res1$epi$E + res1$epi$Ev
+  }
+  
+  # reshape data
+  infections <- data.frame(infections)
+  names(infections) <- make.names(paste0("base_",100*vac_baseline))
+  infections <- tidyr::pivot_longer(infections,everything(),names_to="baseline",values_to="infections")
+  infections$t <- rep(1:TT,each=length(vac_baseline))
+  infections$vac_eff <- vac_effective[e]
+  
+  infections_res <- rbind(infections_res,infections)
+}
+
+
+# plot results
+ggplot(infections_res) +
+  geom_line(aes(x=t,y=infections,col=baseline)) +
+  scale_color_discrete(labels=paste0(vac_baseline*100,"%"),name="Vaccinated") +
+  labs(x="Time",y="Infections",title="Vaccine effectiveness=90%") +
+  facet_wrap(~vac_eff) +
+  theme_bw() +
+  theme(legend.position = "none") 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
