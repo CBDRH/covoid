@@ -381,7 +381,7 @@ state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv
 
 ## parameters
 # imported case
-n_imp_cases <- function(t,pvac) {
+n_imp_cases <- function(t,pvac,param=NULL) {
     0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
 }
 # number of available vaccines
@@ -440,7 +440,7 @@ state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv
 
 ## parameters
 # imported case
-n_imp_cases <- function(t,pvac) {
+n_imp_cases <- function(t,pvac,param=NULL) {
     0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
 }
 # number of available vaccines

@@ -280,7 +280,7 @@ seir_cv_model <- function(t,y,parms) {
 
         for (i in 1:J) {
             # derived parameters
-            lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t,pvac)/N)
+            lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t,pvac,param)/N)
             lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + vaceff3*Iv)/N)) # force infect
 
             # vaccination process
