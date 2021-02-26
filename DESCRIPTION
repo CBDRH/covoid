@@ -1,7 +1,7 @@
 Package: covoid
 Type: Package
 Title: COVID-19 Open-source Infection Dynamics
-Version: 0.1.0
+Version: 0.2-alpha
 Author: Tim Churches <Tim.Churches@inghaminstitute.org.au>, Oisin Fitzgerald <o.fitzgerald@unsw.edu.au>, Mark Hanly <m.hanly@unsw.edu.au>, Mark Hancock <handcock@ucla.edu>
 Maintainer: Tim Churches <Tim.Churches@inghaminstitute.org.au>, Oisin Fitzgerald <o.fitzgerald@unsw.edu.au>, Mark Hanly <m.hanly@unsw.edu.au>
 Description: COVOID is a R package for modelling COVID-19 and other infectious diseases using deterministic compartmental models (DCMs). It contains a built-in Shiny app enabling easy use and demonstration of key concepts to those without R programming backgrounds, along with an expanding API for simulating and estimating homogeneous and age-structured SIR, SEIR and extended models. 
