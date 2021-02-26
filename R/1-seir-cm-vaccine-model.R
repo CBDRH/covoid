@@ -78,6 +78,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
                                    dist=param$dist,
                                    vaceff1=param$vaceff1,
                                    vaceff2=param$vaceff2,
+                                   vaceff3=param$vaceff3,
                                    nvac=param$nvac,
                                    vac_alloc=param$vac_alloc,
                                    n_imp=param$n_imp,
@@ -113,8 +114,9 @@ simulate_seir_cv <- function(t,state_t0,param) {
 #' @param gamma Inverse of the average length of infectious period (I -> R)
 #' @param cm Contact matrix or a named list of contact matrices where the sum is taken to
 #' be all contacts in the population.
-#' @param vaceff1 Vaccine effectiveness - P(infection).
-#' @param vaceff2 Vaccine effectiveness - S -> Sv.
+#' @param vaceff1 Vaccine effectiveness: P(infection) of vaccinated
+#' @param vaceff2 Vaccine effectiveness: S -> Sv.
+#' @param vaceff3 Vaccine effectiveness: Iv -> S/Sv
 #' @param nvac Number vaccinated.
 #' @param n_imp Number of infection imported cases (a function of time).
 #' @param dist Proportion of the population in each age category. Should sum to 1.
@@ -127,7 +129,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
 #' @return List of SEIR model parameters
 #'
 #' @export
-seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,nvac,vac_alloc,n_imp,contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
+seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,vaceff3,nvac,vac_alloc,n_imp,contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
     # assertions
     if (is.list(cm)) {
         stopifnot(!is.null(names(cm)))
@@ -184,6 +186,7 @@ seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,nvac,vac_alloc,
                   dist=dist,
                   vaceff1=vaceff1,
                   vaceff2=vaceff2,
+                  vaceff3=vaceff3,
                   nvac=nvac,
                   vac_alloc=vac_alloc,
                   n_imp=n_imp,
@@ -278,7 +281,7 @@ seir_cv_model <- function(t,y,parms) {
         for (i in 1:J) {
             # derived parameters
             lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t,pvac)/N)
-            lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + Iv)/N)) # force infect
+            lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + vaceff3*Iv)/N)) # force infect
 
             # vaccination process
             nvac_i <- vaceff2*nvac_t[i]

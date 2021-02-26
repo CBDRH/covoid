@@ -353,6 +353,8 @@ digraph vac_eff1 {
 }",height=50)
 ```
 
+The third $V{e3}$ determines the rate at which the vaccinated can infect others.
+
 ## Example simulation I - random vaccination
 
 We'll use the following setup:  
@@ -368,6 +370,7 @@ We'll use the following setup:
 baseline <- 0.0
 vaceff1 <- 0.99
 vaceff2 <- 0.90
+vaceff3 <- 0.90
 S <- SSv*(1-baseline)
 Sv <- SSv*baseline
 E <- rep(0,nJ)
@@ -397,6 +400,7 @@ param1 <- seir_cv_param(R0 = 2.5,
                         dist=dist_oz,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
+                        vaceff3=vaceff3,
                         nvac=nvac,
                         vac_alloc=random_vac_alloc,
                         n_imp=n_imp_cases)
@@ -425,6 +429,7 @@ We'll use the same setup as above, but now assume that 10% of every age group wi
 baseline <- 0.0
 vaceff1 <- 0.99
 vaceff2 <- 0.90
+vaceff3 <- 0.9
 S <- rep(SSv*(1-baseline),each=2)*c(0.9,0.1)
 Sv <- rep(SSv*baseline,each=2)*c(0.9,0.1)
 E <- rep(0,nJ*2)
@@ -462,6 +467,7 @@ param1 <- seir_cv_param(R0 = 2.5,
                         dist=dist_oz2,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
+                        vaceff3=vaceff3,
                         nvac=nvac,
                         vac_alloc=random_vac_alloc,
                         n_imp=n_imp_cases)
