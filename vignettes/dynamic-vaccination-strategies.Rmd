@@ -20,7 +20,7 @@ library(ggplot2)
 ```
 
 This vignette details how to program and simulate dynamic vaccine strategies using COVOID. These are situations where at time 0 some (small) percentage of the population is vaccinated, and 
-as time progresses this percentage is increased according to a user defined strategy. There may be infectious cases present in the population at time zero or imported as time progresses. There is an additional vignette detailing the "static" case where X% of the population are vaccinated at time 0, no additional vaccinations are performed and some infections are seeded in the population. 
+as time progresses this percentage is increased according to a user defined strategy. There may be infectious cases present in the population at time zero or imported as time progresses. There is an additional vignette detailing the "static" case where some percentage of the population are vaccinated at time 0, no additional vaccinations are performed and some infections are seeded in the population. 
 
 ## Model Description
 
