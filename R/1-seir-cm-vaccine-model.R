@@ -79,6 +79,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
                                    vaceff1=param$vaceff1,
                                    vaceff2=param$vaceff2,
                                    nvac=param$nvac,
+                                   vac_alloc=param$vac_alloc,
                                    n_imp=param$n_imp,
                                    contact_intervention=param$contact_intervention,
                                    transmission_intervention=param$transmission_intervention,
@@ -91,6 +92,8 @@ simulate_seir_cv <- function(t,state_t0,param) {
     nJ <- length(param$dist)
     out$epi <- cbind(out$epi)
     out$epi$incidence <- rowSums(out$epi[paste0("incidence",1:nJ)])
+    out$epi$incidencev <- rowSums(out$epi[paste0("incidencev",1:nJ)])
+
 
     # return
     class(out) <- c("covoid",class(out))
@@ -124,7 +127,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
 #' @return List of SEIR model parameters
 #'
 #' @export
-seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,nvac,n_imp,contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
+seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,nvac,vac_alloc,n_imp,contact_intervention=NULL,transmission_intervention=NULL,im=NULL) {
     # assertions
     if (is.list(cm)) {
         stopifnot(!is.null(names(cm)))
@@ -182,6 +185,7 @@ seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,nvac,n_imp,cont
                   vaceff1=vaceff1,
                   vaceff2=vaceff2,
                   nvac=nvac,
+                  vac_alloc=vac_alloc,
                   n_imp=n_imp,
                   contact_intervention=contact_intervention,
                   transmission_intervention=transmission_intervention,
@@ -239,6 +243,10 @@ seir_cv_model <- function(t,y,parms) {
 
         # population size
         J <- ncol(cm_cur)
+
+        # vaccination rate
+        nvac_t <- vac_alloc(nvac(t),y[1:J])
+
         # un-vaccinated
         S <- y[1:J]
         E <- y[(J+1):(2*J)]
@@ -251,6 +259,9 @@ seir_cv_model <- function(t,y,parms) {
         Rv <- y[(7*J+1):(8*J)]
         # total
         N <- S + E + I + R + Sv + Ev + Iv + Rv
+
+        # prop vaccinated
+        pvac <- sum(Sv+Ev+Iv+Rv)/(sum(Sv+Ev+Iv+Rv) + sum(S+E+I+R))
 
         # derived parameters
 
@@ -266,11 +277,11 @@ seir_cv_model <- function(t,y,parms) {
 
         for (i in 1:J) {
             # derived parameters
-            lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t)/N)
+            lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t,pvac)/N)
             lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + Iv)/N)) # force infect
 
             # vaccination process
-            nvac_i <- vaceff2*min(nvac(t),0.9*S[i])
+            nvac_i <- vaceff2*nvac_t[i]
 
             # un-vaccinated flow
             dS[i] <- -(S[i])*(lambda_i + lambda_imp) - nvac_i
@@ -298,6 +309,7 @@ seir_cv_model <- function(t,y,parms) {
              Rv=sum(Rv),
              Ntotal=sum(S) + sum(E) + sum(I) + sum(R) +
                  sum(Sv) + sum(Ev) + sum(Iv) + sum(Rv),
-             incidence=dE+dI+dR+dEv+dIv+dRv)
+             incidence=dE+dI+dR,
+             incidencev=dEv+dIv+dRv)
     })
 }

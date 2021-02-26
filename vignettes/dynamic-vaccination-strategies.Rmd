@@ -1,23 +1,26 @@
 ---
-title: "COVID-19 dynamic vaccination strategy simulations"
-output: html_document
+title: "dynamic-vaccination-strategies"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dynamic-vaccination-strategies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
+```{r, include = FALSE}
 knitr::opts_chunk$set(
-	echo = TRUE,
-	message = FALSE,
-	warning = FALSE
+  collapse = TRUE,
+  comment = "#>"
 )
 ```
 
-```{r}
+```{r setup}
 library(covoid)
 library(ggplot2)
 ```
 
 This vignette details how to program and simulate dynamic vaccine strategies using COVOID. These are situations where at time 0 some (small) percentage of the population is vaccinated, and 
-as time progresses this percentage is increased according to a user defined strategy. There may be infectious cases present in the population at time zero or imported as time progresses. There is an additional vignette detailing the "static" case where X% of the population are vaccinated at time 0, no additional vaccinations are performed and some infections are seeded in the population. 
+as time progresses this percentage is increased according to a user defined strategy. There may be infectious cases present in the population at time zero or imported as time progresses. There is an additional vignette detailing the "static" case where some percentage of the population are vaccinated at time 0, no additional vaccinations are performed and some infections are seeded in the population. 
 
 ## Model Description
 
@@ -314,7 +317,7 @@ ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
 
 ### Vaccine effectiveness  
 
-Two parameters control this. The first $VE_1$..
+Two parameters control this. The first $V_{e1}$ determines the rate at which the vaccinated leave the susceptible compartment. 
 
 ```{r echo=FALSE,fig.cap="*Figure 1:* Vaccination effectiveness",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
@@ -326,13 +329,13 @@ digraph vac_eff1 {
         fontname = Helvetica,
         color='grey']
   S[label='S\nsusceptible'];
-  V[label='V\nvaccinated'];
+  V[label='Sv\nvaccinated'];
   edge [color = 'red' style=dashed]
   S -> V
 }",height=50)
 ```
 
-The second $VE_2$ ...
+The second $V{e2}$ determines the rate at which the vaccinated are infected. 
 
 ```{r echo=FALSE,fig.cap="*Figure 2:* Vaccination effectiveness",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
@@ -343,13 +346,12 @@ digraph vac_eff1 {
   node [shape = box,
         fontname = Helvetica,
         color='grey']
-  V[label='V\nvaccinated'];
+  V[label='Sv\nvaccinated'];
   Ev[label='Ev\nLatent period\n(vaccinated)'];
   edge [color = 'red' style=dashed]
   V -> Ev
 }",height=50)
 ```
-
 
 ## Example simulation I - random vaccination
 
@@ -416,8 +418,7 @@ gridExtra::grid.arrange(p1,p2,ncol=1)
 
 Consider the case where a certain section of the population will refuse to be vaccinated regardless of the consequences (e.g. no international travel). We can model this by increasing the heterogeneity of the population to account for the presence of a certain percentage of vaccine refusers in each age group.  
 
-We'll use the same setup as above, but now assume that 10% of every age group will never get
-vaccinated. 
+We'll use the same setup as above, but now assume that 10% of every age group will never get vaccinated. 
 
 ```{r}
 ## initial states
