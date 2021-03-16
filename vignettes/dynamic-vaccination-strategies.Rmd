@@ -1,10 +1,6 @@
 ---
 title: "dynamic-vaccination-strategies"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{dynamic-vaccination-strategies}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output: rmarkdown::html_document
 ---
 
 ```{r, include = FALSE}
@@ -360,8 +356,8 @@ The third $V{e3}$ determines the rate at which the vaccinated can infect others.
 We'll use the following setup:  
 
 * A population of 5 million  
-* **Randomly** accinate 1,000 people per day until day 30 and 20,000 thereafter. Nobody vaccinated at baseline. 
-* Once we reach 60% vaccination the borders open. As a result there are imported cases. The number of arrivals in follows a $\text{Poisson}(\lambda)$ distribution where $\lambda = 200.0$ with a probability of COVID-19 of $p_{covid} = 0.05$ for all groups. The number of arrivals in each age group is assumed proportional to the age distribution of Australia. 
+* **Randomly** vaccinate 1,000 people per day until day 30 and 20,000 thereafter. Nobody vaccinated at baseline. 
+* Once we reach 365 days of vaccination the borders open. As a result there are imported cases. The number of arrivals in follows a $\text{Poisson}(\lambda)$ distribution where $\lambda = 200.0$ with a probability of COVID-19 of $p_{covid} = 0.05$ for all groups. The number of arrivals in each age group is assumed proportional to the age distribution of Australia. 
 * Assume COVID has been extinguished in local populations, i.e. no local transmission in Australia or low and controlled enough to be ignorable in these average based models.
 * Vaccine effectiveness of $VE_1 = 0.6$ and $VE_2 = 0.99$.
 
@@ -381,8 +377,8 @@ state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv
 
 ## parameters
 # imported case
-n_imp_cases <- function(t,pvac,param=NULL) {
-    0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
+n_imp_cases <- function(t) {
+    0*(t <= 365) + (t > 365)*rpois(n = 1,lambda = 200)*0.05
 }
 # number of available vaccines
 nvac <- function(t) {
@@ -440,8 +436,8 @@ state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv
 
 ## parameters
 # imported case
-n_imp_cases <- function(t,pvac,param=NULL) {
-    0*(pvac <= 0.6) + (pvac > 0.6)*rpois(n = 1,lambda = 200)*0.05
+n_imp_cases <- function(t) {
+    0*(t <= 365) + (t > 365)*rpois(n = 1,lambda = 200)*0.05
 }
 # number of available vaccines
 nvac <- function(t) {
