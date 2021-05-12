@@ -1,18 +1,17 @@
 ---
 title: "static-vaccination-models"
-output: 
-  rmarkdown::html_vignette:
-    fig_caption: yes
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{static-vaccination-models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r include=FALSE}
+```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = FALSE
 )
 ```
 
@@ -291,18 +290,3 @@ ggplot(infections_res) +
   theme_bw() +
   theme(legend.position = "none") 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

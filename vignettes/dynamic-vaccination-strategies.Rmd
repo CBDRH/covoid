@@ -1,8 +1,6 @@
 ---
 title: "dynamic-vaccination-strategies"
-output: 
-  rmarkdown::html_vignette:
-    fig_caption: yes
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{dynamic-vaccination-strategies}
   %\VignetteEngine{knitr::rmarkdown}
@@ -12,7 +10,8 @@ vignette: >
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = FALSE
 )
 ```
 
@@ -487,3 +486,4 @@ p2 <- plot(res1,y="incidence") +
 gridExtra::grid.arrange(p1,p2,ncol=1)
 
 ```
+
