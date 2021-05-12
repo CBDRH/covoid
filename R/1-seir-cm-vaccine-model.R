@@ -16,49 +16,7 @@
 #' @return Object of class covoidd and dcm (from the package EpiModels)
 #'
 #' @examples
-#' # Example 1: no interventions
-#' cm_oz <- import_contact_matrix("Australia","general")
-#' nJ <- ncol(cm_oz)
-#' dist_oz <- import_age_distribution("Australia")
-#' S <- Sv <- rep(1000,nJ)
-#' E <- Ev <- rep(1,nJ)
-#' I <- Iv <- rep(0,nJ)
-#' R <- Rv <- rep(0,nJ)
-#' state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
-#' param1 <- seir_cv_param(R0 = 2.5,sigma=0.1,gamma = 0.1,cm=cm_oz,dist=dist_oz)
-#' res1 <- simulate_seir_cv(t = 150,state_t0 = state0,param = param1)
-#' plot(res1,y=c("S","E","I","R"))
-#'
-#' # Example 2: general physical distancing, school closures and masks/handwashing
-#' cm_oz_all <- import_contact_matrix("Australia","general")
-#' cm_oz_sch <- import_contact_matrix("Australia","school")
-#' cm <- list(all = cm_oz_all, sch = cm_oz_sch)
-#' # separate out school and general population contact rates
-#' cm_oz_all <- cm_oz_all - cm_oz_sch
-#' int <- list(sch=contact_intervention(start = 10,stop = 150,reduce = 0.2,start_delay = 5,stop_delay = 5),
-#'           all=contact_intervention(start = 10,stop = 150,reduce = 0.8,start_delay = 5,stop_delay = 5))
-#' int_t <- transmission_intervention(start = 10,stop = 200,reduce = 0.9,start_delay = 5,stop_delay = 5)
-#' param2 <- seir_cv_param(R0 = 2.5,sigma=0.1,gamma = 0.1,
-#'                      cm=list(sch=cm_oz_sch,
-#'                              all=cm_oz_all),
-#'                      dist=dist_oz,
-#'                      contact_intervention=int,
-#'                      transmission_intervention=int_t)
-#' res2 <- simulate_seir_cv(t = 150,state_t0 = state0,param = param2)
-#' plot(res2,y=c("S","E","I","R"))
-#'
-#' # Example 3: as #2 with children (<15) less infectious/susceptible
-#' im <- matrix(1,ncol=16,nrow=16)
-#' im[,1:3] <- 0.8
-#' param3 <- seir_cv_param(R0 = 2.5,sigma=0.1,gamma = 0.1,
-#'                      cm=list(sch=cm_oz_sch,
-#'                              all=cm_oz_all),
-#'                      dist=dist_oz,
-#'                      contact_intervention=int,
-#'                      transmission_intervention=int_t,
-#'                      im=im)
-#' res3 <- simulate_seir_cv(t = 200,state_t0 = state0,param = param3)
-#' plot(res3,y=c("S","E","I","R"))
+#' # coming soon....
 #'
 #' @export
 simulate_seir_cv <- function(t,state_t0,param) {
@@ -114,9 +72,9 @@ simulate_seir_cv <- function(t,state_t0,param) {
 #' @param gamma Inverse of the average length of infectious period (I -> R)
 #' @param cm Contact matrix or a named list of contact matrices where the sum is taken to
 #' be all contacts in the population.
-#' @param vaceff1 Vaccine effectiveness: P(infection) of vaccinated
-#' @param vaceff2 Vaccine effectiveness: S -> Sv.
-#' @param vaceff3 Vaccine effectiveness: Iv -> S/Sv
+#' @param vaceff1 Vaccine effectiveness: P(infection) of vaccinated (a vector of length J)
+#' @param vaceff2 Vaccine effectiveness: S -> Sv (a vector of length J)
+#' @param vaceff3 Vaccine effectiveness: Iv -> S/Sv (a vector of length J)
 #' @param nvac Number vaccinated.
 #' @param n_imp Number of infection imported cases (a function of time).
 #' @param dist Proportion of the population in each age category. Should sum to 1.
@@ -282,10 +240,10 @@ seir_cv_model <- function(t,y,parms) {
         for (i in 1:J) {
             # derived parameters
             lambda_imp <- pt_cur*sum(cm_cur[i,]*n_imp(t)/N)
-            lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + vaceff3*Iv)/N)) # force infect
+            lambda_i <- sum(pt_cur*im[,i]*cm_cur[i,]*((I + vaceff3[i]*Iv)/N)) # force infect
 
             # vaccination process
-            nvac_i <- vaceff2*nvac_t[i]
+            nvac_i <- vaceff2[i]*nvac_t[i]
 
             # un-vaccinated flow
             dS[i] <- -(S[i])*(lambda_i + lambda_imp) - nvac_i
@@ -294,8 +252,8 @@ seir_cv_model <- function(t,y,parms) {
             dR[i] <- gamma*I[i]
 
             # un-vaccinated flow
-            dSv[i] <- -(1-vaceff1)*Sv[i]*(lambda_i + lambda_imp) + nvac_i
-            dEv[i] <- (1-vaceff1)*Sv[i]*(lambda_i + lambda_imp) - sigma*Ev[i]
+            dSv[i] <- -(1-vaceff1[i])*Sv[i]*(lambda_i + lambda_imp) + nvac_i
+            dEv[i] <- (1-vaceff1[i])*Sv[i]*(lambda_i + lambda_imp) - sigma*Ev[i]
             dIv[i] <- sigma*Ev[i] - gamma*Iv[i]
             dRv[i] <- gamma*Iv[i]
 

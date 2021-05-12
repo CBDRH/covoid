@@ -149,7 +149,7 @@ seir2_model <- function(t,state_t0,param) {
         dE <- (S/N)*beta*Iu + (1-phi)*(S/N)*beta*Ih + (1-phi)*beta*(S/N)*Ici + (1-phi)*betam*(S/N)*Ice - (1/tau)*E
         dEce <- pe*phi*beta*S*Ih + pei*phi*beta*S*Ici + pee*phi*betam*S*Ice - (1/tau)*Ece
         dEci <- pe*(1-phi)*beta*S*Ih + pei*(1-phi)*beta*S*Ici + pee*(1-phi)*betam*S*Ice - (1/tau)*Eci
-        dIh <- (rho/tau)*E - (1/Th)*Ih
+        dIh <- (rho/tau)*Eci - (1/Th)*Ih
         dIu <- ((1-rho)/tau)*sigma*E - (1/Tu)*Iu
         dIce <- (1/tau)*Ece - (1/Tm)*Ice
         dIci <- (1/tau)*Eci - (1/Ti)*Ici
