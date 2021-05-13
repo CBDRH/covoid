@@ -1,12 +1,17 @@
 ---
 title: "dynamic-vaccination-strategies"
-output: rmarkdown::html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{dynamic-vaccination-strategies}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = FALSE
 )
 ```
 
@@ -364,9 +369,9 @@ We'll use the following setup:
 ```{r ,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
 ## initial states
 baseline <- 0.0
-vaceff1 <- 0.99
-vaceff2 <- 0.90
-vaceff3 <- 0.90
+vaceff1 <- rep(0.99,nJ)
+vaceff2 <- rep(0.90,nJ)
+vaceff3 <- rep(0.90,nJ)
 S <- SSv*(1-baseline)
 Sv <- SSv*baseline
 E <- rep(0,nJ)
@@ -423,9 +428,9 @@ We'll use the same setup as above, but now assume that 10% of every age group wi
 ```{r}
 ## initial states
 baseline <- 0.0
-vaceff1 <- 0.99
-vaceff2 <- 0.90
-vaceff3 <- 0.9
+vaceff1 <- rep(0.99,nJ*2)
+vaceff2 <- rep(0.90,nJ*2)
+vaceff3 <- rep(0.9,nJ*2)
 S <- rep(SSv*(1-baseline),each=2)*c(0.9,0.1)
 Sv <- rep(SSv*baseline,each=2)*c(0.9,0.1)
 E <- rep(0,nJ*2)
@@ -481,3 +486,4 @@ p2 <- plot(res1,y="incidence") +
 gridExtra::grid.arrange(p1,p2,ncol=1)
 
 ```
+

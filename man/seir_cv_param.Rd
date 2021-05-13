@@ -12,6 +12,7 @@ seir_cv_param(
   dist,
   vaceff1,
   vaceff2,
+  vaceff3,
   nvac,
   vac_alloc,
   n_imp,
@@ -32,9 +33,11 @@ be all contacts in the population.}
 
 \item{dist}{Proportion of the population in each age category. Should sum to 1.}
 
-\item{vaceff1}{Vaccine effectiveness - P(infection).}
+\item{vaceff1}{Vaccine effectiveness: P(infection) of vaccinated (a vector of length J)}
 
-\item{vaceff2}{Vaccine effectiveness - S -> Sv.}
+\item{vaceff2}{Vaccine effectiveness: S -> Sv (a vector of length J)}
+
+\item{vaceff3}{Vaccine effectiveness: Iv -> S/Sv (a vector of length J)}
 
 \item{nvac}{Number vaccinated.}
 

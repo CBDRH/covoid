@@ -1,12 +1,17 @@
 ---
 title: "static-vaccination-models"
-output: rmarkdown::html_document
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{static-vaccination-models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  eval = FALSE
 )
 ```
 
@@ -142,7 +147,9 @@ In addition we can vary a number of factors:
 
 We'll set B% of the population as vaccinated as time 0, with B varying from 0 to 1.
 
-```{r,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
+This doesn't run on build as it takes too long. 
+
+```{r,eval=FALSE}
 cm_oz <- import_contact_matrix("Australia","general")
 dist_oz <- import_age_distribution("Australia")
 SSv <- dist_oz*5e6
@@ -154,8 +161,9 @@ infections <- matrix(nrow=TT,ncol=length(vac_baseline))
 for (b in 1:length(vac_baseline)) {
   baseline <- vac_baseline[b]
   ## initial states
-  vaceff1 <- 0.99
-  vaceff2 <- 0.90
+  vaceff1 <- rep(0.99,nJ)
+  vaceff2 <- rep(0.90,nJ)
+  vaceff3 <- rep(0.99,nJ)
   S <- SSv*(1-baseline)
   Sv <- SSv*baseline
   E <- rep(100,nJ)  # 100 infectious present
@@ -176,6 +184,7 @@ for (b in 1:length(vac_baseline)) {
                           dist=dist_oz,
                           vaceff1=vaceff1,
                           vaceff2=vaceff2,
+                          vaceff3=vaceff3,
                           nvac=nvac,
                           vac_alloc=random_vac_alloc,
                           n_imp=n_imp_cases)
@@ -207,8 +216,9 @@ gridExtra::grid.arrange(p1,p2,ncol=1)
 
 #### Random vaccination (age) with varying vaccine effectiveness
 
+This doesn't run on build as it takes too long. 
 
-```{r,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
+```{r,eval=FALSE}
 cm_oz <- import_contact_matrix("Australia","general")
 dist_oz <- import_age_distribution("Australia")
 SSv <- dist_oz*5e6
@@ -229,8 +239,9 @@ for (e in 1:length(vac_effective)) {
   for (b in 1:length(vac_baseline)) {
     baseline <- vac_baseline[b]
     ## initial states
-    vaceff1 <- 0.99
-    vaceff2 <- 0.90
+    vaceff1 <- rep(0.99,nJ)
+    vaceff2 <- rep(0.90,nJ)
+    vaceff3 <- rep(0.99,nJ)
     S <- SSv*(1-baseline)
     Sv <- SSv*baseline
     E <- rep(100,nJ)  # 100 infectious present
@@ -249,8 +260,9 @@ for (e in 1:length(vac_effective)) {
                             gamma = 0.1,
                             cm=cm_oz,
                             dist=dist_oz,
-                            vaceff1=vac_effective[e],
+                            vaceff1=rep(vac_effective[e],nJ),
                             vaceff2=vaceff2,
+                            vaceff3=vaceff3,
                             nvac=nvac,
                             vac_alloc=random_vac_alloc,
                             n_imp=n_imp_cases)
@@ -278,18 +290,3 @@ ggplot(infections_res) +
   theme_bw() +
   theme(legend.position = "none") 
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
