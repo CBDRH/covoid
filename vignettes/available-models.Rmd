@@ -340,12 +340,12 @@ digraph SEIR2 {
 
 ```{r,fig.height=3,fig.width=7,fig.retina=3}
 # A minimal example
-# state0 <- seir2_state0(S = 1e5, E1 = 90, E2 = 40)
-# param <- seir2_param(R0=2.5,lambdaimp=0,sigma1=0.2,sigma2=0.2,gamma1=0.2,gamma2=0.2,
-#                      gammaq1=0.1,gammaq2=0.1,Qeff=0.5,Meff=0.99,rho=0.0,eta=1/sqrt(2),
-#                      alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
-# res <- simulate_seir2(t = 250,state_t0 = state0,param = param)
-# plot(res,y=c("S","E","I","Recov","Fatal"),main="Moss et al (2020) model")
+state0 <- seir2_state0(S = 1e5, E1 = 90, E2 = 40)
+param <- seir2_param(R0=2.5,lambdaimp=0,sigma1=0.2,sigma2=0.2,gamma1=0.2,gamma2=0.2,
+                    gammaq1=0.1,gammaq2=0.1,Qeff=0.5,Meff=0.99,rho=0.0,eta=1/sqrt(2),
+                      alphamBeta=0.5,probHospGivenInf=0.09895,delta=1/14,kappa=20,pm=1)
+res <- simulate_seir2(t = 250,state_t0 = state0,param = param)
+plot(res,y=c("S","E","I","Recov","Fatal"),main="Moss et al (2020) model")
 ```
 
 ## Age structured mixing

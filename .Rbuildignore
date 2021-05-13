@@ -7,3 +7,5 @@ research/*
 inst/shiny-interfaces/dcm.models/*
 inst/shiny-interfaces/doherty/*
 inst/shiny-interfaces/sir/*
+^doc$
+^Meta$
