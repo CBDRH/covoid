@@ -200,7 +200,7 @@ seir_cv_model <- function(t,y,parms) {
 
         # account for interventions
         cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
-        pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
+        pt_cur <- calculate_reactive_pt(pt, transmission_intervention, y[(2*16+1):(3*16)])
 
         # population size
         J <- ncol(cm_cur)

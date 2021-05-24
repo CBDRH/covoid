@@ -208,3 +208,19 @@ calculate_current_pt <- function(pt,intervention,t) {
     pt_cur
 }
 
+
+#' Calculate probability of transmission as a reactive function of incidence
+#'
+#' @param pt ...
+#' @param intervention ...
+#' @param incRows ...
+#'
+#'
+calculate_reactive_pt <- function(pt, intervention, incRows){
+    pt_cur <- pt
+    if(!is.null(intervention) & sum(incRows) > intervention$threshold) {
+            pt_cur <- pt_cur * intervention$reduce
+        }
+    # else leave as is
+    pt_cur
+}
