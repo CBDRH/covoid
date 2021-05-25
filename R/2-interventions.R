@@ -188,6 +188,45 @@ calculate_current_cm <- function(cm,intervention,t,dist) {
     cm_cur
 }
 
+
+#' Calculate current contact matrix
+#'
+#' @param cm ...
+#' @param intervention ...
+#' @param t ...
+#'
+#'
+calculate_reactive_cm <- function(cm,intervention,incRows,dist) {
+    # interventions
+    cm_cur <- cm
+    if(!is.null(intervention)) {
+        if (is.list(intervention) & !is.data.frame(intervention)) {
+
+            for (nm in names(intervention)) {
+                int <- intervention[names(intervention) == nm][[1]]
+                if (sum(incRows) > int$threshold) {
+                    vals <- int$reduce
+                    int_m <- diag(mean(vals),length(dist))
+                    cm_cur[names(cm_cur) == nm][[1]] = int_m %*% cm_cur[names(cm_cur) == nm][[1]]
+                }
+                # else leave as is
+            }
+        } else {
+            if (sum(incRows) > intervention$threshold) {
+                vals <- intervention$reduce
+                int_m <- diag(mean(vals),nrow = length(dist))
+                cm_cur <- int_m %*% cm_cur
+            }
+            # else leave as is
+        }
+    }
+
+    if (is.list(cm_cur)) {
+        cm_cur <- Reduce('+', cm_cur)
+    }
+    cm_cur
+}
+
 #' Calculate current probability of transmission
 #'
 #' @param pt ...
@@ -218,9 +257,26 @@ calculate_current_pt <- function(pt,intervention,t) {
 #'
 calculate_reactive_pt <- function(pt, intervention, incRows){
     pt_cur <- pt
-    if(!is.null(intervention) & sum(incRows) > intervention$threshold) {
+    if(!is.null(intervention)) {
+        if (sum(incRows) > intervention$threshold) {
             pt_cur <- pt_cur * intervention$reduce
+            }
         }
     # else leave as is
     pt_cur
 }
+
+
+#' Reactive intervention
+#'
+#' @param threshold incidence threshold for an intervention
+#' @param reduce reduction in contact or transmission probability
+#'
+#' @export
+reactive_intervention <- function(threshold,reduce) {
+    int <- data.frame(threshold=threshold,reduce=reduce)
+    class(int) <- c(class(int),"intervention")
+    int
+}
+
+
