@@ -36,7 +36,8 @@ mm <- function(p,half) {
     (p/(p+half))*(1.0+half)
 }
 
-vaccination_allocation_mm <- function(n,s,vac_params) {
+vaccination_allocation_mm <- function(t,n,s,vac_params) {
+    # t: time t
     # n: number of available vaccines
     # s: number of people in group j
     # in vac_params:
@@ -90,8 +91,8 @@ nvac <- function(t) {
     1000*(t < 30) + 20000*(t >= 30)
 }
 # wrap vaccine allocation function
-random_vac_alloc <- function(n,s) {
-    vaccination_allocation_mm(n,s,list(p=dist_oz,s0=S,half=0.05))
+random_vac_alloc <- function(t,n,s) {
+    vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
 }
 # reactive transmission interventions
 int1 <- reactive_intervention(threshold=40,reduce=0.5)
