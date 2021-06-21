@@ -74,7 +74,7 @@ vaccination_allocation_pp <- function(t,n,s,vac_params) {
     with (vac_params, {
 
         # Logic tests
-        stopifnot(all(propensity >=0) & all(propensity <= 1)) # Propensities should be between 0 and 1
+        stopifnot(all(propensity >=0) & all(propensity < 1)) # Propensities should be between 0 and 1
         stopifnot(n >= 0) # Can't have negative vaccines available
         stopifnot(length(s) == length(openDay)*length(propensity)) # Number of groups = number of phases x number of hesitancy categories
 
