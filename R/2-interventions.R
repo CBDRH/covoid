@@ -203,30 +203,49 @@ check_if_mult_interventions <- function(x) {
 calculate_reactive_cm <- function(cm,intervention,incRows,dist) {
     # interventions
     cm_cur <- cm
+    infect <- sum(incRows)
+    new_intervention <- intervention
     if(!is.null(intervention)) {
-        if (check_if_mult_interventions(intervention)) {
+        if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
+            # update reactive
+            new_intervention$state$inplace <- TRUE
+            new_intervention$state$days0cases <- 0
+            eval.parent(substitute(intervention <- new_intervention))
+            # apply intervention
+            vals <- intervention$reduce
+            int_m <- diag(mean(vals),nrow = length(dist))
+            cm_cur <- int_m %*% cm_cur
 
-            for (nm in names(intervention)) {
-                int <- intervention[names(intervention) == nm][[1]]
-                if (sum(incRows) > int$threshold) {
-                    vals <- int$reduce
-                    int_m <- diag(mean(vals),length(dist))
-                    cm_cur[names(cm_cur) == nm][[1]] = int_m %*% cm_cur[names(cm_cur) == nm][[1]]
-                }
-                # else leave as is
-            }
-        } else {
-            if (sum(incRows) > intervention$threshold) {
+        } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
+            # update reactive
+            new_intervention$state$days0cases <- 0
+            eval.parent(substitute(intervention <- new_intervention))
+            # apply intervention
+            vals <- intervention$reduce
+            int_m <- diag(mean(vals),nrow = length(dist))
+            cm_cur <- int_m %*% cm_cur
+
+        } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
+            new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
+            if (new_intervention$state$days0cases >= intervention$state$length) {
+                # should we turn off the intervention?
+                new_intervention$state$inplace <- FALSE
+                eval.parent(substitute(intervention <- new_intervention))
+                # apply no intervention
+                cm_cur <- cm_cur
+            } else {
+                # update reactive
+                eval.parent(substitute(intervention <- new_intervention))
                 vals <- intervention$reduce
                 int_m <- diag(mean(vals),nrow = length(dist))
+                # apply intervention
                 cm_cur <- int_m %*% cm_cur
             }
-            # else leave as is
-        }
-    }
 
-    if (is.list(cm_cur)) {
-        cm_cur <- Reduce('+', cm_cur)
+        } else {
+            # else leave as is
+            cm_cur <- cm_cur
+        }
     }
     cm_cur
 }
@@ -251,6 +270,8 @@ calculate_current_pt <- function(pt,intervention,t) {
     pt_cur
 }
 
+
+
 #' Calculate probability of transmission as a reactive function of incidence
 #'
 #' @param pt ...
@@ -260,22 +281,29 @@ calculate_current_pt <- function(pt,intervention,t) {
 #'
 calculate_reactive_pt <- function(pt, intervention, incRows){
     pt_cur <- pt
-    incidence <- sum(incRows)
+    infect <- sum(incRows)
     new_intervention <- intervention
     if(!is.null(intervention)) {
-        if ((incidence > intervention$threshold) & (intervention$state$inplace == FALSE)) {
+        if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
             new_intervention$state$inplace <- TRUE
-            new_intervention$state$days0case <- 0
+            new_intervention$state$days0cases <- 0
             eval.parent(substitute(intervention <- new_intervention))
             pt_cur <- pt_cur * intervention$reduce
-        } else if (intervention$state$inplace == TRUE & incidence > 0) {
-            new_intervention$state$days0case <- 0
+        } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
+            new_intervention$state$days0cases <- 0
             eval.parent(substitute(intervention <- new_intervention))
             pt_cur <- pt_cur * intervention$reduce
-        } else if (intervention$state$inplace == TRUE & isTRUE(all.equal(incidence,0))) {
-            new_intervention$state$days0case <- new_intervention$state$days0case + 1
-            eval.parent(substitute(intervention <- new_intervention))
-            pt_cur <- pt_cur * intervention$reduce
+        } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
+            new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
+            if (new_intervention$state$days0cases >= intervention$state$length) {
+                # should we turn off the intervention?
+                new_intervention$state$inplace <- FALSE
+                eval.parent(substitute(intervention <- new_intervention))
+                pt_cur <- pt_cur
+            } else {
+                eval.parent(substitute(intervention <- new_intervention))
+                pt_cur <- pt_cur * intervention$reduce
+            }
         } else {
             # else leave as is
             pt_cur <- pt_cur
@@ -297,4 +325,12 @@ reactive_intervention <- function(threshold,reduce,state) {
     int <- list(threshold=threshold,reduce=reduce,state=state)
     class(int) <- c(class(int),"intervention")
     int
+}
+
+#' Reactive state
+#'
+#'
+#'
+reactive_state <- function(inplace=FALSE,length=7,lowerbound=0) {
+    list(days0cases=NA,inplace=inplace,length=length,lowerbound=lowerbound)
 }

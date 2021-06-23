@@ -54,7 +54,7 @@ vaccination_allocation_mm <- function(t,n,s,vac_params) {
 
 
 
-#' Vaccine allocataion incorporating phases and propensity to be vaccinated
+#' Vaccine allocation incorporating phases and propensity to be vaccinated
 #'
 #' Distribute vaccines across different phases with time-dependent eligibility for different phases and varying vaccine willingness within phases
 #'

@@ -48,35 +48,7 @@ test_that("seir_cm_* examples work",{
     expect_is(plot(res3,y=c("S","E","I","R")),"ggplot")
 
     # Example from seir-cm-vaccine.R
-    # These two functions (mm and vaccination_allocation_mm) will be used in vaccine allocation
-    mm <- function(p,half) {
-        # Michaelis–Menten like dynamics
-        # p: proportion vaccinated
-        # half: point at which vaccination rate halfs
-        (p/(p+half))*(1.0+half)
-    }
-    vaccination_allocation_mm <- function(n,s,vac_params) {
-        # n: number of available vaccines
-        # s: number of people in group j
-        # in vac_params:
-        # p: probability of group j getting vaccinates
-        # s0: group size at time 0
-        # half: percentage of population at which slow down begins
-        with (vac_params, {
-            # number vaccinated
-            nvac0 <- pmin(p*n,s*ceiling(p))
-            remaining_vac <- n - sum(nvac0)
-
-            # allocate remaining vaccines
-            while(remaining_vac > 1 & any((nvac0 != s)[as.logical(ceiling(p))])) {
-                fully_allocated <- nvac0 == s
-                p1 <- (p*!fully_allocated)/sum(p*!fully_allocated)
-                nvac0 <- pmin(nvac0 + p1*remaining_vac,s*ceiling(p))
-                remaining_vac <- n - sum(nvac0)
-            }
-            return(nvac0*mm(s/s0,half))
-        })
-    }
+    # The two functions (mm and vaccination_allocation_mm) will be used in vaccine allocation
     # import and setup baseline states
     cm_oz <- import_contact_matrix("Australia","general")
     nJ <- ncol(cm_oz)
@@ -105,13 +77,13 @@ test_that("seir_cm_* examples work",{
         1000*(t < 30) + 20000*(t >= 30)
     }
     # wrap vaccine allocation function
-    random_vac_alloc <- function(n,s) {
-        vaccination_allocation_mm(n,s,list(p=dist_oz,s0=S,half=0.05))
+    random_vac_alloc <- function(t,n,s) {
+        vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
     }
     # reactive transmission interventions
-    int1 <- reactive_intervention(threshold=40,reduce=0.5)
+    int1 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state(inplace=FALSE))
     # reactive contact rate interventions
-    int2 <- reactive_intervention(threshold=40,reduce=0.5)
+    int2 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state(inplace=FALSE))
     param1 <- seir_cv_param(R0 = 2.5,
                             sigma=0.1,
                             gamma = 0.1,
