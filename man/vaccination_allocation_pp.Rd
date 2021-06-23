@@ -2,7 +2,7 @@
 % Please edit documentation in R/2-vaccine-allocation.R
 \name{vaccination_allocation_pp}
 \alias{vaccination_allocation_pp}
-\title{Vaccine allocataion incorporating phases and propensity to be vaccinated}
+\title{Vaccine allocation incorporating phases and propensity to be vaccinated}
 \usage{
 vaccination_allocation_pp(t, n, s, vac_params)
 }

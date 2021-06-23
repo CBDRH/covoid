@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = TRUE
+  eval = FALSE
 )
 ```
 
@@ -218,7 +218,7 @@ gridExtra::grid.arrange(p1,p2,ncol=1)
 
 This doesn't run on build as it takes too long. 
 
-```{r,eval=TRUE}
+```{r,eval=FALSE}
 cm_oz <- import_contact_matrix("Australia","general")
 dist_oz <- import_age_distribution("Australia")
 SSv <- dist_oz*5e6

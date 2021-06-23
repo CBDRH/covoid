@@ -1,7 +1,7 @@
+
+library(covoid)
 library(tidyverse)
 library(RColorBrewer)
-
-
 
 cm_oz <- import_contact_matrix("Australia","general")
 p1bp1b <- round(mean(colSums(cm_oz[14:16, 14:16])), digits = 1)
@@ -122,92 +122,65 @@ n_imp_cases <- function(t){
 
 }
 
-mm <- function(p,half) {
-    # Michaelis–Menten like dynamics
-    # p: proportion vaccinated
-    # half: point at which vaccination rate halfs
-    (p/(p+half))*(1.0+half)
-}
-
-vaccination_allocation_mm <- function(n,s,vac_params) {
-    # n: number of available vaccines
-    # s: number of people in group j
-    # in vac_params:
-    # p: probability of group j getting vaccinates
-    # s0: group size at time 0
-    # half: percentage of population at which slow down begins
-
-    with (vac_params, {
-        # number vaccinated
-        nvac0 <- pmin(p*n,s*ceiling(p))
-        remaining_vac <- n - sum(nvac0)
-
-        # allocate remaining vaccines
-        while(remaining_vac > 1 & any((nvac0 != s)[as.logical(ceiling(p))])) {
-            fully_allocated <- nvac0 == s
-            p1 <- (p*!fully_allocated)/sum(p*!fully_allocated)
-            nvac0 <- pmin(nvac0 + p1*remaining_vac,s*ceiling(p))
-            remaining_vac <- n - sum(nvac0)
-        }
-        return(nvac0*mm(s/s0,half))
-    })
-}
-
-random_vac_alloc <- function(n,s) {
-    vaccination_allocation_mm(n,s,list(p=dist_oz,s0=S,half=0.05))
+random_vac_alloc <- function(t,n,s) {
+    vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
 }
 
 # Interventions
-int1 <- data.frame(
+int1 <- reactive_intervention(
     threshold = 40,
-    reduce = .8
+    reduce = .8,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int2 <- data.frame(
+int2 <- reactive_intervention(
     threshold = 40,
-    reduce = .6
+    reduce = .6,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int3 <- data.frame(
+int3 <- reactive_intervention(
     threshold = 40,
-    reduce = .4
+    reduce = .4,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int4 <- data.frame(
+int4 <- reactive_intervention(
     threshold = 40,
-    reduce = .2
+    reduce = .2,
+    reactive_state(lowerbound=0,length=7)
 )
 
-int5 <- data.frame(
+int5 <- reactive_intervention(
     threshold = 10,
-    reduce = .8
+    reduce = .8,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int6 <- data.frame(
+int6 <- reactive_intervention(
     threshold = 10,
-    reduce = .6
+    reduce = .6,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int7 <- data.frame(
+int7 <- reactive_intervention(
     threshold = 10,
-    reduce = .4
+    reduce = .4,
+    reactive_state(lowerbound=0,length=7)
 )
 
 
-int8 <- data.frame(
+int8 <- reactive_intervention(
     threshold = 10,
-    reduce = .2
+    reduce = .2,
+    reactive_state(lowerbound=0,length=7)
 )
 
-class(int1) <- c('data.frame', 'intervention')
-class(int2) <- c('data.frame', 'intervention')
-class(int3) <- c('data.frame', 'intervention')
-class(int4) <- c('data.frame', 'intervention')
 
 param0 <- seir_cv_param(R0 = 2.5,
                         sigma=0.1,

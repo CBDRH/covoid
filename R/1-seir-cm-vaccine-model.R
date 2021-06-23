@@ -1,4 +1,42 @@
 
+#' Euler solving with weird intervention stuff
+#'
+#'
+#'
+#'
+euler <- function(y,times,func,parms) {
+    res <- matrix(nrow=length(times),ncol=length(y))
+    colnames(res) <- names(y)
+    res[1,] <- y
+    for (t in 2:max(times)) {
+        tmp0 <- func(t,y,parms)
+        tmp <- tmp0$data
+        dy <- tmp[[1]]
+        tmp <- unlist(tmp[2:length(tmp)])
+
+        if (t == 2) {
+            res1 <- matrix(nrow=length(times),ncol=length(tmp))
+            colnames(res1) <- names(tmp)
+        }
+        y <- y + dy
+        res[t,] <- y
+        res1[t,] <- tmp
+
+        # interventions
+        if(!is.null(tmp0$interventions$transmission_intervention)) {
+            parms$transmission_intervention <- tmp0$interventions$transmission_intervention
+        }
+        if(!is.null(tmp0$interventions$contact_intervention)) {
+            parms$contact_intervention <- tmp0$interventions$contact_intervention
+        }
+    }
+    res1[is.na(res1)] <- 0
+
+    cbind(times,res,res1)
+}
+
+
+
 #' Simulate a deterministic age structured SEIR model with vaccinations and
 #' reactive interventions
 #'
@@ -93,7 +131,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
     stopifnot(class(param) == "seir_cv_param")
 
     # simulation
-    mod <- deSolve::euler(y=state_t0,
+    mod <- euler(y=state_t0,
                         times=1:t,
                         func=seir_cv_model,
                         parms=list(pt=param$pt,
@@ -273,7 +311,11 @@ seir_cv_model <- function(t,y,parms) {
 
         #cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
         cm_cur <- calculate_reactive_cm(cm, contact_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)],dist)
+        c_intervention <- cm_cur$intervention
+        cm_cur <- cm_cur$cm_cur
         pt_cur <- calculate_reactive_pt(pt, transmission_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)])
+        t_intervention <- pt_cur$intervention
+        pt_cur <- pt_cur$pt_cur
         #pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
 
         # vaccination rate
@@ -331,7 +373,7 @@ seir_cv_model <- function(t,y,parms) {
         }
 
         # return
-        list(c(dS,dE,dI,dR,dSv,dEv,dIv,dRv),
+        list(data=list(c(dS,dE,dI,dR,dSv,dEv,dIv,dRv),
              S=sum(S),
              E=sum(E),
              I=sum(I),
@@ -343,6 +385,8 @@ seir_cv_model <- function(t,y,parms) {
              Ntotal=sum(S) + sum(E) + sum(I) + sum(R) +
                  sum(Sv) + sum(Ev) + sum(Iv) + sum(Rv),
              incidence=dE+dI+dR,
-             incidencev=dEv+dIv+dRv)
+             incidencev=dEv+dIv+dRv),
+             interventions=list(transmission_intervention=t_intervention,
+                                contact_intervention=c_intervention))
     })
 }
