@@ -189,6 +189,10 @@ calculate_current_cm <- function(cm,intervention,t,dist) {
 }
 
 
+check_if_mult_interventions <- function(x) {
+    sum(sapply(int1,function(x) sum("intervention" %in% class(x))))
+}
+
 #' Calculate current contact matrix
 #'
 #' @param cm ...
@@ -200,7 +204,7 @@ calculate_reactive_cm <- function(cm,intervention,incRows,dist) {
     # interventions
     cm_cur <- cm
     if(!is.null(intervention)) {
-        if (is.list(intervention) & !is.data.frame(intervention)) {
+        if (check_if_mult_interventions(intervention)) {
 
             for (nm in names(intervention)) {
                 int <- intervention[names(intervention) == nm][[1]]
@@ -247,7 +251,6 @@ calculate_current_pt <- function(pt,intervention,t) {
     pt_cur
 }
 
-
 #' Calculate probability of transmission as a reactive function of incidence
 #'
 #' @param pt ...
@@ -257,12 +260,27 @@ calculate_current_pt <- function(pt,intervention,t) {
 #'
 calculate_reactive_pt <- function(pt, intervention, incRows){
     pt_cur <- pt
+    incidence <- sum(incRows)
+    new_intervention <- intervention
     if(!is.null(intervention)) {
-        if (sum(incRows) > intervention$threshold) {
+        if ((incidence > intervention$threshold) & (intervention$state$inplace == FALSE)) {
+            new_intervention$state$inplace <- TRUE
+            new_intervention$state$days0case <- 0
+            eval.parent(substitute(intervention <- new_intervention))
             pt_cur <- pt_cur * intervention$reduce
-            }
+        } else if (intervention$state$inplace == TRUE & incidence > 0) {
+            new_intervention$state$days0case <- 0
+            eval.parent(substitute(intervention <- new_intervention))
+            pt_cur <- pt_cur * intervention$reduce
+        } else if (intervention$state$inplace == TRUE & isTRUE(all.equal(incidence,0))) {
+            new_intervention$state$days0case <- new_intervention$state$days0case + 1
+            eval.parent(substitute(intervention <- new_intervention))
+            pt_cur <- pt_cur * intervention$reduce
+        } else {
+            # else leave as is
+            pt_cur <- pt_cur
         }
-    # else leave as is
+    }
     pt_cur
 }
 
@@ -271,12 +289,12 @@ calculate_reactive_pt <- function(pt, intervention, incRows){
 #'
 #' @param threshold incidence threshold for an intervention
 #' @param reduce reduction in contact or transmission probability
+#' @param state state of the intervention: a list
 #'
 #' @export
-reactive_intervention <- function(threshold,reduce) {
-    int <- data.frame(threshold=threshold,reduce=reduce)
+reactive_intervention <- function(threshold,reduce,state) {
+    # check arguments
+    int <- list(threshold=threshold,reduce=reduce,state=state)
     class(int) <- c(class(int),"intervention")
     int
 }
-
-

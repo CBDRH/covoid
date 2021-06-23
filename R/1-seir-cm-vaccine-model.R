@@ -301,11 +301,11 @@ seir_cv_model <- function(t,y,parms) {
         J <- ncol(cm)
 
         # account for interventions
+
         #cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
         cm_cur <- calculate_reactive_cm(cm, contact_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)],dist)
         pt_cur <- calculate_reactive_pt(pt, transmission_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)])
         #pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
-
 
         # vaccination rate
         nvac_t <- vac_alloc(t, nvac(t),y[1:J])
