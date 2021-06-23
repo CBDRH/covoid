@@ -11,12 +11,12 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  eval = TRUE
 )
 ```
 
 ```{r setup}
-library(covoid)
+devtools::load_all()
 library(ggplot2)
 ```
 
@@ -218,7 +218,7 @@ gridExtra::grid.arrange(p1,p2,ncol=1)
 
 This doesn't run on build as it takes too long. 
 
-```{r,eval=FALSE}
+```{r,eval=TRUE}
 cm_oz <- import_contact_matrix("Australia","general")
 dist_oz <- import_age_distribution("Australia")
 SSv <- dist_oz*5e6
@@ -253,7 +253,7 @@ for (e in 1:length(vac_effective)) {
     ## parameters
     n_imp_cases <- function(t,pvac) 0
     nvac <- function(t) 0
-    random_vac_alloc <- function(n,s) rep(0,nJ)
+    random_vac_alloc <- function(t,n,s) rep(0,nJ)
       
     param1 <- seir_cv_param(R0 = 2.5,
                             sigma=0.1,

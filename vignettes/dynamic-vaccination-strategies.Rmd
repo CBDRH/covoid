@@ -1,6 +1,8 @@
 ---
 title: "dynamic-vaccination-strategies"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    toc: true
 vignette: >
   %\VignetteIndexEntry{dynamic-vaccination-strategies}
   %\VignetteEngine{knitr::rmarkdown}
@@ -11,7 +13,7 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  eval = FALSE
+  eval = TRUE
 )
 ```
 
@@ -44,13 +46,14 @@ $$
 
 In order to simplify some aspects of programming it is a discrete time model, $\Delta t = 1$ with each time step interpretable as 1 hour/day/week as required. The models are age structured. For background information on age structured compartmental models see `vignette(age-structured-mixing-background)` and for programming information see `vignette(age-structured-mixing)`. 
 
-## Vaccine effectiveness
+## Parameters / Inputs
 
 Simulating an age structured compartmental model requires a contact matrix and age distribution. Some additional modeling requirements for the dynamic vaccine model include:  
 
 * Imported cases  
 * Vaccination strategy  
-* Vaccine effectiveness  
+* Vaccine effectiveness
+* Dynamic interventions
 
 ### Demographics
 
@@ -318,7 +321,7 @@ ggplot(SSvt,aes(x=day,col=age_group,,group=factor(age_group),y=n)) +
 
 ### Vaccine effectiveness  
 
-Two parameters control this. The first $V_{e1}$ determines the rate at which the vaccinated leave the susceptible compartment. 
+Three parameters control this. The first $V_{e1}$ determines the rate at which the vaccinated leave the susceptible compartment. 
 
 ```{r echo=FALSE,fig.cap="*Figure 1:* Vaccination effectiveness",fig.height=200,fig.align="left",fig.retina=3}
 DiagrammeR::grViz("
@@ -355,6 +358,19 @@ digraph vac_eff1 {
 ```
 
 The third $V{e3}$ determines the rate at which the vaccinated can infect others.
+
+### Dynamic interventions
+
+The `reactive_intervention` function can be used to create interventions that dynamically kick-in when
+a threshold number of cases is met, and are disabled when `lowerbound` cases have occurred for `length` days.
+
+
+```{r}
+# create an intervention that kicks in when incidence hits 40, and reduces the relevant
+# parameter (e.g. contact rates) by 50%. The intervention remains in place for 14 days after
+# a lower bound of 5 cases are met.
+int1 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state(inplace=FALSE,length=14,lowerbound=5))
+```
 
 ## Example simulation I - random vaccination
 
@@ -419,13 +435,13 @@ p2 <- plot(res1,y="incidence") +
 gridExtra::grid.arrange(p1,p2,ncol=1)
 ```
 
-## Example simulation II - random vaccination with vaccine hesitancy
+## Example simulation II - vaccine hesitancy
 
 Consider the case where a certain section of the population will refuse to be vaccinated regardless of the consequences (e.g. no international travel). We can model this by increasing the heterogeneity of the population to account for the presence of a certain percentage of vaccine refusers in each age group.  
 
 We'll use the same setup as above, but now assume that 10% of every age group will never get vaccinated. 
 
-```{r}
+```{r,fig.width=6,fig.height=6,fig.retina=3,fig.align='center'}
 ## initial states
 baseline <- 0.0
 vaceff1 <- rep(0.99,nJ*2)
@@ -486,4 +502,8 @@ p2 <- plot(res1,y="incidence") +
 gridExtra::grid.arrange(p1,p2,ncol=1)
 
 ```
+
+## Example simulation III - dynamic interventions
+
+
 
