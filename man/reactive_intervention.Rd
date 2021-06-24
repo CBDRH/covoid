@@ -7,11 +7,11 @@
 reactive_intervention(threshold, reduce, state)
 }
 \arguments{
-\item{threshold}{incidence threshold for an intervention}
+\item{threshold}{threshold (I - prevalence) for an intervention to commence}
 
 \item{reduce}{reduction in contact or transmission probability}
 
-\item{state}{state of the intervention: a list}
+\item{state}{state of the intervention: see `reactive_state`}
 }
 \description{
 Reactive intervention

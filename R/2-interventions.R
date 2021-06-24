@@ -190,61 +190,9 @@ calculate_current_cm <- function(cm,intervention,t,dist) {
 
 
 check_if_mult_interventions <- function(x) {
-    sum(sapply(int1,function(x) sum("intervention" %in% class(x))))
+    sum(sapply(x,function(x) sum("intervention" %in% class(x))))
 }
 
-#' Calculate current contact matrix
-#'
-#' @param cm ...
-#' @param intervention ...
-#' @param t ...
-#'
-#'
-calculate_reactive_cm <- function(cm,intervention,incRows,dist) {
-    # interventions
-    cm_cur <- cm
-    infect <- sum(incRows)
-    new_intervention <- intervention
-    if(!is.null(intervention)) {
-        if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
-            # update reactive
-            new_intervention$state$inplace <- TRUE
-            new_intervention$state$days0cases <- 0
-            # apply intervention
-            vals <- intervention$reduce
-            int_m <- diag(mean(vals),nrow = length(dist))
-            cm_cur <- int_m %*% cm_cur
-
-        } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
-            # update reactive
-            new_intervention$state$days0cases <- 0
-            # apply intervention
-            vals <- intervention$reduce
-            int_m <- diag(mean(vals),nrow = length(dist))
-            cm_cur <- int_m %*% cm_cur
-
-        } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
-            new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
-            if (new_intervention$state$days0cases >= intervention$state$length) {
-                # should we turn off the intervention?
-                new_intervention$state$inplace <- FALSE
-                # apply no intervention
-                cm_cur <- cm_cur
-            } else {
-                # update reactive
-                vals <- intervention$reduce
-                int_m <- diag(mean(vals),nrow = length(dist))
-                # apply intervention
-                cm_cur <- int_m %*% cm_cur
-            }
-
-        } else {
-            # else leave as is
-            cm_cur <- cm_cur
-        }
-    }
-    list(cm_cur=cm_cur,intervention=new_intervention)
-}
 
 #' Calculate current probability of transmission
 #'
@@ -266,50 +214,75 @@ calculate_current_pt <- function(pt,intervention,t) {
     pt_cur
 }
 
+#' Apply an intervention to a contact matrix or probability of transmission
+#'
+#' @param x contact matrix or probability of transmission
+#' @param reduce amount by which we reduce the parameter under the intervention
+#' @param dist distribution of groups in population
+#'
+apply_intervention <- function(x,reduce,dist) UseMethod("apply_intervention")
+
+#' Apply an intervention to a contact matrix or probability of transmission
+#'
+#' @inheritParams apply_intervention
+apply_intervention.default <- function(x,reduce,dist) x*reduce
+
+#' Apply an intervention to a contact matrix or probability of transmission
+#'
+#' @inheritParams apply_intervention
+apply_intervention.contact_matrix <- function(x,reduce,dist) {
+    vals <- reduce
+    int_m <- diag(mean(vals),nrow = length(dist))
+    x <- int_m %*% x
+    x
+}
 
 
-#' Calculate probability of transmission as a reactive function of incidence
-#'
-#' @param pt ...
-#' @param intervention ...
-#' @param incRows ...
+#' Calculate the effect of and update a reactive intervention at each time step
 #'
 #'
-calculate_reactive_pt <- function(pt, intervention, incRows){
-    pt_cur <- pt
+#' @param x a contact matrix or the probability of transmission
+#' @param intervention a reactive intervention
+#' @param incRows the number of cases per group used to define the intervention
+#' beginning and ending
+#' @param dist population distribution of the groups
+#'
+#'
+calculate_reactive <- function(x,intervention,incRows,dist=NULL) {
+    x_cur <- x
     infect <- sum(incRows)
     new_intervention <- intervention
     if(!is.null(intervention)) {
         if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
             new_intervention$state$inplace <- TRUE
             new_intervention$state$days0cases <- 0
-            pt_cur <- pt_cur * intervention$reduce
+            x_cur <- apply_intervention(x_cur,intervention$reduce,dist)
         } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
             new_intervention$state$days0cases <- 0
-            pt_cur <- pt_cur * intervention$reduce
+            x_cur <- apply_intervention(x_cur,intervention$reduce,dist)
         } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
             new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
             if (new_intervention$state$days0cases >= intervention$state$length) {
                 # should we turn off the intervention?
                 new_intervention$state$inplace <- FALSE
-                pt_cur <- pt_cur
+                x_cur <- x_cur
             } else {
-                pt_cur <- pt_cur * intervention$reduce
+                x_cur <- apply_intervention(x_cur,intervention$reduce,dist)
             }
         } else {
             # else leave as is
-            pt_cur <- pt_cur
+            x_cur <- x_cur
         }
     }
-    list(pt_cur=pt_cur,intervention=new_intervention)
+    list(param=x_cur,intervention=new_intervention)
 }
 
 
 #' Reactive intervention
 #'
-#' @param threshold incidence threshold for an intervention
+#' @param threshold threshold (I - prevalence) for an intervention to commence
 #' @param reduce reduction in contact or transmission probability
-#' @param state state of the intervention: a list
+#' @param state state of the intervention: see `reactive_state`
 #'
 #' @export
 reactive_intervention <- function(threshold,reduce,state) {
@@ -320,9 +293,106 @@ reactive_intervention <- function(threshold,reduce,state) {
 }
 
 #' Reactive state
+#' Set parameters for reactive interventions
 #'
+#' @param inplace is the intervention in place (logical)
+#' @param length length+1 of time the intervention should remain in place after
+#' the lower bound condition is met
+#' @param lowerbound the number of case (I - prevalence) at which the intervention
+#' should continue for `length` units of time
 #'
 #' @export
 reactive_state <- function(inplace=FALSE,length=7,lowerbound=0) {
     list(days0cases=NA,inplace=inplace,length=length,lowerbound=lowerbound)
 }
+
+#' #' Calculate probability of transmission as a reactive function of incidence
+#' #'
+#' #' @param pt ...
+#' #' @param intervention ...
+#' #' @param incRows ...
+#' #'
+#' #'
+#' calculate_reactive_pt <- function(pt, intervention, incRows){
+#'     pt_cur <- pt
+#'     infect <- sum(incRows)
+#'     new_intervention <- intervention
+#'     if(!is.null(intervention)) {
+#'         if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
+#'             new_intervention$state$inplace <- TRUE
+#'             new_intervention$state$days0cases <- 0
+#'             pt_cur <- pt_cur * intervention$reduce
+#'         } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
+#'             new_intervention$state$days0cases <- 0
+#'             pt_cur <- pt_cur * intervention$reduce
+#'         } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
+#'             new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
+#'             if (new_intervention$state$days0cases >= intervention$state$length) {
+#'                 # should we turn off the intervention?
+#'                 new_intervention$state$inplace <- FALSE
+#'                 pt_cur <- pt_cur
+#'             } else {
+#'                 pt_cur <- pt_cur * intervention$reduce
+#'             }
+#'         } else {
+#'             # else leave as is
+#'             pt_cur <- pt_cur
+#'         }
+#'     }
+#'     list(pt_cur=pt_cur,intervention=new_intervention)
+#' }
+
+
+#' #' Calculate current contact matrix
+#' #'
+#' #' @param cm ...
+#' #' @param intervention ...
+#' #' @param t ...
+#' #'
+#' #'
+#' calculate_reactive_cm <- function(cm,intervention,incRows,dist) {
+#'     # interventions
+#'     cm_cur <- cm
+#'     infect <- sum(incRows)
+#'     new_intervention <- intervention
+#'     if(!is.null(intervention)) {
+#'         if ((infect > intervention$threshold) & (intervention$state$inplace == FALSE)) {
+#'             # update reactive
+#'             new_intervention$state$inplace <- TRUE
+#'             new_intervention$state$days0cases <- 0
+#'             # apply intervention
+#'             vals <- intervention$reduce
+#'             int_m <- diag(mean(vals),nrow = length(dist))
+#'             cm_cur <- int_m %*% cm_cur
+#'
+#'         } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
+#'             # update reactive
+#'             new_intervention$state$days0cases <- 0
+#'             # apply intervention
+#'             vals <- intervention$reduce
+#'             int_m <- diag(mean(vals),nrow = length(dist))
+#'             cm_cur <- int_m %*% cm_cur
+#'
+#'         } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
+#'             new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
+#'             if (new_intervention$state$days0cases >= intervention$state$length) {
+#'                 # should we turn off the intervention?
+#'                 new_intervention$state$inplace <- FALSE
+#'                 # apply no intervention
+#'                 cm_cur <- cm_cur
+#'             } else {
+#'                 # update reactive
+#'                 vals <- intervention$reduce
+#'                 int_m <- diag(mean(vals),nrow = length(dist))
+#'                 # apply intervention
+#'                 cm_cur <- int_m %*% cm_cur
+#'             }
+#'
+#'         } else {
+#'             # else leave as is
+#'             cm_cur <- cm_cur
+#'         }
+#'     }
+#'     list(cm_cur=cm_cur,intervention=new_intervention)
+#' }
+

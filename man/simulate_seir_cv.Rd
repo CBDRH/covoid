@@ -15,7 +15,7 @@ simulate_seir_cv(t, state_t0, param)
 \item{param}{Model parameters (see ?seir_param)}
 }
 \value{
-Object of class covoidd and dcm (from the package EpiModels)
+Object of class covoid
 }
 \description{
 \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
@@ -64,9 +64,9 @@ random_vac_alloc <- function(t,n,s) {
     vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
 }
 # reactive transmission interventions
-int1 <- reactive_intervention(threshold=40,reduce=0.5)
+int1 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
 # reactive contact rate interventions
-int2 <- reactive_intervention(threshold=40,reduce=0.5)
+int2 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
 param1 <- seir_cv_param(R0 = 2.5,
                         sigma=0.1,
                         gamma = 0.1,

@@ -1,3 +1,25 @@
+test_that("reactive updates work (calculate_reactive)",{
+
+    int <- reactive_intervention(threshold=40,reduce=0.5,
+                                  state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
+    cm <- import_contact_matrix("Australia","general")
+    dist <- import_age_distribution("Australia")
+    cm_update <- calculate_reactive(cm,int,c(100),dist=dist)$param
+    expect_true(all(cm_update/cm == 0.5))
+
+    cm_update <- calculate_reactive(cm,int,c(10),dist=dist)$param
+    expect_true(all(cm_update/cm == 1.0))
+
+    pt <- 0.1
+    pt_update <- calculate_reactive(pt,int,c(100),dist=NULL)$param
+    expect_true(all(pt_update/pt == 0.5))
+
+    pt <- 0.1
+    pt_update <- calculate_reactive(pt,int,c(10),dist=NULL)$param
+    expect_true(all(pt_update/pt == 1.0))
+})
+
+
 test_that("reactive logic is correct (pt)",{
     # setup
     pt <- 0.1  # probability of transmission
@@ -6,33 +28,37 @@ test_that("reactive logic is correct (pt)",{
     y <- c(100,100)
     int1 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_pt(pt,int1,y),pt*0.5)
+    expect_equal(calculate_reactive(pt,int1,y)$param,pt*0.5)
 
     y <- c(0,0)
     int1 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_pt(pt,int1,y),pt)
+    expect_equal(calculate_reactive(pt,int1,y)$param,pt)
 
     y <- c(20,20.001)
     int1 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_pt(pt,int1,y),pt*0.5)
+    expect_equal(calculate_reactive(pt,int1,y)$param,pt*0.5)
 
     # over time test
+    pt <- 0.1
     ys <- c(40,41,rep(1,10))
     int1 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
     for (t in 1:length(ys)) {
-        expect_equal(calculate_reactive_pt(pt,int1,ys[t]),pt*ifelse(t %in% 2:6,0.5,1.0))
+        reactive_update <- calculate_reactive(pt,int1,ys[t])
+        pt_cur <- reactive_update$param
+        int1 <- reactive_update$intervention
+        expect_equal(pt_cur,pt*ifelse(t %in% 2:6,0.5,1.0))
     }
 
-    # over time test
-    ys <- c(40,41,rep(6,9),rep(1,5))
-    int1 <- reactive_intervention(threshold=40,reduce=0.5,
-                                  state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    for (t in 1:length(ys)) {
-        print(calculate_reactive_pt(pt,int1,ys[t]))
-    }
+    # # over time test
+    # ys <- c(40,41,rep(6,9),rep(1,5))
+    # int1 <- reactive_intervention(threshold=40,reduce=0.5,
+    #                               state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
+    # for (t in 1:length(ys)) {
+    #     print(calculate_reactive_pt(pt,int1,ys[t]))
+    # }
 
 })
 
@@ -45,24 +71,27 @@ test_that("reactive logic is correct (cm)",{
     y <- c(100,100)
     int2 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_cm(cm,int2,y,dist),cm*0.5)
+    expect_equal(calculate_reactive(cm,int2,y,dist)$param,cm*0.5)
 
     y <- c(0,0)
     int2 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_cm(cm,int2,y,dist),cm)
+    expect_equal(calculate_reactive(cm,int2,y,dist)$param,cm)
 
     y <- c(20,20.001)
     int2 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
-    expect_equal(calculate_reactive_cm(cm,int2,y,dist),cm*0.5)
+    expect_equal(calculate_reactive(cm,int2,y,dist)$param,cm*0.5)
 
     # over time test
     ys <- c(40,41,rep(1,10))
     int2 <- reactive_intervention(threshold=40,reduce=0.5,
                                   state=reactive_state(inplace=FALSE,length=5,lowerbound=5))
     for (t in 1:length(ys)) {
-        expect_equal(calculate_reactive_cm(cm,int2,ys[t],dist),cm*ifelse(t %in% 2:6,0.5,1.0))
+        reactive_update <- calculate_reactive(cm,int2,ys[t])
+        cm_cur <- reactive_update$param
+        int2 <- reactive_update$intervention
+        expect_equal(cm_cur,cm*ifelse(t %in% 2:6,0.5,1.0))
     }
 })
 
@@ -110,11 +139,8 @@ test_that("reactive sims work",{
                             n_imp=n_imp_cases)
     ## simulation
     res4 <- simulate_seir_cv(t = 100,state_t0 = state0,param = param1)
-    plot(res4,y="incidence")
-    plot(res4,y="I")
-    plot(res4,y="E")
-
-
+    expect_is(res4,"covoid")
+    expect_is(plot(res4,y="incidence"),"ggplot")
 })
 
 

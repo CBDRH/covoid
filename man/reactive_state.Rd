@@ -2,10 +2,21 @@
 % Please edit documentation in R/2-interventions.R
 \name{reactive_state}
 \alias{reactive_state}
-\title{Reactive state}
+\title{Reactive state
+Set parameters for reactive interventions}
 \usage{
 reactive_state(inplace = FALSE, length = 7, lowerbound = 0)
 }
+\arguments{
+\item{inplace}{is the intervention in place (logical)}
+
+\item{length}{length+1 of time the intervention should remain in place after
+the lower bound condition is met}
+
+\item{lowerbound}{the number of case (I - prevalence) at which the intervention
+should continue for `length` units of time}
+}
 \description{
 Reactive state
+Set parameters for reactive interventions
 }

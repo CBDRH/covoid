@@ -1,38 +1,46 @@
 
-#' Euler solving with weird intervention stuff
+#' Euler summation solving with intervention update
 #'
+#' @param y initial state
+#' @param times time steps over which to sum
+#' @param func difference equation, see `seir_cv_model`
+#' @param parms parameters to pass to func, needs to be a list
 #'
-#'
-#'
-euler <- function(y,times,func,parms) {
-    res <- matrix(nrow=length(times),ncol=length(y))
-    colnames(res) <- names(y)
-    res[1,] <- y
+euler1 <- function(y,times,func,parms) {
+    # object to store results from y = y0 + sum(dy/dt,time)
+    main_res <- matrix(nrow=length(times),ncol=length(y))
+    colnames(main_res) <- names(y)
+    main_res[1,] <- y
+    # loop over time steps and update
+    # 1) y
+    # 2) reactive intervention
     for (t in 2:max(times)) {
-        tmp0 <- func(t,y,parms)
-        tmp <- tmp0$data
-        dy <- tmp[[1]]
-        tmp <- unlist(tmp[2:length(tmp)])
+        update_t <- func(t,y,parms)
+        data_t <- update_t$data
+        dy <- data_t[[1]]
+        other_data_t <- unlist(data_t[2:length(data_t)])
 
         if (t == 2) {
-            res1 <- matrix(nrow=length(times),ncol=length(tmp))
-            colnames(res1) <- names(tmp)
+            # matrix to store other non-difference equation results
+            other_res <- matrix(nrow=length(times),ncol=length(other_data_t))
+            colnames(other_res) <- names(other_data_t)
         }
-        y <- y + dy
-        res[t,] <- y
-        res1[t,] <- tmp
 
-        # interventions
-        if(!is.null(tmp0$interventions$transmission_intervention)) {
-            parms$transmission_intervention <- tmp0$interventions$transmission_intervention
+        # update and store results
+        y <- y + dy
+        main_res[t,] <- y
+        other_res[t,] <- other_data_t
+
+        # update interventions
+        if(!is.null(update_t$interventions$transmission_intervention)) {
+            parms$transmission_intervention <- update_t$interventions$transmission_intervention
         }
-        if(!is.null(tmp0$interventions$contact_intervention)) {
-            parms$contact_intervention <- tmp0$interventions$contact_intervention
+        if(!is.null(update_t$interventions$contact_intervention)) {
+            parms$contact_intervention <- update_t$interventions$contact_intervention
         }
     }
-    res1[is.na(res1)] <- 0
-
-    cbind(times,res,res1)
+    other_res[is.na(other_res)] <- 0
+    cbind(times,main_res,other_res)
 }
 
 
@@ -52,7 +60,7 @@ euler <- function(y,times,func,parms) {
 #' @param state_t0 Initial state of the model (see ?seir_state0)
 #' @param param Model parameters (see ?seir_param)
 #'
-#' @return Object of class covoidd and dcm (from the package EpiModels)
+#' @return Object of class covoid
 #'
 #' @examples
 #' (this is a long one!)
@@ -93,9 +101,9 @@ euler <- function(y,times,func,parms) {
 #'     vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
 #' }
 #' # reactive transmission interventions
-#' int1 <- reactive_intervention(threshold=40,reduce=0.5)
+#' int1 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
 #' # reactive contact rate interventions
-#' int2 <- reactive_intervention(threshold=40,reduce=0.5)
+#' int2 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
 #' param1 <- seir_cv_param(R0 = 2.5,
 #'                         sigma=0.1,
 #'                         gamma = 0.1,
@@ -131,7 +139,7 @@ simulate_seir_cv <- function(t,state_t0,param) {
     stopifnot(class(param) == "seir_cv_param")
 
     # simulation
-    mod <- euler(y=state_t0,
+    mod <- euler1(y=state_t0,
                         times=1:t,
                         func=seir_cv_model,
                         parms=list(pt=param$pt,
@@ -158,7 +166,6 @@ simulate_seir_cv <- function(t,state_t0,param) {
     out$epi <- cbind(out$epi)
     out$epi$incidence <- rowSums(out$epi[paste0("incidence",1:nJ)])
     out$epi$incidencev <- rowSums(out$epi[paste0("incidencev",1:nJ)])
-
 
     # return
     class(out) <- c("covoid",class(out))
@@ -308,15 +315,16 @@ seir_cv_model <- function(t,y,parms) {
         J <- ncol(cm)
 
         # account for interventions
-
-        #cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
-        cm_cur <- calculate_reactive_cm(cm, contact_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)],dist)
-        c_intervention <- cm_cur$intervention
-        cm_cur <- cm_cur$cm_cur
-        pt_cur <- calculate_reactive_pt(pt, transmission_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)])
-        t_intervention <- pt_cur$intervention
-        pt_cur <- pt_cur$pt_cur
+        # contact matrix
+        cm_int_update <- calculate_reactive(cm, contact_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)],dist)
+        contact_intervention <- cm_int_update$intervention
+        cm_cur <- cm_int_update$param
+        # probability of transmission
+        pt_int_update <- calculate_reactive(pt, transmission_intervention, y[(2*J+1):(3*J)] + y[(6*J+1):(7*J)])
+        transmission_intervention <- pt_int_update$intervention
+        pt_cur <- pt_int_update$param
         #pt_cur <- calculate_current_pt(pt,transmission_intervention,t)
+        #cm_cur <- calculate_current_cm(cm,contact_intervention,t,dist)
 
         # vaccination rate
         nvac_t <- vac_alloc(t, nvac(t),y[1:J])
@@ -386,7 +394,7 @@ seir_cv_model <- function(t,y,parms) {
                  sum(Sv) + sum(Ev) + sum(Iv) + sum(Rv),
              incidence=dE+dI+dR,
              incidencev=dEv+dIv+dRv),
-             interventions=list(transmission_intervention=t_intervention,
-                                contact_intervention=c_intervention))
+             interventions=list(transmission_intervention=transmission_intervention,
+                                contact_intervention=contact_intervention))
     })
 }
