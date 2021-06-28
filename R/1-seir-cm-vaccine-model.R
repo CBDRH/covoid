@@ -138,11 +138,33 @@ simulate_seir_cv <- function(t,state_t0,param) {
     stopifnot(class(state_t0) == "seir_cv_state0")
     stopifnot(class(param) == "seir_cv_param")
 
+    # calculate prob transmission
+    if (is.list(param$cm)) {
+        cm_gen <- Reduce('+', param$cm)
+    } else {
+        cm_gen <- param$cm
+    }
+    if (is.null(param$im)) {
+        param$im <- matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
+    }
+    J <- ncol(cm_gen)
+    V <- diag(rep(param$gamma,J))
+    F1 <- cm_gen
+    for (i in 1:J) {
+        for (j in 1:J) {
+            F1[i,j] <- param$dist[i]/param$dist[j]*F1[i,j]*param$im[i,j]
+        }
+    }
+    K1 <- F1 %*% solve(V)
+    l1 <- max(Re(eigen(K1)$values))
+    pt <- param$R0/l1
+
+
     # simulation
     mod <- euler1(y=state_t0,
                         times=1:t,
                         func=seir_cv_model,
-                        parms=list(pt=param$pt,
+                        parms=list(pt=pt,
                                    sigma=param$sigma,
                                    gamma=param$gamma,
                                    cm=param$cm,
@@ -227,33 +249,33 @@ seir_cv_param <- function(R0,sigma,gamma,cm,dist,vaceff1,vaceff2,vaceff3,nvac,va
     }
     stopifnot(all.equal(sum(dist),1.0))
 
-    # calculate prob transmission
-    if (is.list(cm)) {
-        cm_gen <- Reduce('+', cm)
-    } else {
-        cm_gen <- cm
-    }
-    if (is.null(im)) {
-        im <- matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
-    }
-    J <- ncol(cm_gen)
-    V <- diag(rep(gamma,J))
-    F1 <- cm_gen
-    for (i in 1:J) {
-        for (j in 1:J) {
-            F1[i,j] <- dist[i]/dist[j]*F1[i,j]*im[i,j]
-        }
-    }
-    K1 <- F1 %*% solve(V)
-    l1 <- max(Re(eigen(K1)$values))
-    pt <- R0/l1
+    # # calculate prob transmission
+    # if (is.list(cm)) {
+    #     cm_gen <- Reduce('+', cm)
+    # } else {
+    #     cm_gen <- cm
+    # }
+    # if (is.null(im)) {
+    #     im <- matrix(1,nrow = nrow(cm_gen),ncol = ncol(cm_gen))
+    # }
+    # J <- ncol(cm_gen)
+    # V <- diag(rep(gamma,J))
+    # F1 <- cm_gen
+    # for (i in 1:J) {
+    #     for (j in 1:J) {
+    #         F1[i,j] <- dist[i]/dist[j]*F1[i,j]*im[i,j]
+    #     }
+    # }
+    # K1 <- F1 %*% solve(V)
+    # l1 <- max(Re(eigen(K1)$values))
+    # pt <- R0/l1
 
     # output with class seir_param
     param <- list(R0=R0,
                   sigma=sigma,
                   gamma=gamma,
                   cm=cm,
-                  pt=pt,
+                  #pt=pt,
                   dist=dist,
                   vaceff1=vaceff1,
                   vaceff2=vaceff2,
