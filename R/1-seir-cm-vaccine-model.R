@@ -415,7 +415,9 @@ seir_cv_model <- function(t,y,parms) {
              Ntotal=sum(S) + sum(E) + sum(I) + sum(R) +
                  sum(Sv) + sum(Ev) + sum(Iv) + sum(Rv),
              incidence=dE+dI+dR,
-             incidencev=dEv+dIv+dRv),
+             incidencev=dEv+dIv+dRv,
+             incidenceE=dI+dR,
+             incidenceEv=dIv+dRv),
              interventions=list(transmission_intervention=transmission_intervention,
                                 contact_intervention=contact_intervention))
     })

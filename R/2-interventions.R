@@ -260,7 +260,7 @@ calculate_reactive <- function(x,intervention,incRows,dist=NULL) {
         } else if (intervention$state$inplace == TRUE & (infect > intervention$state$lowerbound)) {
             new_intervention$state$days0cases <- 0
             x_cur <- apply_intervention(x_cur,intervention$reduce,dist)
-        } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound - 2*.Machine$double.eps))) {
+        } else if ((intervention$state$inplace == TRUE) & (infect <= (intervention$state$lowerbound + 2*.Machine$double.eps))) {
             new_intervention$state$days0cases <- new_intervention$state$days0cases + 1
             if (new_intervention$state$days0cases >= intervention$state$length) {
                 # should we turn off the intervention?
