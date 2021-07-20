@@ -2,7 +2,8 @@
 % Please edit documentation in R/1-seir-cm-vaccine-model.R
 \name{simulate_seir_cv}
 \alias{simulate_seir_cv}
-\title{Simulate a deterministic age structured SEIR model}
+\title{Simulate a deterministic age structured SEIR model with vaccinations and
+reactive interventions}
 \usage{
 simulate_seir_cv(t, state_t0, param)
 }
@@ -14,7 +15,7 @@ simulate_seir_cv(t, state_t0, param)
 \item{param}{Model parameters (see ?seir_param)}
 }
 \value{
-Object of class covoidd and dcm (from the package EpiModels)
+Object of class covoid
 }
 \description{
 \Sexpr[results=rd, stage=render]{lifecycle::badge("maturing")}
@@ -25,6 +26,73 @@ I = Infectious
 R = Removed (recovered or died)
 }
 \examples{
-# coming soon....
+(this is a long one!)
+
+The two functions (covoid::mm and covoid::vaccination_allocation_mm)
+will be used in vaccine allocation
+# import and setup baseline states
+cm_oz <- import_contact_matrix("Australia","general")
+nJ <- ncol(cm_oz)
+dist_oz <- import_age_distribution("Australia")
+SSv <- dist_oz*5e6
+baseline <- 0.0  # vaccinations at t=0
+S <- SSv*(1-baseline)
+Sv <- SSv*baseline
+E <- rep(0,nJ)
+Ev <- rep(0,nJ)
+I <- Iv <- rep(0,nJ)
+R <- Rv <- rep(0,nJ)
+state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+
+## parameters
+# vaccine effectiveness
+vaceff1 <- rep(0.99,nJ)
+vaceff2 <- rep(0.90,nJ)
+vaceff3 <- rep(0.90,nJ)
+
+# imported cases
+n_imp_cases <- function(t) {
+    0*(t <= 365) + (t > 365)*rpois(n = 1,lambda = 200)
+}
+# number of available vaccines
+nvac <- function(t) {
+    # number of available vaccinations (total)
+    1000*(t < 30) + 20000*(t >= 30)
+}
+# wrap vaccine allocation function
+random_vac_alloc <- function(t,n,s) {
+    vaccination_allocation_mm(t,n,s,list(p=dist_oz,s0=S,half=0.05))
+}
+# reactive transmission interventions
+int1 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
+# reactive contact rate interventions
+int2 <- reactive_intervention(threshold=40,reduce=0.5,state=reactive_state())
+param1 <- seir_cv_param(R0 = 2.5,
+                        sigma=0.1,
+                        gamma = 0.1,
+                        cm=cm_oz,
+                        dist=dist_oz,
+                        vaceff1=vaceff1,
+                        vaceff2=vaceff2,
+                        vaceff3=vaceff3,
+                        nvac=nvac,
+                        contact_intervention = int1,
+                        transmission_intervention=int2,
+                        vac_alloc=random_vac_alloc,
+                        n_imp=n_imp_cases)
+
+## simulation
+res1 <- simulate_seir_cv(t = 365*2,state_t0 = state0,param = param1)
+
+## plot the results
+library(ggplot2)
+p1 <- plot(res1,y = c("Sv","S")) +
+    theme_bw(base_size = 16) +
+    labs(title="Susceptible\nvaccinated vs. unvaccinated")
+p2 <- plot(res1,y="incidence") +
+    theme_bw(base_size = 16) +
+    labs(title="Incidence")
+gridExtra::grid.arrange(p1,p2,ncol=1)
+
 
 }
