@@ -194,6 +194,8 @@ simulate_seir_cv <- function(t,state_t0,param) {
     out$epi <- cbind(out$epi)
     out$epi$incidence <- rowSums(out$epi[paste0("incidence",1:nJ)])
     out$epi$incidencev <- rowSums(out$epi[paste0("incidencev",1:nJ)])
+    out$epi$incidenceE <- rowSums(out$epi[paste0("incidenceE",1:nJ)])
+    out$epi$incidenceEv <- rowSums(out$epi[paste0("incidenceEv",1:nJ)])
 
     # return
     class(out) <- c("covoid",class(out))
