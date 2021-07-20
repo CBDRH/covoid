@@ -105,9 +105,11 @@ test_that("reactive sims work",{
     Sv <- SSv*baseline
     E <- rep(0,nJ)
     Ev <- rep(0,nJ)
+    H <- rep(0,nJ)
+    Hv <- rep(0,nJ)
     I <- Iv <- rep(0,nJ)
     R <- Rv <- rep(0,nJ)
-    state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+    state0 <- seir_cv_state0(S,E,I,H,R,Sv,Ev,Iv,Hv,Rv)
     ## parameters
     # vaccine effectiveness
     vaceff1 <- rep(0.99,nJ)
@@ -127,6 +129,9 @@ test_that("reactive sims work",{
     param1 <- seir_cv_param(R0 = 2.5,
                             sigma=0.1,
                             gamma = 0.1,
+                            phosp = rep(0,nJ),
+                            phospv = rep(0,nJ),
+                            thosp = 1/7,
                             cm=cm_oz,
                             dist=dist_oz,
                             vaceff1=vaceff1,
