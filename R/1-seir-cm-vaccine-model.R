@@ -11,6 +11,10 @@ euler1 <- function(y,times,func,parms) {
     main_res <- matrix(nrow=length(times),ncol=length(y))
     colnames(main_res) <- names(y)
     main_res[1,] <- y
+    intervention_res <- matrix(nrow=length(times),ncol=2)
+    colnames(intervention_res) <- c("contact_intervention","transmission_intervention")
+    intervention_res[1,] <- c(parms$contact_intervention$state$inplace,
+                              parms$transmission_intervention$state$inplace)
     # loop over time steps and update
     # 1) y
     # 2) reactive intervention
@@ -38,9 +42,11 @@ euler1 <- function(y,times,func,parms) {
         if(!is.null(update_t$interventions$contact_intervention)) {
             parms$contact_intervention <- update_t$interventions$contact_intervention
         }
+        intervention_res[t,] <- c(parms$contact_intervention$state$inplace,
+                                  parms$transmission_intervention$state$inplace)
     }
     other_res[is.na(other_res)] <- 0
-    cbind(times,main_res,other_res)
+    cbind(times,main_res,other_res,intervention_res)
 }
 
 

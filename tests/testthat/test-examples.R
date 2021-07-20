@@ -98,7 +98,7 @@ test_that("seir_cm_* examples work",{
                             vac_alloc=random_vac_alloc,
                             n_imp=n_imp_cases)
     ## simulation
-    res4 <- simulate_seir_cv(t = 100,state_t0 = state0,param = param1)
+    res4 <- simulate_seir_cv(t = 365*2,state_t0 = state0,param = param1)
     expect_is(res4,"covoid")
     expect_is(plot(res4,y = c("Sv","S")),"ggplot")
 })
