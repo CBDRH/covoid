@@ -419,15 +419,15 @@ seir_cv_model <- function(t,y,parms) {
             dS[i] <- -(S[i])*(lambda_i + lambda_imp) - nvac_i
             dE[i] <- (S[i])*(lambda_i + lambda_imp) - sigma*E[i]
             dI[i] <- sigma*E[i] - (1-phosp[i])*gamma*I[i] - phosp[i]*gamma*I[i]
-            dH[i] <- (1-phosp[i])*gamma*I[i] - thosp*H[i]
-            dR[i] <- gamma*I[i] + thosp*H[i]
+            dH[i] <- phosp[i]*gamma*I[i] - thosp*H[i]
+            dR[i] <- (1-phosp[i])*gamma*I[i] + thosp*H[i]
 
             # un-vaccinated flow
             dSv[i] <- -(1-vaceff1[i])*Sv[i]*(lambda_i + lambda_imp) + nvac_i
             dEv[i] <- (1-vaceff1[i])*Sv[i]*(lambda_i + lambda_imp) - sigma*Ev[i]
             dIv[i] <- sigma*Ev[i] - (1-phospv[i])*gamma*Iv[i] - phospv[i]*gamma*Iv[i]
-            dHv[i] <- (1-phosp[i])*gamma*Iv[i] - thosp*Hv[i]
-            dRv[i] <- gamma*Iv[i] + thosp*Hv[i]
+            dHv[i] <- phospv[i]*gamma*Iv[i] - thosp*Hv[i]
+            dRv[i] <- (1-phospv[i])*gamma*Iv[i] + thosp*Hv[i]
         }
 
         # return
