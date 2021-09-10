@@ -395,7 +395,8 @@ E <- rep(0,nJ)
 Ev <- rep(0,nJ)
 I <- Iv <- rep(0,nJ)
 R <- Rv <- rep(0,nJ)
-state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+H <- Hv <- rep(0,nJ)
+state0 <- seir_cv_state0(S = S,E = E,I = I,H = H,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Hv = Hv,Rv = Rv)
 
 ## parameters
 # imported case
@@ -417,6 +418,9 @@ param1 <- seir_cv_param(R0 = 2.5,
                         gamma = 0.1,
                         cm=cm_oz,
                         dist=dist_oz,
+                        phosp = rep(0.1,nJ),
+                        phospv = rep(0.01,nJ),
+                        thosp = 1/7,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
                         vaceff3=vaceff3,
@@ -455,7 +459,8 @@ E <- rep(0,nJ*2)
 Ev <- rep(0,nJ*2)
 I <- Iv <- rep(0,nJ*2)
 R <- Rv <- rep(0,nJ*2)
-state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+H <- Hv <- rep(0,nJ*2)
+state0 <- seir_cv_state0(S = S,E = E,I = I,H = H,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Hv = Hv,Rv = Rv)
 
 ## parameters
 # imported case
@@ -484,6 +489,9 @@ param1 <- seir_cv_param(R0 = 2.5,
                         gamma = 0.1,
                         cm=cm_oz2,
                         dist=dist_oz2,
+                        phosp = rep(0.1,nJ*2),
+                        phospv = rep(0.01,nJ*2),
+                        thosp = 1/7,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
                         vaceff3=vaceff3,
@@ -527,7 +535,8 @@ E <- rep(0,nJ)
 Ev <- rep(0,nJ)
 I <- Iv <- rep(0,nJ)
 R <- Rv <- rep(0,nJ)
-state0 <- seir_cv_state0(S = S,E = E,I = I,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Rv = Rv)
+H <- Hv <- rep(0,nJ)
+state0 <- seir_cv_state0(S = S,E = E,I = I,H = H,R = R,Sv = Sv,Ev = Ev,Iv = Iv,Hv = Hv,Rv = Rv)
 
 ## parameters
 # imported case
@@ -552,6 +561,9 @@ param1 <- seir_cv_param(R0 = 2.5,
                         gamma = 0.1,
                         cm=cm_oz,
                         dist=dist_oz,
+                        phosp = rep(0.1,nJ),
+                        phospv = rep(0.01,nJ),
+                        thosp = 1/7,
                         vaceff1=vaceff1,
                         vaceff2=vaceff2,
                         vaceff3=vaceff3,
