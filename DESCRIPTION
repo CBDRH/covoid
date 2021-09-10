@@ -49,7 +49,10 @@ Imports:
     dplyr
 Remotes: nik01010/dashboardthemes
 Suggests: 
-    testthat
+    testthat,
+    tidyverse,
+    RColorBrewer,
+    runner
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 RdMacros: 
