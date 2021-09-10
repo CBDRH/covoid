@@ -13,8 +13,17 @@ euler1 <- function(y,times,func,parms) {
     main_res[1,] <- y
     intervention_res <- matrix(nrow=length(times),ncol=2)
     colnames(intervention_res) <- c("contact_intervention","transmission_intervention")
-    intervention_res[1,] <- c(parms$contact_intervention$state$inplace,
-                              parms$transmission_intervention$state$inplace)
+    if(!is.null(parms$contact_intervention)) {
+        intervention_res[1,1] <- parms$contact_intervention$state$inplace
+    } else {
+        intervention_res[1,1] <- FALSE
+    }
+    if(!is.null(parms$transmission_intervention)) {
+        intervention_res[1,2] <- parms$transmission_intervention$state$inplace
+    } else {
+        intervention_res[1,1] <- FALSE
+    }
+
     # loop over time steps and update
     # 1) y
     # 2) reactive intervention
@@ -42,8 +51,16 @@ euler1 <- function(y,times,func,parms) {
         if(!is.null(update_t$interventions$contact_intervention)) {
             parms$contact_intervention <- update_t$interventions$contact_intervention
         }
-        intervention_res[t,] <- c(parms$contact_intervention$state$inplace,
-                                  parms$transmission_intervention$state$inplace)
+        if(!is.null(parms$contact_intervention)) {
+            intervention_res[t,1] <- parms$contact_intervention$state$inplace
+        } else {
+            intervention_res[t,1] <- FALSE
+        }
+        if(!is.null(parms$transmission_intervention)) {
+            intervention_res[t,2] <- parms$transmission_intervention$state$inplace
+        } else {
+            intervention_res[t,1] <- FALSE
+        }
     }
     other_res[is.na(other_res)] <- 0
     cbind(times,main_res,other_res,intervention_res)
@@ -87,7 +104,7 @@ euler1 <- function(y,times,func,parms) {
 #' H <- rep(0,nJ)
 #' Hv <- rep(0,nJ)
 #' R <- Rv <- rep(0,nJ)
-#' state0 <- seir_cv_state0(S,E,I,H,R,Sv,Ev,Iv,Rv)
+#' state0 <- seir_cv_state0(S,E,I,H,R,Sv,Ev,Iv,Hv,Rv)
 #'
 #' ## parameters
 #' # vaccine effectiveness
